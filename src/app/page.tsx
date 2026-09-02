@@ -46,7 +46,7 @@ export default async function HomePage() {
               道館戰工具
             </h1>
             <p className="mx-auto mt-4 max-w-md text-base text-balance text-muted-foreground sm:text-lg md:mx-0">
-              不用再開串統計。任何道館都能開一個來用。
+              拍組、道館戰分配，全館一目了然。
             </p>
           </div>
 
