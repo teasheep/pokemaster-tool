@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { GoogleSignInButton } from "@/components/google-signin-button";
 import { PageShell } from "@/components/page-shell";
 import { getSessionUser } from "@/lib/supabase/server";
 import { HomeTicketBoard } from "./home-ticket-board";
@@ -19,8 +18,8 @@ export const dynamic = "force-dynamic";
  *     使用者明講「產品的核心是道館戰工具, 不需要把細節描述出來」。
  *   - **用看的不用讀的**: 旁邊放一塊道館戰看板的縮影 (home-ticket-board.tsx) 當插圖,
  *     陌生人瞄一眼就知道這是個什麼樣的工具, 不用讀說明。
- *   - **只有一顆 CTA**: 「用 Google 登入」。不放「逛圖鑑」—— 訪客在導覽列已經看得到「拍組」,
- *     首頁再放一顆就是「分頁以外的第二個入口」(AGENTS.md 點名過的前科)。
+ *   - **只有一顆 CTA, 而且是真正的 Google 按鈕**: 按下去直接去 Google, 不是先跳 /login。
+ *     不放「逛圖鑑」—— 訪客在導覽列已經看得到「拍組」, 首頁再放一顆就是第二個入口。
  *   - 沒有背景漸層、沒有卡片外框的假入口、沒有功能列表。
  *   - 手機: 直向堆疊, 看板在 h1 正下方, CTA 整條可點 (48px)。桌機: 文字在左、看板在右。
  */
@@ -47,18 +46,20 @@ export default async function HomePage() {
               道館戰工具
             </h1>
             <p className="mx-auto mt-4 max-w-md text-base text-balance text-muted-foreground sm:text-lg md:mx-0">
-              開一個給你的道館，全館一起用。
+              不用再開串統計。任何道館都能開一個來用。
             </p>
           </div>
 
           <HomeTicketBoard className="mx-auto w-full max-w-sm md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:justify-self-center" />
 
-          {/* 只有一顆 CTA。「先逛拍組圖鑑」刻意不放 —— 訪客在桌機 header 與手機底部分頁列
-              都已經看得到「拍組」, 首頁再放一顆就是「分頁以外的第二個入口」(AGENTS.md)。 */}
-          <div className="mx-auto w-full max-w-xs md:col-start-1 md:row-start-2 md:mx-0 md:self-start">
-            <Button asChild size="lg" className="h-12 w-full sm:min-w-48 md:w-auto">
-              <Link href="/login">用 Google 登入</Link>
-            </Button>
+          {/* CTA = **真正的 Google 按鈕**, 不是連到 /login 的假鈕。
+              舊版是 shadcn primary Button 寫著「用 Google 登入」但只是換頁 —— 既不符合 Google
+              品牌規範 (底色/尺寸/logo 全錯), 又拿 Google 的名字代表一個「其實只是跳頁」的動作。
+              直接放 GoogleSignInButton: 按下去就真的去 Google, 而且外觀是官方那顆。
+              這**不是第二個登入實作** —— 全站只有 google-signin-button.tsx 一份, 這裡只是多一個掛載點。
+              「先逛拍組圖鑑」刻意不放: 訪客在桌機 header 與手機底部分頁列都已經看得到「拍組」。 */}
+          <div className="flex justify-center md:col-start-1 md:row-start-2 md:justify-start md:self-start">
+            <GoogleSignInButton />
           </div>
         </div>
       </PageShell>

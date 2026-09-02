@@ -6,12 +6,14 @@
 // 旁邊那顆「使用 Google 登入」永遠要留著 —— FedCM 生效後我們**偵測不到 One Tap 有沒有跳出來**
 // (見下面 prompt() 的註解), 沒有保底入口就會變成「入口還在但功能斷掉」。
 //
-// 掛載範圍刻意只有 `/login`:
-//   - 那頁的意圖 100% 明確, 而且 proxy.ts 保證已登入者會被導去 /pairs, 進得來的都是訪客。
-//   - GIS 這支 script 載入本身就是一個帶 Google cookie 的請求。掛在首頁/圖鑑等於把「有人來過
-//     pm-gym」告訴 Google, 而路過看圖鑑的人根本不需要登入。
-//   - 使用者關掉 One Tap 會讓瀏覽器對本站進入 FedCM embargo (而且我們看不到) —— 那個額度要
-//     留給真的要登入的人, 不要燒在沒有登入意圖的頁面上。
+// **掛載範圍 = 全站的訪客** (2026-09-02 使用者指定: 「我希望在沒登入的時候 哪裡都有 one tap」)。
+// 由 root layout 的 GoogleOneTapSlot 掛載, 那個 slot 只在**沒登入**時才渲染這個元件,
+// 所以已登入的人完全不會載入 GIS。
+//
+// 取捨要知道: GIS script 的載入本身就是一個帶 Google cookie 的請求, 掛全站等於讓每一位
+// 訪客 (包含只是來逛圖鑑的路人) 都被 Google 看見一次; 而且使用者關掉 One Tap 會讓瀏覽器
+// 對整站進入 FedCM embargo (我們偵測不到)。原本只掛 /login 就是為了省下這兩件事 ——
+// 現在改成全站是使用者權衡後的決定, 不是疏漏。
 
 import { useEffect, useRef } from "react";
 import Script from "next/script";
@@ -53,13 +55,7 @@ function alreadyPrompted(): boolean {
   }
 }
 
-export function GoogleOneTap({
-  clientId,
-  redirect,
-}: {
-  clientId: string | null;
-  redirect?: string | null;
-}) {
+export function GoogleOneTap({ clientId }: { clientId: string | null }) {
   const started = useRef(false);
 
   useEffect(
@@ -113,8 +109,17 @@ export function GoogleOneTap({
       //   1. /auth/one-tap 是 Route Handler 不是頁面 —— App Router 的 client 導航送不過去。
       //   2. 新 session 要讓 middleware 與 server component 從頭判斷一次; router.refresh()
       //      只清當前頁的 client cache, 而 /login 上的 RSC 請求會撞到 proxy 的
-      //      「已登入 → 307 /pairs」, 反而繞掉 onboarding 閘門。
-      const next = safeNextPath(redirect);
+      //      「已登入 → 307 /gyms」, 反而繞掉 onboarding 閘門。
+      //
+      // 目的地 = **登入完留在原地**: 在圖鑑按下去就回圖鑑, 不要把人丟到別頁去。
+      // 只有 /login 例外 —— 那頁本身不是目的地, 要看 ?redirect= (proxy 攔截時帶上的原路徑)。
+      // 這裡直接讀 window.location 而不用 useSearchParams: 後者會把整個 root layout
+      // 拖進 client 渲染, 而我們只在 callback 當下需要這個值。
+      const here = new URL(window.location.href);
+      const next =
+        here.pathname === "/login"
+          ? safeNextPath(here.searchParams.get("redirect"))
+          : safeNextPath(here.pathname + here.search);
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- 見上面兩點: 這裡要的就是整頁導向到 Route Handler
       window.location.assign(`/auth/one-tap?next=${encodeURIComponent(next)}`);
     } catch (e) {

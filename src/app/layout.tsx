@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { SyncPairDefs } from "@/components/sync-pair-defs";
+import { GoogleOneTapSlot } from "@/components/google-one-tap-slot";
 import { getSessionUser } from "@/lib/supabase/server";
 
 import "./globals.css";
@@ -102,6 +103,11 @@ export default function RootLayout({
           {/* 手機的三個全站分頁在螢幕底部 (桌機 sm 以上不渲染任何東西) */}
           <Suspense fallback={null}>
             <MobileTabBarSlot />
+          </Suspense>
+          {/* 訪客的 Google One Tap (沒有可見 DOM — 提示由 Google 畫在視窗角落)。
+              已登入就整個不渲染, 連 GIS script 都不載。 */}
+          <Suspense fallback={null}>
+            <GoogleOneTapSlot />
           </Suspense>
           <Toaster richColors position="top-right" />
         </ThemeProvider>
