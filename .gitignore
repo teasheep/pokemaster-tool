@@ -89,3 +89,6 @@ src/data/pair-embeddings.json
 
 # 根目錄的隨手截圖參考 (沒有任何程式引用)
 pomatools 截圖參考.png
+
+# GitHub fine-grained PAT (設 Actions secrets 用)
+.gh-token

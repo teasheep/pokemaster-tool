@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 pm-gym contributors
+Copyright (c) 2026 teasheep
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,21 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-NOTICE — 遊戲素材與資料
-
-The MIT license above covers the source code in this repository only.
-
-Pokémon and Pokémon Masters EX are trademarks of Nintendo, Creatures Inc.,
-GAME FREAK inc., The Pokémon Company and DeNA Co., Ltd. This project is an
-unofficial fan-made tool and is not affiliated with, endorsed by, or sponsored
-by any of them.
-
-Game data (sync pair names, types, roles, release dates) and artwork under
-`public/reference/` are the property of their respective rights holders and
-are included solely for interoperability with the game. They are NOT covered
-by the MIT license above. Derived binaries (PNG sources, image embeddings) are
-regenerated from public sources by `npm run data:update` and are not tracked
-in version control.

@@ -165,7 +165,7 @@ AGENTS.md         這個 repo 的硬性慣例與踩過的坑
 版控中**只保留網站實際供應的 WebP**；PNG 原檔與影像 embedding 是由 `npm run data:update`
 從公開來源重新產生的衍生檔，不進版控（見 [`.gitignore`](.gitignore)）。
 
-本專案自己的程式碼採 [MIT](LICENSE)。
+本專案自己的程式碼採 [MIT](LICENSE)；素材與資料的權利歸屬見 [NOTICE](NOTICE)。
 
 ---
 
