@@ -1,0 +1,91 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (never commit real values)
+.env*
+!.env.local.example
+
+# IDE
+.idea/
+.vscode/
+
+# 本地素材 / 診斷資料夾 (測試截圖、diag 產物等, 全部不上 git — 180MB+)
+assets/
+
+# 已棄用的 opencv.js (ORB pipeline 已移除, 改用 DINOv2 embedding) — 11MB 死檔
+public/opencv/
+
+# tesseract 英文模型 (執行時由 CDN 取得, repo 不需收進這 5MB)
+eng.traineddata
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# 機器本地設定 (不上 git)
+.claude/settings.local.json
+
+# 暫時性診斷腳本 (用完即丟)
+scripts/dev/
+
+# supabase CLI 本地 stack 的暫存/產生檔
+supabase/.temp/
+supabase/.branches/
+
+# 道館內部資料 (成員表單/LINE 記錄等隱私資料, 一律不上 git)
+ref/
+
+# Cloudflare (OpenNext build 產物 / wrangler 本地狀態 / 部署憑證)
+.open-next/
+.wrangler/
+.cloudflare-token
+.cloudflare-account-id
+
+# ── 可重新產生的衍生檔 (2026-09-02) ──
+# 這些是資料管線從公開來源下載/算出來的, 不是專案的原始碼, 而且很肥:
+#   PNG 原檔        5,549 檔 / 94.8 MB   ← 只有 scripts/ 與本機限定的辨識頁在讀
+#   pair-embeddings   1 檔 /  7.8 MB     ← 只有辨識管線 (目前暫緩) 在讀
+# 線上實際供應的是 WebP (5.2 MB), 那份**有**進版控。
+# 部署也用不到 PNG —— public/.assetsignore 本來就把它們擋在部署之外。
+#
+# 要重新產生: `npm run data:update` (會重新下載並轉檔) /
+#             `node scripts/build-embeddings.mjs` (重算 embedding)
+#
+# ⚠ 這只是「不進版控」, 不是刪除 —— 本機的檔案照舊存在, 辨識管線在本機仍然跑得動。
+public/reference/**/*.png
+src/data/pair-embeddings.json
+
+# 根目錄的隨手截圖參考 (沒有任何程式引用)
+pomatools 截圖參考.png

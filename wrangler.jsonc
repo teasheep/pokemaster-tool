@@ -1,0 +1,38 @@
+// Cloudflare Workers 設定 (OpenNext adapter)
+// 部署: npm run deploy:cf (會先以 DEPLOY_TARGET=cloudflare 建置, 排除本機限定的辨識功能)
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pm-gym",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-05-05",
+  "compatibility_flags": ["nodejs_compat"],
+  // 自訂網域 (2026-09-02)。**唯一入口** —— workers_dev 同時關掉, 舊的
+  // pm-gym.pokemon-master-inventory.workers.dev 會 404 (使用者指定「一切按照新的來」,
+  // 舊分享連結一起斷是知情的取捨)。
+  //
+  // 為什麼要接: docs/devops.md §3.2 —— workers.dev 子網域的請求被路由到 colo=SJC (加州),
+  // 一個 CF-Cache-Status: HIT 的靜態檔 TTFB 仍要 426ms, 那是全站的地板而且與程式無關。
+  // 推論接自訂網域會回到 TPE。**部署完第一件事就是驗證這個推論**:
+  //   curl.exe -s https://pokemaster-tool.com/cdn-cgi/trace   → 看 colo=
+  // 是 TPE 就賺到 ~400ms; 還是 SJC 的話推論不成立, 去 docs/devops.md §3.2 更正紀錄。
+  //
+  // `custom_domain: true` 與一般 route pattern 的差別: 前者由 Cloudflare 自己建 DNS 記錄並
+  // 獨佔該 hostname (這個站要的就是這個); 後者是在既有 DNS 上疊路由, 適合「網域上還有別的服務」。
+  //
+  // ⚠ **zone 必須先存在於同一個 Cloudflare 帳號且狀態 Active**, 否則 deploy 直接失敗
+  //   (網域剛換 nameserver 還在傳播時就是這種狀態)。
+  // zone `pokemaster-tool.com` 與這個 Worker 同帳號 (a92e5392…) 且狀態 active, 2026-09-02 接上。
+  "routes": [{ "pattern": "pokemaster-tool.com", "custom_domain": true }],
+  // routes 設了就一定要一起關掉 workers.dev, 否則兩個 origin 都活著:
+  // 舊網址仍走慢的 SJC 路徑, 而且 Supabase 的 Redirect URLs / Google 的 JS 來源
+  // 都要為它多養一份設定 (兩份 origin = 兩倍維護面積)。
+  // 注意 dashboard 上按 Disable 是白工 —— 官方明講下次 deploy 會被重新啟用, 一定要寫在這個檔裡。
+  "workers_dev": false,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

@@ -1,0 +1,67 @@
+# Cloudflare Workers Assets 的排除清單 (https://developers.cloudflare.com/workers/static-assets/)
+#
+# 為什麼要有這個檔: public/ 有 100MB+ 的圖, 但線上真正會被請求的只有一小部分。
+# open-next 把 public/ 整包 cpSync 到 .open-next/assets/ (與 _headers 同一條路徑),
+# wrangler 部署前會讀 assets 目錄根層的 .assetsignore, 用 gitignore 語法把列到的檔排除
+# (它會自動排除 .assetsignore / _headers / _redirects 自己, 不用寫)。
+#
+# ⚠ 加任何一行進來之前, 一定要先全域 grep 確認 src/ 沒有地方引用 —
+#    只要有一處還指著被排除的檔, 線上就是 404 空圖。
+#    最後一次核對: 2026-08-19, `grep -rn "/reference/" src --include=*.ts --include=*.tsx`
+#    只出現 trainer / pokemon / ui / trainer-ex 四個目錄。
+
+# ⛔ **不要**排除 catalog/ — public/catalog/<指紋>.json 是「PairPicker 勾全圖鑑」的唯一資料源
+#    (建置時由 scripts/emit-client-catalog.mjs 產生)。排掉 = 線上勾全圖鑑抓到 404,
+#    只能靠 /api/catalog 那條退路撐著, 等於把好不容易變成 0 CPU 的路徑退回 45-65ms。
+
+# ── 已棄用的死檔 ──
+# opencv.js 10.87MB — ORB 比對管線早就換成 DINOv2 embedding (見 embed-matcher.ts),
+# 沒有任何程式碼載它。.gitignore 已擋它進 git, 但本機檔案還在 public/ 底下,
+# 不寫這一行每次部署都會把它送上去。
+opencv/
+
+# ── 沒有任何 UI 在用的參考圖目錄 ──
+# 這幾個目錄是辨識管線的訓練/比對素材 (build-embeddings.mjs 在本機讀), 網頁一張都不顯示。
+# 檔案留在 repo 給 embedding 用, 只是不進部署。
+reference/pokemon-circle/
+reference/syncpair/
+reference/trainer-circle/
+reference/trainer-ex-base/
+reference/trainer-face/
+
+# EX 換裝立繪 — 唯一引用處是 src/app/upload/screenshot-upload-client.tsx,
+# 而它只被 src/app/upload/page.node.tsx 匯入; next.config.ts 的 pageExtensions 在
+# DEPLOY_TARGET=cloudflare 時是 ["tsx","ts"], *.node.tsx 不算路由 → 線上根本沒有這頁。
+# **用 ignore 不要 rm** (AGENTS.md『EX 裝』明訂圖檔要保留)。
+# ⚠ 重啟 EX 立繪 UI 時要拿掉這一行, 否則線上 EX 立繪會全部 404。
+reference/trainer-ex/
+
+# ── PNG 原檔: 已經有 .webp 了 ──
+# 網頁一律吃 .webp (scripts/convert-card-images.mjs 產, 接在資料管線 stage 1b)。
+# PNG 留在 repo 是因為 build-embeddings.mjs 與 lib/server 的辨識管線讀的是 PNG 路徑,
+# 刪掉本機就重算不了 embedding — 所以「留 repo, 不上部署」。
+# ⚠ 只排除 *.png, 不要寫整個目錄 (同目錄的 .webp 才是線上要的那份)。
+reference/trainer/*.png
+reference/pokemon/*.png
+reference/ui/*.png
+reference/ui/candy/*.png
+
+# ── 尚未官方公布的拍組: 只有它們在用的圖 (2026-08-21) ──
+# catalog 裡有 10 筆是資料管線從 datamine 先撈到、官方還沒宣布的拍組
+# (判準見 src/lib/pairs/loader.ts 的 isUnreleasedPair)。它們已經在收口
+# loadPairsForClient() 被濾掉 → 線上不會有任何一頁/任何 JSON 提到這些拍組,
+# 但圖檔留在 public/ 就還是「知道網址就抓得到」的未公布美術素材。
+# 下面 4 個 .webp 是**只有那 10 筆在用**的 (已逐一比對: 其餘共用圖檔都還有已上市拍組在指,
+# 例如 lillie / hikari / hibiki 的立繪、togepy 的寶可夢圖 — 那些絕對不能排除)。
+# PNG 原檔已被上面 reference/{trainer,pokemon}/*.png 兩行擋掉, 所以這裡只需要補 .webp。
+# ⚠ 這些拍組正式公布 (catalog 拿到 verifiedSources / releaseDate) 後,
+#    它們會自動回到 loadPairsForClient 的輸出 → **要記得把對應這幾行刪掉**, 否則線上是空卡。
+#
+# 註 (2026-09-01): isUnreleasedPair 另外有一條「releaseDate 還沒到」的判準 (判準 B),
+# 被它擋下的拍組**刻意不列進來**。理由是取捨: 那批每隔幾天就上架一批, 忘記把行刪掉的代價
+# (已上市拍組線上是空卡, 使用者看得到) 遠大於留著幾張沒有任何頁面引用得到的圖檔 ——
+# 而且它們的檔名只有 catalog 才查得到, catalog 現在已經不含它們了。
+reference/trainer/ch0074_00_tanpan_128.webp
+reference/pokemon/pm0546_00_monmen_128.webp
+reference/pokemon/pm0007_00_zenigame_128.webp
+reference/pokemon/pm0394_00_pottaishi_128.webp

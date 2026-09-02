@@ -1,0 +1,43 @@
+# Cloudflare Workers Assets 的自訂回應標頭 (https://developers.cloudflare.com/workers/static-assets/headers/)
+#
+# 為什麼要有這個檔: wrangler.jsonc 的 assets 只設了 directory + binding, 沒設快取 →
+# 線上退回 Workers Assets 的預設值 `public, max-age=0, must-revalidate`,
+# 連檔名帶內容雜湊的 JS chunk 每次回訪都要跟邊緣重驗一趟 (整牆拍組圖也是)。
+#
+# public/ 底下的檔案會被 open-next 原樣複製到 .open-next/assets/ (createAssets.js 的
+# cpSync 整包複製, 底線開頭的檔案也在內), 所以放這裡就會生效, 部署腳本不用改。
+#
+# **這個檔只作用在「靜態資產命中」的回應**, 頁面 HTML 與 /api/* 是 Worker 動態產的,
+# 完全碰不到這裡 (2026-08-21 驗證: assets router 命中資產才走 ASSET_WORKER/attachCustomHeaders,
+# 沒命中就把 USER_WORKER 的 response 原樣回傳; 線上 /catalog/*.json 有 ETag+CF-Cache-Status,
+# / 則是 x-opennext:1)。所以**安全標頭寫在 next.config.ts 的 headers()**, 寫這裡是白工。
+#
+# 兩個地雷:
+#  - **不要**在 /* 寫 Cache-Control。同一個 header key 被第二條規則設到時是 append 不是覆蓋
+#    (assets.worker.js: 第一次 set, 之後 append) → 會變成 "public,max-age=0,...,public,max-age=31536000"。
+#  - 頁面的 private, no-cache, no-store 是對的 (force-dynamic + 個人資料), 不要去蓋。
+
+# 靜態資產也吃得到的唯一一條安全標頭 (next.config 的 headers() 管不到這些檔)。
+# 只放 nosniff: 它是對「檔案」有意義的那條; Referrer-Policy/X-Frame-Options 是對「文件」講的,
+# 放在 PNG/JSON 上沒有意義。這條沒有跟下面任何規則撞 key, 不影響快取。
+/*
+  X-Content-Type-Options: nosniff
+
+# Next.js 建置產物: 檔名帶內容雜湊, 內容變檔名就變 → 可以放心 immutable 一年
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 完整拍組圖鑑 (client 投影版, 309KB): 檔名帶內容+投影形狀的指紋 → immutable 一年。
+# 這個檔由 scripts/emit-client-catalog.mjs 在建置時產生 (見 src/data/catalog-version.ts),
+# 是「PairPicker 勾全圖鑑」的來源。走 Workers Assets = 我們的 Worker 完全不執行 (0 CPU),
+# 換掉的是舊的 /api/catalog 路由 (每次被打要 45-65ms CPU, 免費方案上限 10ms)。
+# public 不是 private: 資產路徑不經過 middleware, 本來就不是登入才拿得到的東西;
+# 內容只有圖鑑 (零個人資料), 且 /pairs 對訪客本來就直送同一份投影。
+/catalog/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 拍組立繪/屬性 icon: 30 天, **刻意不給 immutable** —
+# 圖檔名是 actorId 沒有雜湊, scrape-brybry.mjs 重跑會覆寫同名檔;
+# 給了 immutable 就是讓使用者整整一年看不到新圖。
+/reference/*
+  Cache-Control: public, max-age=2592000

@@ -1,0 +1,28 @@
+name: 功能建議
+description: 想要新的功能或改動
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        先看一下 [ROADMAP.md](../blob/main/ROADMAP.md) —— 有些東西是**刻意不做**的，
+        理由寫在最後一節。也請看 [AGENTS.md](../blob/main/AGENTS.md) 的資訊架構那條：
+        這個站刻意維持「頂部兩個分頁」，新功能通常應該長在現有的頁裡而不是新開一頁。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你實際遇到的問題
+      description: 請描述情境，不要直接描述解法 —— 解法可能有更好的
+      placeholder: 道館戰打到一半想知道還有誰沒出刀，現在要一個一個看券數推算。
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: 你覺得這該長在哪一頁
+      description: 現有哪一頁的職責涵蓋它？
+      placeholder: 道館戰看板
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 現在你怎麼繞過

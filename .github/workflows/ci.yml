@@ -1,0 +1,126 @@
+# CI + 部署。
+#
+# **部署的觸發條件只有一個: 推一個 `v*` 版本 tag。**
+# push 到 main 只跑檢查, 不會動到線上 —— 「說上線才部署」這條規矩就是靠這個 tag 落實的,
+# tag 本身就是那句「上線」, 而且順便留下版本紀錄 (哪個 commit 上了線, git 上查得到)。
+#
+#   平常:  git push                      → 只跑 check
+#   上線:  git tag v2026.09.02 && git push origin v2026.09.02
+#                                        → check 通過後才部署
+#
+# 兩個 job 放同一個檔是刻意的: deploy 用 `needs: check`, 跨檔案的 workflow 拿不到這個保證
+# (要靠 workflow_run, 那條又難追), 分兩個檔就會變成「檢查還在跑就已經部署上去了」。
+#
+# 需要的 GitHub secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN           Cloudflare → My Profile → API Tokens
+#   CLOUDFLARE_ACCOUNT_ID          Worker pm-gym 所在的帳號 id
+#   NEXT_PUBLIC_SUPABASE_URL       ─┐
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY   │ 這四個是 app 真正會讀的 (已逐一 grep src/ 確認)
+#   SUPABASE_SERVICE_ROLE_KEY       │ ⚠ 只有 /api/export 用得到
+#   GOOGLE_OAUTH_CLIENT_ID         ─┘ One Tap 用
+#
+# **刻意不放進 GitHub 的**: DATABASE_URL (直連 Postgres, 只有 scripts/setup-supabase.mjs 用)、
+# SUPABASE_ACCESS_TOKEN (Management API)、GOOGLE_OAUTH_CLIENT_SECRET (Supabase 那邊已經有了)。
+# src/ 一個字都沒引用它們, 放上去只是多三個外洩面。要套 migration 一律在本機跑。
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"] # 只有這個會觸發部署
+  pull_request:
+  workflow_dispatch: # 手動只跑檢查, 不會部署
+
+# 同時只跑一個部署 —— 連續推兩個 tag 時, 後面那個不該和前面那個搶著寫同一個 Worker。
+# cancel-in-progress: false: 部署到一半被砍掉比排隊更糟。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: 型別 / lint / 測試
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: 型別
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      # ⏰ tests/unreleased-pairs.test.ts 與 catalog-asset.test.ts 會在「新拍組上架日」自己變紅,
+      #    那是刻意的提醒 (該重跑 npm run data:catalog 並重新部署), 不是壞掉。
+      #    見 AGENTS.md「還不能對外送的拍組」那條。
+      - name: 測試
+        run: npm test
+
+  deploy:
+    name: 部署到 Cloudflare Workers
+    needs: check
+    # **只有 v* tag 會部署。** push 到 main / PR / 手動觸發都只跑上面的 check。
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 這次要上線的版本
+        run: |
+          echo "tag    : ${GITHUB_REF_NAME}"
+          echo "commit : ${GITHUB_SHA}"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      # ⚠ 這一步不能省: @opennextjs/cloudflare 產生 Worker 的 process.env (next-env.mjs) 時
+      #    **只讀 .env* 檔, 不讀 process.env** (見 dist/cli/utils/extract-project-env-vars.js)。
+      #    CI 上沒有 .env.local 的話, 部署出去的 Worker 會缺 Supabase 環境變數,
+      #    而 proxy.ts 在 production 缺這兩個值時是直接回 503 (刻意 fail-closed) → 整站掛掉。
+      #    寫成檔案而不是 export 到 shell, 就是為了走和本機部署完全一樣的路徑。
+      - name: 從 secrets 產生 .env.local
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+        run: |
+          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY GOOGLE_OAUTH_CLIENT_ID; do
+            if [ -z "${!v}" ]; then echo "::error::缺少 secret $v — 去 Settings → Secrets and variables → Actions 補上"; exit 1; fi
+            printf '%s=%s\n' "$v" "${!v}" >> .env.local
+          done
+          echo "已產生 .env.local ($(wc -l < .env.local) 行)"
+
+      # deploy:cf = opennextjs-cloudflare build + deploy。
+      # 腳本自己會設 DEPLOY_TARGET=cloudflare 並清掉 NEXT_PUBLIC_ENABLE_RECOGNITION
+      # (辨識功能是本機限定, *.node.tsx 不進線上路由)。
+      # 認證優先吃 CLOUDFLARE_API_TOKEN 環境變數, 所以 CI 上不需要 .cloudflare-token 檔。
+      - name: 建置 + 部署
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run deploy:cf
+
+      # 部署有傳播延遲, 先等幾秒再驗 (AGENTS.md 的地雷: 部署完立刻 probe 會打到舊版)
+      - name: 驗證線上
+        run: |
+          sleep 15
+          code=$(curl -s -o /dev/null -m 30 -w '%{http_code}' https://pokemaster-tool.com/)
+          echo "首頁 HTTP $code"
+          [ "$code" = "200" ] || { echo "::error::首頁不是 200, 部署可能有問題"; exit 1; }
+          curl -s -m 30 https://pokemaster-tool.com/login | grep -q "使用 Google 帳戶登入" \
+            || { echo "::error::登入頁沒有 Google 按鈕"; exit 1; }
+          echo "✓ ${GITHUB_REF_NAME} 已上線, 首頁與登入頁正常"

@@ -1,0 +1,1825 @@
+{
+  "generatedAt": "2026-09-01T02:26:08.168Z",
+  "portraits": {
+    "ch0015_00_takeshi": {
+      "ex": "/reference/trainer-ex/ch0015_00_takeshi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0015_00_takeshi_base.png"
+    },
+    "ch0015_01_takeshi": {
+      "ex": "/reference/trainer-ex/ch0015_01_takeshi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0015_01_takeshi_base.png"
+    },
+    "ch0015_90_takeshi": {
+      "ex": "/reference/trainer-ex/ch0015_90_takeshi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0015_90_takeshi_base.png"
+    },
+    "ch0110_01_kasumi": {
+      "ex": "/reference/trainer-ex/ch0110_01_kasumi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0110_01_kasumi_base.png"
+    },
+    "ch0110_00_kasumi": {
+      "ex": "/reference/trainer-ex/ch0110_00_kasumi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0110_00_kasumi_base.png"
+    },
+    "ch0110_10_kasumi": {
+      "ex": "/reference/trainer-ex/ch0110_10_kasumi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0110_10_kasumi_base.png"
+    },
+    "ch0110_90_kasumi": {
+      "ex": "/reference/trainer-ex/ch0110_90_kasumi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0110_90_kasumi_base.png"
+    },
+    "ch0035_00_matthies": {
+      "ex": "/reference/trainer-ex/ch0035_00_matthies_ex.png",
+      "base": "/reference/trainer-ex-base/ch0035_00_matthies_base.png"
+    },
+    "ch0008_00_erika": {
+      "ex": "/reference/trainer-ex/ch0008_00_erika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0008_00_erika_base.png"
+    },
+    "ch0008_40_erika": {
+      "ex": "/reference/trainer-ex/ch0008_40_erika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0008_40_erika_base.png"
+    },
+    "ch0008_10_erika": {
+      "ex": "/reference/trainer-ex/ch0008_10_erika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0008_10_erika_base.png"
+    },
+    "ch0008_41_erika": {
+      "ex": "/reference/trainer-ex/ch0008_41_erika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0008_41_erika_base.png"
+    },
+    "ch0059_00_katsura": {
+      "ex": "/reference/trainer-ex/ch0059_00_katsura_ex.png",
+      "base": "/reference/trainer-ex-base/ch0059_00_katsura_base.png"
+    },
+    "ch0005_00_kanna": {
+      "ex": "/reference/trainer-ex/ch0005_00_kanna_ex.png",
+      "base": "/reference/trainer-ex-base/ch0005_00_kanna_base.png"
+    },
+    "ch0057_00_shiba": {
+      "ex": "/reference/trainer-ex/ch0057_00_shiba_ex.png",
+      "base": "/reference/trainer-ex-base/ch0057_00_shiba_base.png"
+    },
+    "ch0061_00_kikuko": {
+      "ex": "/reference/trainer-ex/ch0061_00_kikuko_ex.png",
+      "base": "/reference/trainer-ex-base/ch0061_00_kikuko_base.png"
+    },
+    "ch0018_00_chris": {
+      "ex": "/reference/trainer-ex/ch0018_00_chris_ex.png",
+      "base": "/reference/trainer-ex-base/ch0018_00_chris_base.png"
+    },
+    "ch0018_10_chris": {
+      "ex": "/reference/trainer-ex/ch0018_10_chris_ex.png",
+      "base": "/reference/trainer-ex-base/ch0018_10_chris_base.png"
+    },
+    "ch0018_40_chris": {
+      "ex": "/reference/trainer-ex/ch0018_40_chris_ex.png",
+      "base": "/reference/trainer-ex-base/ch0018_40_chris_base.png"
+    },
+    "ch0045_00_tsukushi": {
+      "ex": "/reference/trainer-ex/ch0045_00_tsukushi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0045_00_tsukushi_base.png"
+    },
+    "ch0045_40_tsukushi": {
+      "ex": "/reference/trainer-ex/ch0045_40_tsukushi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0045_40_tsukushi_base.png"
+    },
+    "ch0026_00_akane": {
+      "ex": "/reference/trainer-ex/ch0026_00_akane_ex.png",
+      "base": "/reference/trainer-ex-base/ch0026_00_akane_base.png"
+    },
+    "ch0026_40_akane": {
+      "ex": "/reference/trainer-ex/ch0026_40_akane_ex.png",
+      "base": "/reference/trainer-ex-base/ch0026_40_akane_base.png"
+    },
+    "ch0032_00_yanagi": {
+      "ex": "/reference/trainer-ex/ch0032_00_yanagi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0032_00_yanagi_base.png"
+    },
+    "ch0028_00_ibuki": {
+      "ex": "/reference/trainer-ex/ch0028_00_ibuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0028_00_ibuki_base.png"
+    },
+    "ch0028_40_ibuki": {
+      "ex": "/reference/trainer-ex/ch0028_40_ibuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0028_40_ibuki_base.png"
+    },
+    "ch0060_00_anzu": {
+      "ex": "/reference/trainer-ex/ch0060_00_anzu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0060_00_anzu_base.png"
+    },
+    "ch0047_00_itsuki": {
+      "ex": "/reference/trainer-ex/ch0047_00_itsuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0047_00_itsuki_base.png"
+    },
+    "ch0062_00_karin": {
+      "ex": "/reference/trainer-ex/ch0062_00_karin_ex.png",
+      "base": "/reference/trainer-ex-base/ch0062_00_karin_base.png"
+    },
+    "ch0019_00_yuki": {
+      "ex": "/reference/trainer-ex/ch0019_00_yuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0019_00_yuki_base.png"
+    },
+    "ch0019_10_yuki": {
+      "ex": "/reference/trainer-ex/ch0019_10_yuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0019_10_yuki_base.png"
+    },
+    "ch0019_90_yuki": {
+      "ex": "/reference/trainer-ex/ch0019_90_yuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0019_90_yuki_base.png"
+    },
+    "ch0019_40_yuki": {
+      "ex": "/reference/trainer-ex/ch0019_40_yuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0019_40_yuki_base.png"
+    },
+    "ch0044_00_tsutsuji": {
+      "ex": "/reference/trainer-ex/ch0044_00_tsutsuji_ex.png",
+      "base": "/reference/trainer-ex-base/ch0044_00_tsutsuji_base.png"
+    },
+    "ch0044_40_tsutsuji": {
+      "ex": "/reference/trainer-ex/ch0044_40_tsutsuji_ex.png",
+      "base": "/reference/trainer-ex-base/ch0044_40_tsutsuji_base.png"
+    },
+    "ch0043_00_toki": {
+      "ex": "/reference/trainer-ex/ch0043_00_toki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0043_00_toki_base.png"
+    },
+    "ch0029_00_asuna": {
+      "ex": "/reference/trainer-ex/ch0029_00_asuna_ex.png",
+      "base": "/reference/trainer-ex-base/ch0029_00_asuna_base.png"
+    },
+    "ch0029_40_asuna": {
+      "ex": "/reference/trainer-ex/ch0029_40_asuna_ex.png",
+      "base": "/reference/trainer-ex-base/ch0029_40_asuna_base.png"
+    },
+    "ch0009_00_senri": {
+      "ex": "/reference/trainer-ex/ch0009_00_senri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0009_00_senri_base.png"
+    },
+    "ch0042_00_nagi": {
+      "ex": "/reference/trainer-ex/ch0042_00_nagi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0042_00_nagi_base.png"
+    },
+    "ch0031_00_fuu": {
+      "ex": "/reference/trainer-ex/ch0031_00_fuu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0031_00_fuu_base.png"
+    },
+    "ch0031_40_fuu": {
+      "ex": "/reference/trainer-ex/ch0031_40_fuu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0031_40_fuu_base.png"
+    },
+    "ch0030_00_ran": {
+      "ex": "/reference/trainer-ex/ch0030_00_ran_ex.png",
+      "base": "/reference/trainer-ex-base/ch0030_00_ran_base.png"
+    },
+    "ch0030_40_ran": {
+      "ex": "/reference/trainer-ex/ch0030_40_ran_ex.png",
+      "base": "/reference/trainer-ex-base/ch0030_40_ran_base.png"
+    },
+    "ch0049_00_fuyo": {
+      "ex": "/reference/trainer-ex/ch0049_00_fuyo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0049_00_fuyo_base.png"
+    },
+    "ch0049_40_fuyo": {
+      "ex": "/reference/trainer-ex/ch0049_40_fuyo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0049_40_fuyo_base.png"
+    },
+    "ch0094_00_genji": {
+      "ex": "/reference/trainer-ex/ch0094_00_genji_ex.png",
+      "base": "/reference/trainer-ex-base/ch0094_00_genji_base.png"
+    },
+    "ch0046_00_datsura": {
+      "ex": "/reference/trainer-ex/ch0046_00_datsura_ex.png",
+      "base": "/reference/trainer-ex-base/ch0046_00_datsura_base.png"
+    },
+    "ch0099_00_jun": {
+      "ex": "/reference/trainer-ex/ch0099_00_jun_ex.png",
+      "base": "/reference/trainer-ex-base/ch0099_00_jun_base.png"
+    },
+    "ch0099_40_jun": {
+      "ex": "/reference/trainer-ex/ch0099_40_jun_ex.png",
+      "base": "/reference/trainer-ex-base/ch0099_40_jun_base.png"
+    },
+    "ch0038_00_hyouta": {
+      "ex": "/reference/trainer-ex/ch0038_00_hyouta_ex.png",
+      "base": "/reference/trainer-ex-base/ch0038_00_hyouta_base.png"
+    },
+    "ch0027_00_natane": {
+      "ex": "/reference/trainer-ex/ch0027_00_natane_ex.png",
+      "base": "/reference/trainer-ex-base/ch0027_00_natane_base.png"
+    },
+    "ch0027_40_natane": {
+      "ex": "/reference/trainer-ex/ch0027_40_natane_ex.png",
+      "base": "/reference/trainer-ex-base/ch0027_40_natane_base.png"
+    },
+    "ch0050_00_sumomo": {
+      "ex": "/reference/trainer-ex/ch0050_00_sumomo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0050_00_sumomo_base.png"
+    },
+    "ch0010_00_maximum": {
+      "ex": "/reference/trainer-ex/ch0010_00_maximum_ex.png",
+      "base": "/reference/trainer-ex-base/ch0010_00_maximum_base.png"
+    },
+    "ch0025_00_suzuna": {
+      "ex": "/reference/trainer-ex/ch0025_00_suzuna_ex.png",
+      "base": "/reference/trainer-ex-base/ch0025_00_suzuna_base.png"
+    },
+    "ch0025_40_suzuna": {
+      "ex": "/reference/trainer-ex/ch0025_40_suzuna_ex.png",
+      "base": "/reference/trainer-ex-base/ch0025_40_suzuna_base.png"
+    },
+    "ch0006_00_oba": {
+      "ex": "/reference/trainer-ex/ch0006_00_oba_ex.png",
+      "base": "/reference/trainer-ex-base/ch0006_00_oba_base.png"
+    },
+    "ch0041_00_nejiki": {
+      "ex": "/reference/trainer-ex/ch0041_00_nejiki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0041_00_nejiki_base.png"
+    },
+    "ch0023_00_momi": {
+      "ex": "/reference/trainer-ex/ch0023_00_momi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0023_00_momi_base.png"
+    },
+    "ch0097_00_mai": {
+      "ex": "/reference/trainer-ex/ch0097_00_mai_ex.png",
+      "base": "/reference/trainer-ex-base/ch0097_00_mai_base.png"
+    },
+    "ch0097_40_mai": {
+      "ex": "/reference/trainer-ex/ch0097_40_mai_ex.png",
+      "base": "/reference/trainer-ex-base/ch0097_40_mai_base.png"
+    },
+    "ch0101_00_mei": {
+      "ex": "/reference/trainer-ex/ch0101_00_mei_ex.png",
+      "base": "/reference/trainer-ex-base/ch0101_00_mei_base.png"
+    },
+    "ch0101_10_mei": {
+      "ex": "/reference/trainer-ex/ch0101_10_mei_ex.png",
+      "base": "/reference/trainer-ex-base/ch0101_10_mei_base.png"
+    },
+    "ch0101_41_mei": {
+      "ex": "/reference/trainer-ex/ch0101_41_mei_ex.png",
+      "base": "/reference/trainer-ex-base/ch0101_41_mei_base.png"
+    },
+    "ch0101_90_mei": {
+      "ex": "/reference/trainer-ex/ch0101_90_mei_ex.png",
+      "base": "/reference/trainer-ex-base/ch0101_90_mei_base.png"
+    },
+    "ch0101_42_mei": {
+      "ex": "/reference/trainer-ex/ch0101_42_mei_ex.png",
+      "base": "/reference/trainer-ex-base/ch0101_42_mei_base.png"
+    },
+    "ch0033_00_yakon": {
+      "ex": "/reference/trainer-ex/ch0033_00_yakon_ex.png",
+      "base": "/reference/trainer-ex-base/ch0033_00_yakon_base.png"
+    },
+    "ch0016_00_huuro": {
+      "ex": "/reference/trainer-ex/ch0016_00_huuro_ex.png",
+      "base": "/reference/trainer-ex-base/ch0016_00_huuro_base.png"
+    },
+    "ch0016_40_huuro": {
+      "ex": "/reference/trainer-ex/ch0016_40_huuro_ex.png",
+      "base": "/reference/trainer-ex-base/ch0016_40_huuro_base.png"
+    },
+    "ch0016_41_huuro": {
+      "ex": "/reference/trainer-ex/ch0016_41_huuro_ex.png",
+      "base": "/reference/trainer-ex-base/ch0016_41_huuro_base.png"
+    },
+    "ch0016_42_huuro": {
+      "ex": "/reference/trainer-ex/ch0016_42_huuro_ex.png",
+      "base": "/reference/trainer-ex-base/ch0016_42_huuro_base.png"
+    },
+    "ch0040_00_hachiku": {
+      "ex": "/reference/trainer-ex/ch0040_00_hachiku_ex.png",
+      "base": "/reference/trainer-ex-base/ch0040_00_hachiku_base.png"
+    },
+    "ch0092_00_iris": {
+      "ex": "/reference/trainer-ex/ch0092_00_iris_ex.png",
+      "base": "/reference/trainer-ex-base/ch0092_00_iris_base.png"
+    },
+    "ch0092_80_iris": {
+      "ex": "/reference/trainer-ex/ch0092_80_iris_ex.png",
+      "base": "/reference/trainer-ex-base/ch0092_80_iris_base.png"
+    },
+    "ch0092_40_iris": {
+      "ex": "/reference/trainer-ex/ch0092_40_iris_ex.png",
+      "base": "/reference/trainer-ex-base/ch0092_40_iris_base.png"
+    },
+    "ch0092_41_iris": {
+      "ex": "/reference/trainer-ex/ch0092_41_iris_ex.png",
+      "base": "/reference/trainer-ex-base/ch0092_41_iris_base.png"
+    },
+    "ch0011_00_homika": {
+      "ex": "/reference/trainer-ex/ch0011_00_homika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0011_00_homika_base.png"
+    },
+    "ch0011_10_homika": {
+      "ex": "/reference/trainer-ex/ch0011_10_homika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0011_10_homika_base.png"
+    },
+    "ch0052_00_shizui": {
+      "ex": "/reference/trainer-ex/ch0052_00_shizui_ex.png",
+      "base": "/reference/trainer-ex-base/ch0052_00_shizui_base.png"
+    },
+    "ch0024_00_shikimi": {
+      "ex": "/reference/trainer-ex/ch0024_00_shikimi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0024_00_shikimi_base.png"
+    },
+    "ch0024_40_shikimi": {
+      "ex": "/reference/trainer-ex/ch0024_40_shikimi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0024_40_shikimi_base.png"
+    },
+    "ch0063_00_renbu": {
+      "ex": "/reference/trainer-ex/ch0063_00_renbu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0063_00_renbu_base.png"
+    },
+    "ch0053_00_zakuro": {
+      "ex": "/reference/trainer-ex/ch0053_00_zakuro_ex.png",
+      "base": "/reference/trainer-ex-base/ch0053_00_zakuro_base.png"
+    },
+    "ch0012_00_corni": {
+      "ex": "/reference/trainer-ex/ch0012_00_corni_ex.png",
+      "base": "/reference/trainer-ex-base/ch0012_00_corni_base.png"
+    },
+    "ch0012_10_corni": {
+      "ex": "/reference/trainer-ex/ch0012_10_corni_ex.png",
+      "base": "/reference/trainer-ex-base/ch0012_10_corni_base.png"
+    },
+    "ch0012_90_corni": {
+      "ex": "/reference/trainer-ex/ch0012_90_corni_ex.png",
+      "base": "/reference/trainer-ex-base/ch0012_90_corni_base.png"
+    },
+    "ch0037_00_fukuji": {
+      "ex": "/reference/trainer-ex/ch0037_00_fukuji_ex.png",
+      "base": "/reference/trainer-ex-base/ch0037_00_fukuji_base.png"
+    },
+    "ch0022_00_urup": {
+      "ex": "/reference/trainer-ex/ch0022_00_urup_ex.png",
+      "base": "/reference/trainer-ex-base/ch0022_00_urup_base.png"
+    },
+    "ch0096_00_zumi": {
+      "ex": "/reference/trainer-ex/ch0096_00_zumi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0096_00_zumi_base.png"
+    },
+    "ch0096_10_zumi": {
+      "ex": "/reference/trainer-ex/ch0096_10_zumi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0096_10_zumi_base.png"
+    },
+    "ch0055_00_gampi": {
+      "ex": "/reference/trainer-ex/ch0055_00_gampi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0055_00_gampi_base.png"
+    },
+    "ch0098_00_hau": {
+      "ex": "/reference/trainer-ex/ch0098_00_hau_ex.png",
+      "base": "/reference/trainer-ex-base/ch0098_00_hau_base.png"
+    },
+    "ch0098_10_hau": {
+      "ex": "/reference/trainer-ex/ch0098_10_hau_ex.png",
+      "base": "/reference/trainer-ex-base/ch0098_10_hau_base.png"
+    },
+    "ch0036_00_mamane": {
+      "ex": "/reference/trainer-ex/ch0036_00_mamane_ex.png",
+      "base": "/reference/trainer-ex-base/ch0036_00_mamane_base.png"
+    },
+    "ch0034_00_matsurika": {
+      "ex": "/reference/trainer-ex/ch0034_00_matsurika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0034_00_matsurika_base.png"
+    },
+    "ch0034_10_matsurika": {
+      "ex": "/reference/trainer-ex/ch0034_10_matsurika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0034_10_matsurika_base.png"
+    },
+    "ch0051_00_litchi": {
+      "ex": "/reference/trainer-ex/ch0051_00_litchi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0051_00_litchi_base.png"
+    },
+    "ch0013_00_hapu": {
+      "ex": "/reference/trainer-ex/ch0013_00_hapu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0013_00_hapu_base.png"
+    },
+    "ch0058_00_kahiri": {
+      "ex": "/reference/trainer-ex/ch0058_00_kahiri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0058_00_kahiri_base.png"
+    },
+    "ch0039_00_viola": {
+      "ex": "/reference/trainer-ex/ch0039_00_viola_ex.png",
+      "base": "/reference/trainer-ex-base/ch0039_00_viola_base.png"
+    },
+    "ch0039_40_viola": {
+      "ex": "/reference/trainer-ex/ch0039_40_viola_ex.png",
+      "base": "/reference/trainer-ex-base/ch0039_40_viola_base.png"
+    },
+    "ch0056_00_kuchinashi": {
+      "ex": "/reference/trainer-ex/ch0056_00_kuchinashi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0056_00_kuchinashi_base.png"
+    },
+    "ch0054_00_kyo": {
+      "ex": "/reference/trainer-ex/ch0054_00_kyo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0054_00_kyo_base.png"
+    },
+    "ch0007_00_acerola": {
+      "ex": "/reference/trainer-ex/ch0007_00_acerola_ex.png",
+      "base": "/reference/trainer-ex-base/ch0007_00_acerola_base.png"
+    },
+    "ch0007_40_acerola": {
+      "ex": "/reference/trainer-ex/ch0007_40_acerola_ex.png",
+      "base": "/reference/trainer-ex-base/ch0007_40_acerola_base.png"
+    },
+    "ch0007_10_acerola": {
+      "ex": "/reference/trainer-ex/ch0007_10_acerola_ex.png",
+      "base": "/reference/trainer-ex-base/ch0007_10_acerola_base.png"
+    },
+    "ch0007_41_acerola": {
+      "ex": "/reference/trainer-ex/ch0007_41_acerola_ex.png",
+      "base": "/reference/trainer-ex-base/ch0007_41_acerola_base.png"
+    },
+    "ch0014_01_cheren": {
+      "ex": "/reference/trainer-ex/ch0014_01_cheren_ex.png",
+      "base": "/reference/trainer-ex-base/ch0014_01_cheren_base.png"
+    },
+    "ch0014_90_cheren": {
+      "ex": "/reference/trainer-ex/ch0014_90_cheren_ex.png",
+      "base": "/reference/trainer-ex-base/ch0014_90_cheren_base.png"
+    },
+    "ch0021_00_green": {
+      "ex": "/reference/trainer-ex/ch0021_00_green_ex.png",
+      "base": "/reference/trainer-ex-base/ch0021_00_green_base.png"
+    },
+    "ch0021_01_green": {
+      "ex": "/reference/trainer-ex/ch0021_01_green_ex.png",
+      "base": "/reference/trainer-ex-base/ch0021_01_green_base.png"
+    },
+    "ch0021_80_green": {
+      "ex": "/reference/trainer-ex/ch0021_80_green_ex.png",
+      "base": "/reference/trainer-ex-base/ch0021_80_green_base.png"
+    },
+    "ch0021_90_green": {
+      "ex": "/reference/trainer-ex/ch0021_90_green_ex.png",
+      "base": "/reference/trainer-ex-base/ch0021_90_green_base.png"
+    },
+    "ch0021_91_green": {
+      "ex": "/reference/trainer-ex/ch0021_91_green_ex.png",
+      "base": "/reference/trainer-ex-base/ch0021_91_green_base.png"
+    },
+    "ch0021_40_green": {
+      "ex": "/reference/trainer-ex/ch0021_40_green_ex.png",
+      "base": "/reference/trainer-ex-base/ch0021_40_green_base.png"
+    },
+    "ch0002_00_kotone": {
+      "ex": "/reference/trainer-ex/ch0002_00_kotone_ex.png",
+      "base": "/reference/trainer-ex-base/ch0002_00_kotone_base.png"
+    },
+    "ch0002_40_kotone": {
+      "ex": "/reference/trainer-ex/ch0002_40_kotone_ex.png",
+      "base": "/reference/trainer-ex-base/ch0002_40_kotone_base.png"
+    },
+    "ch0002_10_kotone": {
+      "ex": "/reference/trainer-ex/ch0002_10_kotone_ex.png",
+      "base": "/reference/trainer-ex-base/ch0002_10_kotone_base.png"
+    },
+    "ch0002_41_kotone": {
+      "ex": "/reference/trainer-ex/ch0002_41_kotone_ex.png",
+      "base": "/reference/trainer-ex-base/ch0002_41_kotone_base.png"
+    },
+    "ch0002_90_kotone": {
+      "ex": "/reference/trainer-ex/ch0002_90_kotone_ex.png",
+      "base": "/reference/trainer-ex-base/ch0002_90_kotone_base.png"
+    },
+    "ch0020_00_toya": {
+      "ex": "/reference/trainer-ex/ch0020_00_toya_ex.png",
+      "base": "/reference/trainer-ex-base/ch0020_00_toya_base.png"
+    },
+    "ch0020_40_toya": {
+      "ex": "/reference/trainer-ex/ch0020_40_toya_ex.png",
+      "base": "/reference/trainer-ex-base/ch0020_40_toya_base.png"
+    },
+    "ch0020_10_toya": {
+      "ex": "/reference/trainer-ex/ch0020_10_toya_ex.png",
+      "base": "/reference/trainer-ex-base/ch0020_10_toya_base.png"
+    },
+    "ch0020_90_toya": {
+      "ex": "/reference/trainer-ex/ch0020_90_toya_ex.png",
+      "base": "/reference/trainer-ex-base/ch0020_90_toya_base.png"
+    },
+    "ch0004_00_toko": {
+      "ex": "/reference/trainer-ex/ch0004_00_toko_ex.png",
+      "base": "/reference/trainer-ex-base/ch0004_00_toko_base.png"
+    },
+    "ch0004_40_toko": {
+      "ex": "/reference/trainer-ex/ch0004_40_toko_ex.png",
+      "base": "/reference/trainer-ex-base/ch0004_40_toko_base.png"
+    },
+    "ch0004_41_toko": {
+      "ex": "/reference/trainer-ex/ch0004_41_toko_ex.png",
+      "base": "/reference/trainer-ex-base/ch0004_41_toko_base.png"
+    },
+    "ch0004_10_toko": {
+      "ex": "/reference/trainer-ex/ch0004_10_toko_ex.png",
+      "base": "/reference/trainer-ex-base/ch0004_10_toko_base.png"
+    },
+    "ch0004_90_toko": {
+      "ex": "/reference/trainer-ex/ch0004_90_toko_ex.png",
+      "base": "/reference/trainer-ex-base/ch0004_90_toko_base.png"
+    },
+    "ch0106_00_kamitsure": {
+      "ex": "/reference/trainer-ex/ch0106_00_kamitsure_ex.png",
+      "base": "/reference/trainer-ex-base/ch0106_00_kamitsure_base.png"
+    },
+    "ch0106_10_kamitsure": {
+      "ex": "/reference/trainer-ex/ch0106_10_kamitsure_ex.png",
+      "base": "/reference/trainer-ex-base/ch0106_10_kamitsure_base.png"
+    },
+    "ch0106_40_kamitsure": {
+      "ex": "/reference/trainer-ex/ch0106_40_kamitsure_ex.png",
+      "base": "/reference/trainer-ex-base/ch0106_40_kamitsure_base.png"
+    },
+    "ch0106_11_kamitsure": {
+      "ex": "/reference/trainer-ex/ch0106_11_kamitsure_ex.png",
+      "base": "/reference/trainer-ex-base/ch0106_11_kamitsure_base.png"
+    },
+    "ch0095_00_cattleya": {
+      "ex": "/reference/trainer-ex/ch0095_00_cattleya_ex.png",
+      "base": "/reference/trainer-ex-base/ch0095_00_cattleya_base.png"
+    },
+    "ch0095_40_cattleya": {
+      "ex": "/reference/trainer-ex/ch0095_40_cattleya_ex.png",
+      "base": "/reference/trainer-ex-base/ch0095_40_cattleya_base.png"
+    },
+    "ch0003_00_calme": {
+      "ex": "/reference/trainer-ex/ch0003_00_calme_ex.png",
+      "base": "/reference/trainer-ex-base/ch0003_00_calme_base.png"
+    },
+    "ch0003_90_calme": {
+      "ex": "/reference/trainer-ex/ch0003_90_calme_ex.png",
+      "base": "/reference/trainer-ex-base/ch0003_90_calme_base.png"
+    },
+    "ch0153_00_prim": {
+      "ex": "/reference/trainer-ex/ch0153_00_prim_ex.png",
+      "base": "/reference/trainer-ex-base/ch0153_00_prim_base.png"
+    },
+    "ch0048_00_gima": {
+      "ex": "/reference/trainer-ex/ch0048_00_gima_ex.png",
+      "base": "/reference/trainer-ex-base/ch0048_00_gima_base.png"
+    },
+    "ch0048_10_gima": {
+      "ex": "/reference/trainer-ex/ch0048_10_gima_ex.png",
+      "base": "/reference/trainer-ex-base/ch0048_10_gima_base.png"
+    },
+    "ch0048_80_gima": {
+      "ex": "/reference/trainer-ex/ch0048_80_gima_ex.png",
+      "base": "/reference/trainer-ex-base/ch0048_80_gima_base.png"
+    },
+    "ch0140_00_sakaki": {
+      "ex": "/reference/trainer-ex/ch0140_00_sakaki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0140_00_sakaki_base.png"
+    },
+    "ch0140_10_sakaki": {
+      "ex": "/reference/trainer-ex/ch0140_10_sakaki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0140_10_sakaki_base.png"
+    },
+    "ch0140_80_sakaki": {
+      "ex": "/reference/trainer-ex/ch0140_80_sakaki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0140_80_sakaki_base.png"
+    },
+    "ch0140_11_sakaki": {
+      "ex": "/reference/trainer-ex/ch0140_11_sakaki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0140_11_sakaki_base.png"
+    },
+    "ch0112_00_hibiki": {
+      "ex": "/reference/trainer-ex/ch0112_00_hibiki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0112_00_hibiki_base.png"
+    },
+    "ch0112_10_hibiki": {
+      "ex": "/reference/trainer-ex/ch0112_10_hibiki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0112_10_hibiki_base.png"
+    },
+    "ch0112_90_hibiki": {
+      "ex": "/reference/trainer-ex/ch0112_90_hibiki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0112_90_hibiki_base.png"
+    },
+    "ch0112_91_hibiki": {
+      "ex": "/reference/trainer-ex/ch0112_91_hibiki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0112_91_hibiki_base.png"
+    },
+    "ch0017_00_leaf": {
+      "ex": "/reference/trainer-ex/ch0017_00_leaf_ex.png",
+      "base": "/reference/trainer-ex-base/ch0017_00_leaf_base.png"
+    },
+    "ch0017_10_leaf": {
+      "ex": "/reference/trainer-ex/ch0017_10_leaf_ex.png",
+      "base": "/reference/trainer-ex-base/ch0017_10_leaf_base.png"
+    },
+    "ch0017_90_leaf": {
+      "ex": "/reference/trainer-ex/ch0017_90_leaf_ex.png",
+      "base": "/reference/trainer-ex-base/ch0017_90_leaf_base.png"
+    },
+    "ch0111_00_wataru": {
+      "ex": "/reference/trainer-ex/ch0111_00_wataru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0111_00_wataru_base.png"
+    },
+    "ch0111_40_wataru": {
+      "ex": "/reference/trainer-ex/ch0111_40_wataru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0111_40_wataru_base.png"
+    },
+    "ch0111_90_wataru": {
+      "ex": "/reference/trainer-ex/ch0111_90_wataru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0111_90_wataru_base.png"
+    },
+    "ch0091_00_shirona": {
+      "ex": "/reference/trainer-ex/ch0091_00_shirona_ex.png",
+      "base": "/reference/trainer-ex-base/ch0091_00_shirona_base.png"
+    },
+    "ch0091_01_shirona": {
+      "ex": "/reference/trainer-ex/ch0091_01_shirona_ex.png",
+      "base": "/reference/trainer-ex-base/ch0091_01_shirona_base.png"
+    },
+    "ch0091_20_shirona": {
+      "ex": "/reference/trainer-ex/ch0091_20_shirona_ex.png",
+      "base": "/reference/trainer-ex-base/ch0091_20_shirona_base.png"
+    },
+    "ch0091_10_shirona": {
+      "ex": "/reference/trainer-ex/ch0091_10_shirona_ex.png",
+      "base": "/reference/trainer-ex-base/ch0091_10_shirona_base.png"
+    },
+    "ch0091_90_shirona": {
+      "ex": "/reference/trainer-ex/ch0091_90_shirona_ex.png",
+      "base": "/reference/trainer-ex-base/ch0091_90_shirona_base.png"
+    },
+    "ch0091_40_shirona": {
+      "ex": "/reference/trainer-ex/ch0091_40_shirona_ex.png",
+      "base": "/reference/trainer-ex-base/ch0091_40_shirona_base.png"
+    },
+    "ch0001_00_kukui": {
+      "ex": "/reference/trainer-ex/ch0001_00_kukui_ex.png",
+      "base": "/reference/trainer-ex-base/ch0001_00_kukui_base.png"
+    },
+    "ch0129_00_higana": {
+      "ex": "/reference/trainer-ex/ch0129_00_higana_ex.png",
+      "base": "/reference/trainer-ex-base/ch0129_00_higana_base.png"
+    },
+    "ch0129_40_higana": {
+      "ex": "/reference/trainer-ex/ch0129_40_higana_ex.png",
+      "base": "/reference/trainer-ex-base/ch0129_40_higana_base.png"
+    },
+    "ch0090_00_daigo": {
+      "ex": "/reference/trainer-ex/ch0090_00_daigo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0090_00_daigo_base.png"
+    },
+    "ch0090_40_daigo": {
+      "ex": "/reference/trainer-ex/ch0090_40_daigo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0090_40_daigo_base.png"
+    },
+    "ch0090_50_daigo": {
+      "ex": "/reference/trainer-ex/ch0090_50_daigo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0090_50_daigo_base.png"
+    },
+    "ch0090_10_daigo": {
+      "ex": "/reference/trainer-ex/ch0090_10_daigo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0090_10_daigo_base.png"
+    },
+    "ch0090_41_daigo": {
+      "ex": "/reference/trainer-ex/ch0090_41_daigo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0090_41_daigo_base.png"
+    },
+    "ch0090_90_daigo": {
+      "ex": "/reference/trainer-ex/ch0090_90_daigo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0090_90_daigo_base.png"
+    },
+    "ch0137_00_orchid1": {
+      "ex": "/reference/trainer-ex/ch0137_00_orchid1_ex.png",
+      "base": "/reference/trainer-ex-base/ch0137_00_orchid1_base.png"
+    },
+    "ch0157_00_mache": {
+      "ex": "/reference/trainer-ex/ch0157_00_mache_ex.png",
+      "base": "/reference/trainer-ex-base/ch0157_00_mache_base.png"
+    },
+    "ch0000_00_red": {
+      "ex": "/reference/trainer-ex/ch0000_00_red_ex.png",
+      "base": "/reference/trainer-ex-base/ch0000_00_red_base.png"
+    },
+    "ch0000_80_red": {
+      "ex": "/reference/trainer-ex/ch0000_80_red_ex.png",
+      "base": "/reference/trainer-ex-base/ch0000_80_red_base.png"
+    },
+    "ch0000_10_red": {
+      "ex": "/reference/trainer-ex/ch0000_10_red_ex.png",
+      "base": "/reference/trainer-ex-base/ch0000_10_red_base.png"
+    },
+    "ch0000_90_red": {
+      "ex": "/reference/trainer-ex/ch0000_90_red_ex.png",
+      "base": "/reference/trainer-ex-base/ch0000_90_red_base.png"
+    },
+    "ch0000_40_red": {
+      "ex": "/reference/trainer-ex/ch0000_40_red_ex.png",
+      "base": "/reference/trainer-ex-base/ch0000_40_red_base.png"
+    },
+    "ch0365_00_red2": {
+      "ex": "/reference/trainer-ex/ch0365_00_red2_ex.png",
+      "base": "/reference/trainer-ex-base/ch0365_00_red2_base.png"
+    },
+    "ch0114_00_natsume": {
+      "ex": "/reference/trainer-ex/ch0114_00_natsume_ex.png",
+      "base": "/reference/trainer-ex-base/ch0114_00_natsume_base.png"
+    },
+    "ch0114_40_natsume": {
+      "ex": "/reference/trainer-ex/ch0114_40_natsume_ex.png",
+      "base": "/reference/trainer-ex-base/ch0114_40_natsume_base.png"
+    },
+    "ch0114_90_natsume": {
+      "ex": "/reference/trainer-ex/ch0114_90_natsume_ex.png",
+      "base": "/reference/trainer-ex-base/ch0114_90_natsume_base.png"
+    },
+    "ch0151_00_melissa": {
+      "ex": "/reference/trainer-ex/ch0151_00_melissa_ex.png",
+      "base": "/reference/trainer-ex-base/ch0151_00_melissa_base.png"
+    },
+    "ch0121_00_plumeria": {
+      "ex": "/reference/trainer-ex/ch0121_00_plumeria_ex.png",
+      "base": "/reference/trainer-ex-base/ch0121_00_plumeria_base.png"
+    },
+    "ch0125_00_guzma": {
+      "ex": "/reference/trainer-ex/ch0125_00_guzma_ex.png",
+      "base": "/reference/trainer-ex-base/ch0125_00_guzma_base.png"
+    },
+    "ch0125_40_guzma": {
+      "ex": "/reference/trainer-ex/ch0125_40_guzma_ex.png",
+      "base": "/reference/trainer-ex-base/ch0125_40_guzma_base.png"
+    },
+    "ch0131_00_citron": {
+      "ex": "/reference/trainer-ex/ch0131_00_citron_ex.png",
+      "base": "/reference/trainer-ex-base/ch0131_00_citron_base.png"
+    },
+    "ch0127_00_mikuri": {
+      "ex": "/reference/trainer-ex/ch0127_00_mikuri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0127_00_mikuri_base.png"
+    },
+    "ch0127_40_mikuri": {
+      "ex": "/reference/trainer-ex/ch0127_40_mikuri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0127_40_mikuri_base.png"
+    },
+    "ch0133_00_shilver": {
+      "ex": "/reference/trainer-ex/ch0133_00_shilver_ex.png",
+      "base": "/reference/trainer-ex-base/ch0133_00_shilver_base.png"
+    },
+    "ch0133_10_shilver": {
+      "ex": "/reference/trainer-ex/ch0133_10_shilver_ex.png",
+      "base": "/reference/trainer-ex-base/ch0133_10_shilver_base.png"
+    },
+    "ch0133_90_shilver": {
+      "ex": "/reference/trainer-ex/ch0133_90_shilver_ex.png",
+      "base": "/reference/trainer-ex-base/ch0133_90_shilver_base.png"
+    },
+    "ch0133_91_shilver": {
+      "ex": "/reference/trainer-ex/ch0133_91_shilver_ex.png",
+      "base": "/reference/trainer-ex-base/ch0133_91_shilver_base.png"
+    },
+    "ch0128_00_mitsuru": {
+      "ex": "/reference/trainer-ex/ch0128_00_mitsuru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0128_00_mitsuru_base.png"
+    },
+    "ch0128_10_mitsuru": {
+      "ex": "/reference/trainer-ex/ch0128_10_mitsuru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0128_10_mitsuru_base.png"
+    },
+    "ch0113_00_mikan": {
+      "ex": "/reference/trainer-ex/ch0113_00_mikan_ex.png",
+      "base": "/reference/trainer-ex-base/ch0113_00_mikan_base.png"
+    },
+    "ch0113_40_mikan": {
+      "ex": "/reference/trainer-ex/ch0113_40_mikan_ex.png",
+      "base": "/reference/trainer-ex-base/ch0113_40_mikan_base.png"
+    },
+    "ch0113_41_mikan": {
+      "ex": "/reference/trainer-ex/ch0113_41_mikan_ex.png",
+      "base": "/reference/trainer-ex-base/ch0113_41_mikan_base.png"
+    },
+    "ch0113_42_mikan": {
+      "ex": "/reference/trainer-ex/ch0113_42_mikan_ex.png",
+      "base": "/reference/trainer-ex-base/ch0113_42_mikan_base.png"
+    },
+    "ch0116_00_hikari": {
+      "ex": "/reference/trainer-ex/ch0116_00_hikari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0116_00_hikari_base.png"
+    },
+    "ch0116_40_hikari": {
+      "ex": "/reference/trainer-ex/ch0116_40_hikari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0116_40_hikari_base.png"
+    },
+    "ch0116_10_hikari": {
+      "ex": "/reference/trainer-ex/ch0116_10_hikari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0116_10_hikari_base.png"
+    },
+    "ch0116_41_hikari": {
+      "ex": "/reference/trainer-ex/ch0116_41_hikari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0116_41_hikari_base.png"
+    },
+    "ch0116_90_hikari": {
+      "ex": "/reference/trainer-ex/ch0116_90_hikari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0116_90_hikari_base.png"
+    },
+    "ch0170_00_arty": {
+      "ex": "/reference/trainer-ex/ch0170_00_arty_ex.png",
+      "base": "/reference/trainer-ex-base/ch0170_00_arty_base.png"
+    },
+    "ch0170_40_arty": {
+      "ex": "/reference/trainer-ex/ch0170_40_arty_ex.png",
+      "base": "/reference/trainer-ex-base/ch0170_40_arty_base.png"
+    },
+    "ch0130_00_serena": {
+      "ex": "/reference/trainer-ex/ch0130_00_serena_ex.png",
+      "base": "/reference/trainer-ex-base/ch0130_00_serena_base.png"
+    },
+    "ch0130_40_serena": {
+      "ex": "/reference/trainer-ex/ch0130_40_serena_ex.png",
+      "base": "/reference/trainer-ex-base/ch0130_40_serena_base.png"
+    },
+    "ch0130_10_serena": {
+      "ex": "/reference/trainer-ex/ch0130_10_serena_ex.png",
+      "base": "/reference/trainer-ex-base/ch0130_10_serena_base.png"
+    },
+    "ch0130_90_serena": {
+      "ex": "/reference/trainer-ex/ch0130_90_serena_ex.png",
+      "base": "/reference/trainer-ex-base/ch0130_90_serena_base.png"
+    },
+    "ch0130_41_serena": {
+      "ex": "/reference/trainer-ex/ch0130_41_serena_ex.png",
+      "base": "/reference/trainer-ex-base/ch0130_41_serena_base.png"
+    },
+    "ch0198_00_azami": {
+      "ex": "/reference/trainer-ex/ch0198_00_azami_ex.png",
+      "base": "/reference/trainer-ex-base/ch0198_00_azami_base.png"
+    },
+    "ch0148_00_matsuba": {
+      "ex": "/reference/trainer-ex/ch0148_00_matsuba_ex.png",
+      "base": "/reference/trainer-ex-base/ch0148_00_matsuba_base.png"
+    },
+    "ch0148_40_matsuba": {
+      "ex": "/reference/trainer-ex/ch0148_40_matsuba_ex.png",
+      "base": "/reference/trainer-ex-base/ch0148_40_matsuba_base.png"
+    },
+    "ch0148_10_matsuba": {
+      "ex": "/reference/trainer-ex/ch0148_10_matsuba_ex.png",
+      "base": "/reference/trainer-ex-base/ch0148_10_matsuba_base.png"
+    },
+    "ch0148_41_matsuba": {
+      "ex": "/reference/trainer-ex/ch0148_41_matsuba_ex.png",
+      "base": "/reference/trainer-ex-base/ch0148_41_matsuba_base.png"
+    },
+    "ch0194_00_akagi": {
+      "ex": "/reference/trainer-ex/ch0194_00_akagi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0194_00_akagi_base.png"
+    },
+    "ch0194_10_akagi": {
+      "ex": "/reference/trainer-ex/ch0194_10_akagi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0194_10_akagi_base.png"
+    },
+    "ch0120_00_lusamine": {
+      "ex": "/reference/trainer-ex/ch0120_00_lusamine_ex.png",
+      "base": "/reference/trainer-ex-base/ch0120_00_lusamine_base.png"
+    },
+    "ch0120_10_lusamine": {
+      "ex": "/reference/trainer-ex/ch0120_10_lusamine_ex.png",
+      "base": "/reference/trainer-ex-base/ch0120_10_lusamine_base.png"
+    },
+    "ch0119_00_gladion": {
+      "ex": "/reference/trainer-ex/ch0119_00_gladion_ex.png",
+      "base": "/reference/trainer-ex-base/ch0119_00_gladion_base.png"
+    },
+    "ch0119_10_gladion": {
+      "ex": "/reference/trainer-ex/ch0119_10_gladion_ex.png",
+      "base": "/reference/trainer-ex-base/ch0119_10_gladion_base.png"
+    },
+    "ch0119_40_gladion": {
+      "ex": "/reference/trainer-ex/ch0119_40_gladion_ex.png",
+      "base": "/reference/trainer-ex-base/ch0119_40_gladion_base.png"
+    },
+    "ch0118_00_lillie": {
+      "ex": "/reference/trainer-ex/ch0118_00_lillie_ex.png",
+      "base": "/reference/trainer-ex-base/ch0118_00_lillie_base.png"
+    },
+    "ch0118_40_lillie": {
+      "ex": "/reference/trainer-ex/ch0118_40_lillie_ex.png",
+      "base": "/reference/trainer-ex-base/ch0118_40_lillie_base.png"
+    },
+    "ch0118_50_lillie": {
+      "ex": "/reference/trainer-ex/ch0118_50_lillie_ex.png",
+      "base": "/reference/trainer-ex-base/ch0118_50_lillie_base.png"
+    },
+    "ch0118_41_lillie": {
+      "ex": "/reference/trainer-ex/ch0118_41_lillie_ex.png",
+      "base": "/reference/trainer-ex-base/ch0118_41_lillie_base.png"
+    },
+    "ch0118_42_lillie": {
+      "ex": "/reference/trainer-ex/ch0118_42_lillie_ex.png",
+      "base": "/reference/trainer-ex-base/ch0118_42_lillie_base.png"
+    },
+    "ch0115_00_denji": {
+      "ex": "/reference/trainer-ex/ch0115_00_denji_ex.png",
+      "base": "/reference/trainer-ex-base/ch0115_00_denji_base.png"
+    },
+    "ch0115_40_denji": {
+      "ex": "/reference/trainer-ex/ch0115_40_denji_ex.png",
+      "base": "/reference/trainer-ex-base/ch0115_40_denji_base.png"
+    },
+    "ch0183_00_molayne": {
+      "ex": "/reference/trainer-ex/ch0183_00_molayne_ex.png",
+      "base": "/reference/trainer-ex-base/ch0183_00_molayne_base.png"
+    },
+    "ch0215_00_lutia": {
+      "ex": "/reference/trainer-ex/ch0215_00_lutia_ex.png",
+      "base": "/reference/trainer-ex-base/ch0215_00_lutia_base.png"
+    },
+    "ch0215_40_lutia": {
+      "ex": "/reference/trainer-ex/ch0215_40_lutia_ex.png",
+      "base": "/reference/trainer-ex-base/ch0215_40_lutia_base.png"
+    },
+    "ch0132_00_adeku": {
+      "ex": "/reference/trainer-ex/ch0132_00_adeku_ex.png",
+      "base": "/reference/trainer-ex-base/ch0132_00_adeku_base.png"
+    },
+    "ch0132_90_adeku": {
+      "ex": "/reference/trainer-ex/ch0132_90_adeku_ex.png",
+      "base": "/reference/trainer-ex-base/ch0132_90_adeku_base.png"
+    },
+    "ch0100_00_kyohei": {
+      "ex": "/reference/trainer-ex/ch0100_00_kyohei_ex.png",
+      "base": "/reference/trainer-ex-base/ch0100_00_kyohei_base.png"
+    },
+    "ch0100_90_kyohei": {
+      "ex": "/reference/trainer-ex/ch0100_90_kyohei_ex.png",
+      "base": "/reference/trainer-ex-base/ch0100_90_kyohei_base.png"
+    },
+    "ch0102_00_bell": {
+      "ex": "/reference/trainer-ex/ch0102_00_bell_ex.png",
+      "base": "/reference/trainer-ex-base/ch0102_00_bell_base.png"
+    },
+    "ch0102_90_bell": {
+      "ex": "/reference/trainer-ex/ch0102_90_bell_ex.png",
+      "base": "/reference/trainer-ex-base/ch0102_90_bell_base.png"
+    },
+    "ch0243_00_yuri": {
+      "ex": "/reference/trainer-ex/ch0243_00_yuri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0243_00_yuri_base.png"
+    },
+    "ch0243_40_yuri": {
+      "ex": "/reference/trainer-ex/ch0243_40_yuri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0243_40_yuri_base.png"
+    },
+    "ch0243_80_yuri": {
+      "ex": "/reference/trainer-ex/ch0243_80_yuri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0243_80_yuri_base.png"
+    },
+    "ch0243_81_yuri": {
+      "ex": "/reference/trainer-ex/ch0243_81_yuri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0243_81_yuri_base.png"
+    },
+    "ch0243_41_yuri": {
+      "ex": "/reference/trainer-ex/ch0243_41_yuri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0243_41_yuri_base.png"
+    },
+    "ch0089_00_n": {
+      "ex": "/reference/trainer-ex/ch0089_00_n_ex.png",
+      "base": "/reference/trainer-ex-base/ch0089_00_n_base.png"
+    },
+    "ch0089_40_n": {
+      "ex": "/reference/trainer-ex/ch0089_40_n_ex.png",
+      "base": "/reference/trainer-ex-base/ch0089_40_n_base.png"
+    },
+    "ch0089_41_n": {
+      "ex": "/reference/trainer-ex/ch0089_41_n_ex.png",
+      "base": "/reference/trainer-ex-base/ch0089_41_n_base.png"
+    },
+    "ch0089_10_n": {
+      "ex": "/reference/trainer-ex/ch0089_10_n_ex.png",
+      "base": "/reference/trainer-ex-base/ch0089_10_n_base.png"
+    },
+    "ch0089_90_n": {
+      "ex": "/reference/trainer-ex/ch0089_90_n_ex.png",
+      "base": "/reference/trainer-ex-base/ch0089_90_n_base.png"
+    },
+    "ch0126_00_haruka": {
+      "ex": "/reference/trainer-ex/ch0126_00_haruka_ex.png",
+      "base": "/reference/trainer-ex-base/ch0126_00_haruka_base.png"
+    },
+    "ch0126_40_haruka": {
+      "ex": "/reference/trainer-ex/ch0126_40_haruka_ex.png",
+      "base": "/reference/trainer-ex-base/ch0126_40_haruka_base.png"
+    },
+    "ch0126_41_haruka": {
+      "ex": "/reference/trainer-ex/ch0126_41_haruka_ex.png",
+      "base": "/reference/trainer-ex-base/ch0126_41_haruka_base.png"
+    },
+    "ch0126_10_haruka": {
+      "ex": "/reference/trainer-ex/ch0126_10_haruka_ex.png",
+      "base": "/reference/trainer-ex-base/ch0126_10_haruka_base.png"
+    },
+    "ch0126_90_haruka": {
+      "ex": "/reference/trainer-ex/ch0126_90_haruka_ex.png",
+      "base": "/reference/trainer-ex-base/ch0126_90_haruka_base.png"
+    },
+    "ch0124_00_mao": {
+      "ex": "/reference/trainer-ex/ch0124_00_mao_ex.png",
+      "base": "/reference/trainer-ex-base/ch0124_00_mao_base.png"
+    },
+    "ch0124_40_mao": {
+      "ex": "/reference/trainer-ex/ch0124_40_mao_ex.png",
+      "base": "/reference/trainer-ex-base/ch0124_40_mao_base.png"
+    },
+    "ch0196_00_fleurdelis": {
+      "ex": "/reference/trainer-ex/ch0196_00_fleurdelis_ex.png",
+      "base": "/reference/trainer-ex-base/ch0196_00_fleurdelis_base.png"
+    },
+    "ch0196_10_fleurdelis": {
+      "ex": "/reference/trainer-ex/ch0196_10_fleurdelis_ex.png",
+      "base": "/reference/trainer-ex-base/ch0196_10_fleurdelis_base.png"
+    },
+    "ch0136_00_platane": {
+      "ex": "/reference/trainer-ex/ch0136_00_platane_ex.png",
+      "base": "/reference/trainer-ex-base/ch0136_00_platane_base.png"
+    },
+    "ch0136_40_platane": {
+      "ex": "/reference/trainer-ex/ch0136_40_platane_ex.png",
+      "base": "/reference/trainer-ex-base/ch0136_40_platane_base.png"
+    },
+    "ch0256_00_nezz": {
+      "ex": "/reference/trainer-ex/ch0256_00_nezz_ex.png",
+      "base": "/reference/trainer-ex-base/ch0256_00_nezz_base.png"
+    },
+    "ch0256_10_nezz": {
+      "ex": "/reference/trainer-ex/ch0256_10_nezz_ex.png",
+      "base": "/reference/trainer-ex-base/ch0256_10_nezz_base.png"
+    },
+    "ch0247_00_dande": {
+      "ex": "/reference/trainer-ex/ch0247_00_dande_ex.png",
+      "base": "/reference/trainer-ex-base/ch0247_00_dande_base.png"
+    },
+    "ch0247_10_dande": {
+      "ex": "/reference/trainer-ex/ch0247_10_dande_ex.png",
+      "base": "/reference/trainer-ex-base/ch0247_10_dande_base.png"
+    },
+    "ch0247_40_dande": {
+      "ex": "/reference/trainer-ex/ch0247_40_dande_ex.png",
+      "base": "/reference/trainer-ex-base/ch0247_40_dande_base.png"
+    },
+    "ch0247_80_dande": {
+      "ex": "/reference/trainer-ex/ch0247_80_dande_ex.png",
+      "base": "/reference/trainer-ex-base/ch0247_80_dande_base.png"
+    },
+    "ch0247_90_dande": {
+      "ex": "/reference/trainer-ex/ch0247_90_dande_ex.png",
+      "base": "/reference/trainer-ex-base/ch0247_90_dande_base.png"
+    },
+    "ch0245_00_mary": {
+      "ex": "/reference/trainer-ex/ch0245_00_mary_ex.png",
+      "base": "/reference/trainer-ex-base/ch0245_00_mary_base.png"
+    },
+    "ch0245_40_mary": {
+      "ex": "/reference/trainer-ex/ch0245_40_mary_ex.png",
+      "base": "/reference/trainer-ex-base/ch0245_40_mary_base.png"
+    },
+    "ch0245_41_mary": {
+      "ex": "/reference/trainer-ex/ch0245_41_mary_ex.png",
+      "base": "/reference/trainer-ex-base/ch0245_41_mary_base.png"
+    },
+    "ch0245_90_mary": {
+      "ex": "/reference/trainer-ex/ch0245_90_mary_ex.png",
+      "base": "/reference/trainer-ex-base/ch0245_90_mary_base.png"
+    },
+    "ch0245_42_mary": {
+      "ex": "/reference/trainer-ex/ch0245_42_mary_ex.png",
+      "base": "/reference/trainer-ex-base/ch0245_42_mary_base.png"
+    },
+    "ch0245_80_mary": {
+      "ex": "/reference/trainer-ex/ch0245_80_mary_ex.png",
+      "base": "/reference/trainer-ex-base/ch0245_80_mary_base.png"
+    },
+    "ch0158_00_carnet": {
+      "ex": "/reference/trainer-ex/ch0158_00_carnet_ex.png",
+      "base": "/reference/trainer-ex-base/ch0158_00_carnet_base.png"
+    },
+    "ch0158_40_carnet": {
+      "ex": "/reference/trainer-ex/ch0158_40_carnet_ex.png",
+      "base": "/reference/trainer-ex-base/ch0158_40_carnet_base.png"
+    },
+    "ch0158_10_carnet": {
+      "ex": "/reference/trainer-ex/ch0158_10_carnet_ex.png",
+      "base": "/reference/trainer-ex-base/ch0158_10_carnet_base.png"
+    },
+    "ch0158_90_carnet": {
+      "ex": "/reference/trainer-ex/ch0158_90_carnet_ex.png",
+      "base": "/reference/trainer-ex-base/ch0158_90_carnet_base.png"
+    },
+    "ch0123_00_mizuki": {
+      "ex": "/reference/trainer-ex/ch0123_00_mizuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0123_00_mizuki_base.png"
+    },
+    "ch0123_40_mizuki": {
+      "ex": "/reference/trainer-ex/ch0123_40_mizuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0123_40_mizuki_base.png"
+    },
+    "ch0123_80_mizuki": {
+      "ex": "/reference/trainer-ex/ch0123_80_mizuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0123_80_mizuki_base.png"
+    },
+    "ch0123_90_mizuki": {
+      "ex": "/reference/trainer-ex/ch0123_90_mizuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0123_90_mizuki_base.png"
+    },
+    "ch0122_00_yo": {
+      "ex": "/reference/trainer-ex/ch0122_00_yo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0122_00_yo_base.png"
+    },
+    "ch0122_80_yo": {
+      "ex": "/reference/trainer-ex/ch0122_80_yo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0122_80_yo_base.png"
+    },
+    "ch0122_90_yo": {
+      "ex": "/reference/trainer-ex/ch0122_90_yo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0122_90_yo_base.png"
+    },
+    "ch0257_00_qibana": {
+      "ex": "/reference/trainer-ex/ch0257_00_qibana_ex.png",
+      "base": "/reference/trainer-ex-base/ch0257_00_qibana_base.png"
+    },
+    "ch0257_40_qibana": {
+      "ex": "/reference/trainer-ex/ch0257_40_qibana_ex.png",
+      "base": "/reference/trainer-ex-base/ch0257_40_qibana_base.png"
+    },
+    "ch0257_41_qibana": {
+      "ex": "/reference/trainer-ex/ch0257_41_qibana_ex.png",
+      "base": "/reference/trainer-ex-base/ch0257_41_qibana_base.png"
+    },
+    "ch0195_00_ghetsis": {
+      "ex": "/reference/trainer-ex/ch0195_00_ghetsis_ex.png",
+      "base": "/reference/trainer-ex-base/ch0195_00_ghetsis_base.png"
+    },
+    "ch0249_00_rulina": {
+      "ex": "/reference/trainer-ex/ch0249_00_rulina_ex.png",
+      "base": "/reference/trainer-ex-base/ch0249_00_rulina_base.png"
+    },
+    "ch0249_40_rulina": {
+      "ex": "/reference/trainer-ex/ch0249_40_rulina_ex.png",
+      "base": "/reference/trainer-ex-base/ch0249_40_rulina_base.png"
+    },
+    "ch0250_00_saida": {
+      "ex": "/reference/trainer-ex/ch0250_00_saida_ex.png",
+      "base": "/reference/trainer-ex-base/ch0250_00_saida_base.png"
+    },
+    "ch0250_40_saida": {
+      "ex": "/reference/trainer-ex/ch0250_40_saida_ex.png",
+      "base": "/reference/trainer-ex-base/ch0250_40_saida_base.png"
+    },
+    "ch0192_00_matsubusa": {
+      "ex": "/reference/trainer-ex/ch0192_00_matsubusa_ex.png",
+      "base": "/reference/trainer-ex-base/ch0192_00_matsubusa_base.png"
+    },
+    "ch0193_00_aogiri": {
+      "ex": "/reference/trainer-ex/ch0193_00_aogiri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0193_00_aogiri_base.png"
+    },
+    "ch0160_00_suiren": {
+      "ex": "/reference/trainer-ex/ch0160_00_suiren_ex.png",
+      "base": "/reference/trainer-ex-base/ch0160_00_suiren_base.png"
+    },
+    "ch0160_10_suiren": {
+      "ex": "/reference/trainer-ex/ch0160_10_suiren_ex.png",
+      "base": "/reference/trainer-ex-base/ch0160_10_suiren_base.png"
+    },
+    "ch0160_40_suiren": {
+      "ex": "/reference/trainer-ex/ch0160_40_suiren_ex.png",
+      "base": "/reference/trainer-ex-base/ch0160_40_suiren_base.png"
+    },
+    "ch0149_00_kaki": {
+      "ex": "/reference/trainer-ex/ch0149_00_kaki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0149_00_kaki_base.png"
+    },
+    "ch0161_00_hara": {
+      "ex": "/reference/trainer-ex/ch0161_00_hara_ex.png",
+      "base": "/reference/trainer-ex-base/ch0161_00_hara_base.png"
+    },
+    "ch0117_00_royalmask": {
+      "ex": "/reference/trainer-ex/ch0117_00_royalmask_ex.png",
+      "base": "/reference/trainer-ex-base/ch0117_00_royalmask_base.png"
+    },
+    "ch0108_00_nobori": {
+      "ex": "/reference/trainer-ex/ch0108_00_nobori_ex.png",
+      "base": "/reference/trainer-ex-base/ch0108_00_nobori_base.png"
+    },
+    "ch0108_40_nobori": {
+      "ex": "/reference/trainer-ex/ch0108_40_nobori_ex.png",
+      "base": "/reference/trainer-ex-base/ch0108_40_nobori_base.png"
+    },
+    "ch0108_10_nobori": {
+      "ex": "/reference/trainer-ex/ch0108_10_nobori_ex.png",
+      "base": "/reference/trainer-ex-base/ch0108_10_nobori_base.png"
+    },
+    "ch0109_00_kudari": {
+      "ex": "/reference/trainer-ex/ch0109_00_kudari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0109_00_kudari_base.png"
+    },
+    "ch0109_40_kudari": {
+      "ex": "/reference/trainer-ex/ch0109_40_kudari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0109_40_kudari_base.png"
+    },
+    "ch0109_10_kudari": {
+      "ex": "/reference/trainer-ex/ch0109_10_kudari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0109_10_kudari_base.png"
+    },
+    "ch0205_00_lesoir": {
+      "ex": "/reference/trainer-ex/ch0205_00_lesoir_ex.png",
+      "base": "/reference/trainer-ex-base/ch0205_00_lesoir_base.png"
+    },
+    "ch0066_01_boss": {
+      "ex": "/reference/trainer-ex/ch0066_01_boss_ex.png",
+      "base": "/reference/trainer-ex-base/ch0066_01_boss_base.png"
+    },
+    "ch0066_10_boss": {
+      "ex": "/reference/trainer-ex/ch0066_10_boss_ex.png",
+      "base": "/reference/trainer-ex-base/ch0066_10_boss_base.png"
+    },
+    "ch0067_01_leader1": {
+      "ex": "/reference/trainer-ex/ch0067_01_leader1_ex.png",
+      "base": "/reference/trainer-ex-base/ch0067_01_leader1_base.png"
+    },
+    "ch0068_01_leader2": {
+      "ex": "/reference/trainer-ex/ch0068_01_leader2_ex.png",
+      "base": "/reference/trainer-ex-base/ch0068_01_leader2_base.png"
+    },
+    "ch0150_00_hayato": {
+      "ex": "/reference/trainer-ex/ch0150_00_hayato_ex.png",
+      "base": "/reference/trainer-ex-base/ch0150_00_hayato_base.png"
+    },
+    "ch0135_00_kagetsu": {
+      "ex": "/reference/trainer-ex/ch0135_00_kagetsu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0135_00_kagetsu_base.png"
+    },
+    "ch0244_00_hop": {
+      "ex": "/reference/trainer-ex/ch0244_00_hop_ex.png",
+      "base": "/reference/trainer-ex-base/ch0244_00_hop_base.png"
+    },
+    "ch0244_90_hop": {
+      "ex": "/reference/trainer-ex/ch0244_90_hop_ex.png",
+      "base": "/reference/trainer-ex-base/ch0244_90_hop_base.png"
+    },
+    "ch0251_00_onion": {
+      "ex": "/reference/trainer-ex/ch0251_00_onion_ex.png",
+      "base": "/reference/trainer-ex-base/ch0251_00_onion_base.png"
+    },
+    "ch0251_40_onion": {
+      "ex": "/reference/trainer-ex/ch0251_40_onion_ex.png",
+      "base": "/reference/trainer-ex-base/ch0251_40_onion_base.png"
+    },
+    "ch0159_00_kokuran": {
+      "ex": "/reference/trainer-ex/ch0159_00_kokuran_ex.png",
+      "base": "/reference/trainer-ex-base/ch0159_00_kokuran_base.png"
+    },
+    "ch0259_00_sania": {
+      "ex": "/reference/trainer-ex/ch0259_00_sania_ex.png",
+      "base": "/reference/trainer-ex-base/ch0259_00_sania_base.png"
+    },
+    "ch0259_40_sania": {
+      "ex": "/reference/trainer-ex/ch0259_40_sania_ex.png",
+      "base": "/reference/trainer-ex-base/ch0259_40_sania_base.png"
+    },
+    "ch0259_41_sania": {
+      "ex": "/reference/trainer-ex/ch0259_41_sania_ex.png",
+      "base": "/reference/trainer-ex-base/ch0259_41_sania_base.png"
+    },
+    "ch0162_00_koki": {
+      "ex": "/reference/trainer-ex/ch0162_00_koki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0162_00_koki_base.png"
+    },
+    "ch0162_90_koki": {
+      "ex": "/reference/trainer-ex/ch0162_90_koki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0162_90_koki_base.png"
+    },
+    "ch0152_00_ryo": {
+      "ex": "/reference/trainer-ex/ch0152_00_ryo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0152_00_ryo_base.png"
+    },
+    "ch0154_00_kikuno": {
+      "ex": "/reference/trainer-ex/ch0154_00_kikuno_ex.png",
+      "base": "/reference/trainer-ex-base/ch0154_00_kikuno_base.png"
+    },
+    "ch0176_00_goyo": {
+      "ex": "/reference/trainer-ex/ch0176_00_goyo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0176_00_goyo_base.png"
+    },
+    "ch0246_00_beet": {
+      "ex": "/reference/trainer-ex/ch0246_00_beet_ex.png",
+      "base": "/reference/trainer-ex-base/ch0246_00_beet_base.png"
+    },
+    "ch0246_90_beet": {
+      "ex": "/reference/trainer-ex/ch0246_90_beet_ex.png",
+      "base": "/reference/trainer-ex-base/ch0246_90_beet_base.png"
+    },
+    "ch0246_10_beet": {
+      "ex": "/reference/trainer-ex/ch0246_10_beet_ex.png",
+      "base": "/reference/trainer-ex-base/ch0246_10_beet_base.png"
+    },
+    "ch0246_80_beet": {
+      "ex": "/reference/trainer-ex/ch0246_80_beet_ex.png",
+      "base": "/reference/trainer-ex-base/ch0246_80_beet_base.png"
+    },
+    "ch0217_00_handsome": {
+      "ex": "/reference/trainer-ex/ch0217_00_handsome_ex.png",
+      "base": "/reference/trainer-ex-base/ch0217_00_handsome_base.png"
+    },
+    "ch0222_00_kagari": {
+      "ex": "/reference/trainer-ex/ch0222_00_kagari_ex.png",
+      "base": "/reference/trainer-ex-base/ch0222_00_kagari_base.png"
+    },
+    "ch0264_00_satoshi": {
+      "ex": "/reference/trainer-ex/ch0264_00_satoshi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0264_00_satoshi_base.png"
+    },
+    "ch0204_00_lanuit": {
+      "ex": "/reference/trainer-ex/ch0204_00_lanuit_ex.png",
+      "base": "/reference/trainer-ex-base/ch0204_00_lanuit_base.png"
+    },
+    "ch0254_00_gordie": {
+      "ex": "/reference/trainer-ex/ch0254_00_gordie_ex.png",
+      "base": "/reference/trainer-ex-base/ch0254_00_gordie_base.png"
+    },
+    "ch0255_00_melon": {
+      "ex": "/reference/trainer-ex/ch0255_00_melon_ex.png",
+      "base": "/reference/trainer-ex-base/ch0255_00_melon_base.png"
+    },
+    "ch0242_00_masaru": {
+      "ex": "/reference/trainer-ex/ch0242_00_masaru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0242_00_masaru_base.png"
+    },
+    "ch0242_40_masaru": {
+      "ex": "/reference/trainer-ex/ch0242_40_masaru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0242_40_masaru_base.png"
+    },
+    "ch0147_00_hugh": {
+      "ex": "/reference/trainer-ex/ch0147_00_hugh_ex.png",
+      "base": "/reference/trainer-ex-base/ch0147_00_hugh_base.png"
+    },
+    "ch0147_40_hugh": {
+      "ex": "/reference/trainer-ex/ch0147_40_hugh_ex.png",
+      "base": "/reference/trainer-ex-base/ch0147_40_hugh_base.png"
+    },
+    "ch0191_00_achroma": {
+      "ex": "/reference/trainer-ex/ch0191_00_achroma_ex.png",
+      "base": "/reference/trainer-ex-base/ch0191_00_achroma_base.png"
+    },
+    "ch0139_00_sana": {
+      "ex": "/reference/trainer-ex/ch0139_00_sana_ex.png",
+      "base": "/reference/trainer-ex-base/ch0139_00_sana_base.png"
+    },
+    "ch0139_40_sana": {
+      "ex": "/reference/trainer-ex/ch0139_40_sana_ex.png",
+      "base": "/reference/trainer-ex-base/ch0139_40_sana_base.png"
+    },
+    "ch0178_00_lira": {
+      "ex": "/reference/trainer-ex/ch0178_00_lira_ex.png",
+      "base": "/reference/trainer-ex-base/ch0178_00_lira_base.png"
+    },
+    "ch0220_00_matiere": {
+      "ex": "/reference/trainer-ex/ch0220_00_matiere_ex.png",
+      "base": "/reference/trainer-ex-base/ch0220_00_matiere_base.png"
+    },
+    "ch0282_00_ballguy": {
+      "ex": "/reference/trainer-ex/ch0282_00_ballguy_ex.png",
+      "base": "/reference/trainer-ex-base/ch0282_00_ballguy_base.png"
+    },
+    "ch0282_10_ballguy": {
+      "ex": "/reference/trainer-ex/ch0282_10_ballguy_ex.png",
+      "base": "/reference/trainer-ex-base/ch0282_10_ballguy_base.png"
+    },
+    "ch0284_00_seki": {
+      "ex": "/reference/trainer-ex/ch0284_00_seki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0284_00_seki_base.png"
+    },
+    "ch0284_40_seki": {
+      "ex": "/reference/trainer-ex/ch0284_40_seki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0284_40_seki_base.png"
+    },
+    "ch0284_41_seki": {
+      "ex": "/reference/trainer-ex/ch0284_41_seki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0284_41_seki_base.png"
+    },
+    "ch0285_00_kai": {
+      "ex": "/reference/trainer-ex/ch0285_00_kai_ex.png",
+      "base": "/reference/trainer-ex-base/ch0285_00_kai_base.png"
+    },
+    "ch0285_40_kai": {
+      "ex": "/reference/trainer-ex/ch0285_40_kai_ex.png",
+      "base": "/reference/trainer-ex-base/ch0285_40_kai_base.png"
+    },
+    "ch0285_41_kai": {
+      "ex": "/reference/trainer-ex/ch0285_41_kai_ex.png",
+      "base": "/reference/trainer-ex-base/ch0285_41_kai_base.png"
+    },
+    "ch0216_00_minaki": {
+      "ex": "/reference/trainer-ex/ch0216_00_minaki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0216_00_minaki_base.png"
+    },
+    "ch0262_00_rose": {
+      "ex": "/reference/trainer-ex/ch0262_00_rose_ex.png",
+      "base": "/reference/trainer-ex-base/ch0262_00_rose_base.png"
+    },
+    "ch0263_00_olea": {
+      "ex": "/reference/trainer-ex/ch0263_00_olea_ex.png",
+      "base": "/reference/trainer-ex-base/ch0263_00_olea_base.png"
+    },
+    "ch0175_00_gojika": {
+      "ex": "/reference/trainer-ex/ch0175_00_gojika_ex.png",
+      "base": "/reference/trainer-ex-base/ch0175_00_gojika_base.png"
+    },
+    "ch0155_00_dracaena": {
+      "ex": "/reference/trainer-ex/ch0155_00_dracaena_ex.png",
+      "base": "/reference/trainer-ex-base/ch0155_00_dracaena_base.png"
+    },
+    "ch0289_00_nemo": {
+      "ex": "/reference/trainer-ex/ch0289_00_nemo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0289_00_nemo_base.png"
+    },
+    "ch0289_10_nemo": {
+      "ex": "/reference/trainer-ex/ch0289_10_nemo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0289_10_nemo_base.png"
+    },
+    "ch0206_00_lajournee": {
+      "ex": "/reference/trainer-ex/ch0206_00_lajournee_ex.png",
+      "base": "/reference/trainer-ex-base/ch0206_00_lajournee_base.png"
+    },
+    "ch0064_01_rival": {
+      "ex": "/reference/trainer-ex/ch0064_01_rival_ex.png",
+      "base": "/reference/trainer-ex-base/ch0064_01_rival_base.png"
+    },
+    "ch0105_01_rival2": {
+      "ex": "/reference/trainer-ex/ch0105_01_rival2_ex.png",
+      "base": "/reference/trainer-ex-base/ch0105_01_rival2_base.png"
+    },
+    "ch0141_00_apollo": {
+      "ex": "/reference/trainer-ex/ch0141_00_apollo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0141_00_apollo_base.png"
+    },
+    "ch0142_00_athena": {
+      "ex": "/reference/trainer-ex/ch0142_00_athena_ex.png",
+      "base": "/reference/trainer-ex-base/ch0142_00_athena_base.png"
+    },
+    "ch0143_00_lambda": {
+      "ex": "/reference/trainer-ex/ch0143_00_lambda_ex.png",
+      "base": "/reference/trainer-ex-base/ch0143_00_lambda_base.png"
+    },
+    "ch0144_00_lance": {
+      "ex": "/reference/trainer-ex/ch0144_00_lance_ex.png",
+      "base": "/reference/trainer-ex-base/ch0144_00_lance_base.png"
+    },
+    "ch0134_00_kurotsugu": {
+      "ex": "/reference/trainer-ex/ch0134_00_kurotsugu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0134_00_kurotsugu_base.png"
+    },
+    "ch0203_00_kate": {
+      "ex": "/reference/trainer-ex/ch0203_00_kate_ex.png",
+      "base": "/reference/trainer-ex-base/ch0203_00_kate_base.png"
+    },
+    "ch0291_00_sho": {
+      "ex": "/reference/trainer-ex/ch0291_00_sho_ex.png",
+      "base": "/reference/trainer-ex-base/ch0291_00_sho_base.png"
+    },
+    "ch0291_40_sho": {
+      "ex": "/reference/trainer-ex/ch0291_40_sho_ex.png",
+      "base": "/reference/trainer-ex-base/ch0291_40_sho_base.png"
+    },
+    "ch0290_00_teru": {
+      "ex": "/reference/trainer-ex/ch0290_00_teru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0290_00_teru_base.png"
+    },
+    "ch0290_40_teru": {
+      "ex": "/reference/trainer-ex/ch0290_40_teru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0290_40_teru_base.png"
+    },
+    "ch0169_00_aloe": {
+      "ex": "/reference/trainer-ex/ch0169_00_aloe_ex.png",
+      "base": "/reference/trainer-ex-base/ch0169_00_aloe_base.png"
+    },
+    "ch0190_00_ryuki": {
+      "ex": "/reference/trainer-ex/ch0190_00_ryuki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0190_00_ryuki_base.png"
+    },
+    "ch0293_00_button": {
+      "ex": "/reference/trainer-ex/ch0293_00_button_ex.png",
+      "base": "/reference/trainer-ex-base/ch0293_00_button_base.png"
+    },
+    "ch0269_00_ayumi": {
+      "ex": "/reference/trainer-ex/ch0269_00_ayumi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0269_00_ayumi_base.png"
+    },
+    "ch0296_00_nanjamo": {
+      "ex": "/reference/trainer-ex/ch0296_00_nanjamo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0296_00_nanjamo_base.png"
+    },
+    "ch0296_40_nanjamo": {
+      "ex": "/reference/trainer-ex/ch0296_40_nanjamo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0296_40_nanjamo_base.png"
+    },
+    "ch0296_10_nanjamo": {
+      "ex": "/reference/trainer-ex/ch0296_10_nanjamo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0296_10_nanjamo_base.png"
+    },
+    "ch0294_00_grusha": {
+      "ex": "/reference/trainer-ex/ch0294_00_grusha_ex.png",
+      "base": "/reference/trainer-ex-base/ch0294_00_grusha_base.png"
+    },
+    "ch0279_00_kakeru": {
+      "ex": "/reference/trainer-ex/ch0279_00_kakeru_ex.png",
+      "base": "/reference/trainer-ex-base/ch0279_00_kakeru_base.png"
+    },
+    "ch0156_00_gen": {
+      "ex": "/reference/trainer-ex/ch0156_00_gen_ex.png",
+      "base": "/reference/trainer-ex-base/ch0156_00_gen_base.png"
+    },
+    "ch0295_00_omodaka": {
+      "ex": "/reference/trainer-ex/ch0295_00_omodaka_ex.png",
+      "base": "/reference/trainer-ex-base/ch0295_00_omodaka_base.png"
+    },
+    "ch0295_90_omodaka": {
+      "ex": "/reference/trainer-ex/ch0295_90_omodaka_ex.png",
+      "base": "/reference/trainer-ex-base/ch0295_90_omodaka_base.png"
+    },
+    "ch0180_00_tierno": {
+      "ex": "/reference/trainer-ex/ch0180_00_tierno_ex.png",
+      "base": "/reference/trainer-ex-base/ch0180_00_tierno_base.png"
+    },
+    "ch0202_00_dahlia": {
+      "ex": "/reference/trainer-ex/ch0202_00_dahlia_ex.png",
+      "base": "/reference/trainer-ex-base/ch0202_00_dahlia_base.png"
+    },
+    "ch0297_00_volo": {
+      "ex": "/reference/trainer-ex/ch0297_00_volo_ex.png",
+      "base": "/reference/trainer-ex-base/ch0297_00_volo_base.png"
+    },
+    "ch0359_00_volo2": {
+      "ex": "/reference/trainer-ex/ch0359_00_volo2_ex.png",
+      "base": "/reference/trainer-ex-base/ch0359_00_volo2_base.png"
+    },
+    "ch0298_00_zinnia": {
+      "ex": "/reference/trainer-ex/ch0298_00_zinnia_ex.png",
+      "base": "/reference/trainer-ex-base/ch0298_00_zinnia_base.png"
+    },
+    "ch0302_00_chiri": {
+      "ex": "/reference/trainer-ex/ch0302_00_chiri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0302_00_chiri_base.png"
+    },
+    "ch0302_40_chiri": {
+      "ex": "/reference/trainer-ex/ch0302_40_chiri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0302_40_chiri_base.png"
+    },
+    "ch0301_00_hachikuman": {
+      "ex": "/reference/trainer-ex/ch0301_00_hachikuman_ex.png",
+      "base": "/reference/trainer-ex-base/ch0301_00_hachikuman_base.png"
+    },
+    "ch0300_00_jujube": {
+      "ex": "/reference/trainer-ex/ch0300_00_jujube_ex.png",
+      "base": "/reference/trainer-ex-base/ch0300_00_jujube_base.png"
+    },
+    "ch0303_00_poppy": {
+      "ex": "/reference/trainer-ex/ch0303_00_poppy_ex.png",
+      "base": "/reference/trainer-ex-base/ch0303_00_poppy_base.png"
+    },
+    "ch0303_40_poppy": {
+      "ex": "/reference/trainer-ex/ch0303_40_poppy_ex.png",
+      "base": "/reference/trainer-ex-base/ch0303_40_poppy_base.png"
+    },
+    "ch0304_00_aoki": {
+      "ex": "/reference/trainer-ex/ch0304_00_aoki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0304_00_aoki_base.png"
+    },
+    "ch0304_40_aoki": {
+      "ex": "/reference/trainer-ex/ch0304_40_aoki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0304_40_aoki_base.png"
+    },
+    "ch0304_41_aoki": {
+      "ex": "/reference/trainer-ex/ch0304_41_aoki_ex.png",
+      "base": "/reference/trainer-ex-base/ch0304_41_aoki_base.png"
+    },
+    "ch0252_00_kabu": {
+      "ex": "/reference/trainer-ex/ch0252_00_kabu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0252_00_kabu_base.png"
+    },
+    "ch0252_40_kabu": {
+      "ex": "/reference/trainer-ex/ch0252_40_kabu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0252_40_kabu_base.png"
+    },
+    "ch0272_00_klara": {
+      "ex": "/reference/trainer-ex/ch0272_00_klara_ex.png",
+      "base": "/reference/trainer-ex-base/ch0272_00_klara_base.png"
+    },
+    "ch0273_00_savory": {
+      "ex": "/reference/trainer-ex/ch0273_00_savory_ex.png",
+      "base": "/reference/trainer-ex-base/ch0273_00_savory_base.png"
+    },
+    "ch0199_00_kogomi": {
+      "ex": "/reference/trainer-ex/ch0199_00_kogomi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0199_00_kogomi_base.png"
+    },
+    "ch0317_00_pepper": {
+      "ex": "/reference/trainer-ex/ch0317_00_pepper_ex.png",
+      "base": "/reference/trainer-ex-base/ch0317_00_pepper_base.png"
+    },
+    "ch0317_40_pepper": {
+      "ex": "/reference/trainer-ex/ch0317_40_pepper_ex.png",
+      "base": "/reference/trainer-ex-base/ch0317_40_pepper_base.png"
+    },
+    "ch0207_00_lematin": {
+      "ex": "/reference/trainer-ex/ch0207_00_lematin_ex.png",
+      "base": "/reference/trainer-ex-base/ch0207_00_lematin_base.png"
+    },
+    "ch0177_00_pachira": {
+      "ex": "/reference/trainer-ex/ch0177_00_pachira_ex.png",
+      "base": "/reference/trainer-ex-base/ch0177_00_pachira_base.png"
+    },
+    "ch0171_00_shijima": {
+      "ex": "/reference/trainer-ex/ch0171_00_shijima_ex.png",
+      "base": "/reference/trainer-ex-base/ch0171_00_shijima_base.png"
+    },
+    "ch0181_00_trova": {
+      "ex": "/reference/trainer-ex/ch0181_00_trova_ex.png",
+      "base": "/reference/trainer-ex-base/ch0181_00_trova_base.png"
+    },
+    "ch0327_00_pina": {
+      "ex": "/reference/trainer-ex/ch0327_00_pina_ex.png",
+      "base": "/reference/trainer-ex-base/ch0327_00_pina_base.png"
+    },
+    "ch0318_00_claver": {
+      "ex": "/reference/trainer-ex/ch0318_00_claver_ex.png",
+      "base": "/reference/trainer-ex-base/ch0318_00_claver_base.png"
+    },
+    "ch0330_00_biwa": {
+      "ex": "/reference/trainer-ex/ch0330_00_biwa_ex.png",
+      "base": "/reference/trainer-ex-base/ch0330_00_biwa_base.png"
+    },
+    "ch0187_00_sina": {
+      "ex": "/reference/trainer-ex/ch0187_00_sina_ex.png",
+      "base": "/reference/trainer-ex-base/ch0187_00_sina_base.png"
+    },
+    "ch0188_00_dexio": {
+      "ex": "/reference/trainer-ex/ch0188_00_dexio_ex.png",
+      "base": "/reference/trainer-ex-base/ch0188_00_dexio_base.png"
+    },
+    "ch0248_00_yarrow": {
+      "ex": "/reference/trainer-ex/ch0248_00_yarrow_ex.png",
+      "base": "/reference/trainer-ex-base/ch0248_00_yarrow_base.png"
+    },
+    "ch0320_00_meroko": {
+      "ex": "/reference/trainer-ex/ch0320_00_meroko_ex.png",
+      "base": "/reference/trainer-ex-base/ch0320_00_meroko_base.png"
+    },
+    "ch0328_00_shuumei": {
+      "ex": "/reference/trainer-ex/ch0328_00_shuumei_ex.png",
+      "base": "/reference/trainer-ex-base/ch0328_00_shuumei_base.png"
+    },
+    "ch0287_00_svgirl": {
+      "ex": "/reference/trainer-ex/ch0287_00_svgirl_ex.png",
+      "base": "/reference/trainer-ex-base/ch0287_00_svgirl_base.png"
+    },
+    "ch0287_40_svgirl": {
+      "ex": "/reference/trainer-ex/ch0287_40_svgirl_ex.png",
+      "base": "/reference/trainer-ex-base/ch0287_40_svgirl_base.png"
+    },
+    "ch0286_00_svboy": {
+      "ex": "/reference/trainer-ex/ch0286_00_svboy_ex.png",
+      "base": "/reference/trainer-ex-base/ch0286_00_svboy_base.png"
+    },
+    "ch0286_40_svboy": {
+      "ex": "/reference/trainer-ex/ch0286_40_svboy_ex.png",
+      "base": "/reference/trainer-ex-base/ch0286_40_svboy_base.png"
+    },
+    "ch0286_80_svboy": {
+      "ex": "/reference/trainer-ex/ch0286_80_svboy_ex.png",
+      "base": "/reference/trainer-ex-base/ch0286_80_svboy_base.png"
+    },
+    "ch0329_00_ortiga": {
+      "ex": "/reference/trainer-ex/ch0329_00_ortiga_ex.png",
+      "base": "/reference/trainer-ex-base/ch0329_00_ortiga_base.png"
+    },
+    "ch0352_00_taro": {
+      "ex": "/reference/trainer-ex/ch0352_00_taro_ex.png",
+      "base": "/reference/trainer-ex-base/ch0352_00_taro_base.png"
+    },
+    "ch0352_40_taro": {
+      "ex": "/reference/trainer-ex/ch0352_40_taro_ex.png",
+      "base": "/reference/trainer-ex-base/ch0352_40_taro_base.png"
+    },
+    "ch0182_00_ilima": {
+      "ex": "/reference/trainer-ex/ch0182_00_ilima_ex.png",
+      "base": "/reference/trainer-ex-base/ch0182_00_ilima_base.png"
+    },
+    "ch0212_00_banjiro": {
+      "ex": "/reference/trainer-ex/ch0212_00_banjiro_ex.png",
+      "base": "/reference/trainer-ex-base/ch0212_00_banjiro_base.png"
+    },
+    "ch0358_00_nelke": {
+      "ex": "/reference/trainer-ex/ch0358_00_nelke_ex.png",
+      "base": "/reference/trainer-ex-base/ch0358_00_nelke_base.png"
+    },
+    "ch0138_00_orchid2": {
+      "ex": "/reference/trainer-ex/ch0138_00_orchid2_ex.png",
+      "base": "/reference/trainer-ex-base/ch0138_00_orchid2_base.png"
+    },
+    "ch0356_00_zeiyu": {
+      "ex": "/reference/trainer-ex/ch0356_00_zeiyu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0356_00_zeiyu_base.png"
+    },
+    "ch0356_10_zeiyu": {
+      "ex": "/reference/trainer-ex/ch0356_10_zeiyu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0356_10_zeiyu_base.png"
+    },
+    "ch0356_80_zeiyu": {
+      "ex": "/reference/trainer-ex/ch0356_80_zeiyu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0356_80_zeiyu_base.png"
+    },
+    "ch0357_00_suguri": {
+      "ex": "/reference/trainer-ex/ch0357_00_suguri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0357_00_suguri_base.png"
+    },
+    "ch0357_10_suguri": {
+      "ex": "/reference/trainer-ex/ch0357_10_suguri_ex.png",
+      "base": "/reference/trainer-ex-base/ch0357_10_suguri_base.png"
+    },
+    "ch0312_00_hinatsu": {
+      "ex": "/reference/trainer-ex/ch0312_00_hinatsu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0312_00_hinatsu_base.png"
+    },
+    "ch0312_40_hinatsu": {
+      "ex": "/reference/trainer-ex/ch0312_40_hinatsu_ex.png",
+      "base": "/reference/trainer-ex-base/ch0312_40_hinatsu_base.png"
+    },
+    "ch0311_00_yone": {
+      "ex": "/reference/trainer-ex/ch0311_00_yone_ex.png",
+      "base": "/reference/trainer-ex-base/ch0311_00_yone_base.png"
+    },
+    "ch0338_00_sazare": {
+      "ex": "/reference/trainer-ex/ch0338_00_sazare_ex.png",
+      "base": "/reference/trainer-ex-base/ch0338_00_sazare_base.png"
+    },
+    "ch0338_40_sazare": {
+      "ex": "/reference/trainer-ex/ch0338_40_sazare_ex.png",
+      "base": "/reference/trainer-ex-base/ch0338_40_sazare_base.png"
+    },
+    "ch0107_00_dent": {
+      "ex": "/reference/trainer-ex/ch0107_00_dent_ex.png",
+      "base": "/reference/trainer-ex-base/ch0107_00_dent_base.png"
+    },
+    "ch0145_00_pod": {
+      "ex": "/reference/trainer-ex/ch0145_00_pod_ex.png",
+      "base": "/reference/trainer-ex-base/ch0145_00_pod_base.png"
+    },
+    "ch0146_00_corn": {
+      "ex": "/reference/trainer-ex/ch0146_00_corn_ex.png",
+      "base": "/reference/trainer-ex-base/ch0146_00_corn_base.png"
+    },
+    "ch0336_00_mimoza": {
+      "ex": "/reference/trainer-ex/ch0336_00_mimoza_ex.png",
+      "base": "/reference/trainer-ex-base/ch0336_00_mimoza_base.png"
+    },
+    "ch0337_00_corusa": {
+      "ex": "/reference/trainer-ex/ch0337_00_corusa_ex.png",
+      "base": "/reference/trainer-ex-base/ch0337_00_corusa_base.png"
+    },
+    "ch0335_00_hassaku": {
+      "ex": "/reference/trainer-ex/ch0335_00_hassaku_ex.png",
+      "base": "/reference/trainer-ex-base/ch0335_00_hassaku_base.png"
+    },
+    "ch0360_00_kakitsubata": {
+      "ex": "/reference/trainer-ex/ch0360_00_kakitsubata_ex.png",
+      "base": "/reference/trainer-ex-base/ch0360_00_kakitsubata_base.png"
+    },
+    "ch0348_00_raifort": {
+      "ex": "/reference/trainer-ex/ch0348_00_raifort_ex.png",
+      "base": "/reference/trainer-ex-base/ch0348_00_raifort_base.png"
+    },
+    "ch0315_00_wasabi": {
+      "ex": "/reference/trainer-ex/ch0315_00_wasabi_ex.png",
+      "base": "/reference/trainer-ex-base/ch0315_00_wasabi_base.png"
+    },
+    "ch0366_00_zagirl": {
+      "ex": "/reference/trainer-ex/ch0366_00_zagirl_ex.png",
+      "base": "/reference/trainer-ex-base/ch0366_00_zagirl_base.png"
+    },
+    "ch0367_00_gai": {
+      "ex": "/reference/trainer-ex/ch0367_00_gai_ex.png",
+      "base": "/reference/trainer-ex-base/ch0367_00_gai_base.png"
+    },
+    "ch0201_00_jindai": {
+      "ex": "/reference/trainer-ex/ch0201_00_jindai_ex.png",
+      "base": "/reference/trainer-ex-base/ch0201_00_jindai_base.png"
+    },
+    "ch0225_00_mars": {
+      "ex": "/reference/trainer-ex/ch0225_00_mars_ex.png",
+      "base": "/reference/trainer-ex-base/ch0225_00_mars_base.png"
+    },
+    "ch0226_00_jupiter": {
+      "ex": "/reference/trainer-ex/ch0226_00_jupiter_ex.png",
+      "base": "/reference/trainer-ex-base/ch0226_00_jupiter_base.png"
+    },
+    "ch0227_00_saturn": {
+      "ex": "/reference/trainer-ex/ch0227_00_saturn_ex.png",
+      "base": "/reference/trainer-ex-base/ch0227_00_saturn_base.png"
+    }
+  }
+}

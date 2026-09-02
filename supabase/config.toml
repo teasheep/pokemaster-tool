@@ -1,0 +1,30 @@
+# Supabase 本地開發 stack 設定 (npx supabase start / stop)
+# 雲端專案只需要 .env.local 的 URL/keys; 此檔僅影響本地 Docker stack。
+project_id = "pokemon-master-inventory"
+
+# 預設 54321-54327 已被另一個專案的本地 Supabase (capsule-crm) 佔用, 整組往後挪 20
+[api]
+port = 54341
+
+[db]
+port = 54342
+
+[db.shadow]
+port = 54340
+
+[studio]
+port = 54343
+
+[inbucket]
+port = 54344
+
+[analytics]
+port = 54347
+
+[auth]
+site_url = "http://localhost:3030"
+additional_redirect_urls = ["http://localhost:3030/auth/callback"]
+
+[auth.email]
+# 本地開發不寄信: 註冊即生效 (雲端專案請在 Dashboard 自行設定)
+enable_confirmations = false

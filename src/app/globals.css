@@ -1,0 +1,234 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* 拍組卡左下角計數 +1 時的彈跳回饋 (Tailwind v4: --animate-* 產生 animate-count-pop) */
+@keyframes count-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* 載入骨架的掃光 — 一道高光橫越灰塊。
+   刻意不用 animate-pulse: 一整牆骨架同步明滅比不動還吵, 等待時要的是和諧不是閃爍。
+   150% → -50% 是算過的: background-size 200% 時高光帶剛好從左緣外掃到右緣外, 沒有停頓。 */
+@keyframes skeleton-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+@theme inline {
+  --animate-count-pop: count-pop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-skeleton-sweep: skeleton-sweep 1.6s ease-in-out infinite;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* 主題: 參考「出刀作戰儀表板」的設計語言 (金色主調/卡片/等寬數字),
+   light = 陽光版 — 暖奶油底 + 琥珀金主色; dark = 儀表板同款夜藍 + 金 */
+:root {
+  --card: oklch(0.995 0.008 90);
+  --card-foreground: oklch(0.24 0.02 60);
+  --popover: oklch(0.995 0.008 90);
+  --popover-foreground: oklch(0.24 0.02 60);
+  --primary: oklch(0.72 0.14 70);
+  --primary-foreground: oklch(0.2 0.03 60);
+  --secondary: oklch(0.95 0.025 88);
+  --secondary-foreground: oklch(0.32 0.04 65);
+  --muted: oklch(0.945 0.02 88);
+  --muted-foreground: oklch(0.5 0.03 70);
+  --accent: oklch(0.93 0.045 85);
+  --accent-foreground: oklch(0.3 0.05 65);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.89 0.025 85);
+  --input: oklch(0.89 0.025 85);
+  --ring: oklch(0.72 0.14 70);
+  --chart-1: oklch(0.72 0.14 70);
+  --chart-2: oklch(0.65 0.12 45);
+  --chart-3: oklch(0.55 0.1 150);
+  --chart-4: oklch(0.6 0.12 250);
+  --chart-5: oklch(0.5 0.1 320);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.975 0.015 90);
+  --sidebar-foreground: oklch(0.24 0.02 60);
+  --sidebar-primary: oklch(0.72 0.14 70);
+  --sidebar-primary-foreground: oklch(0.2 0.03 60);
+  --sidebar-accent: oklch(0.93 0.045 85);
+  --sidebar-accent-foreground: oklch(0.3 0.05 65);
+  --sidebar-border: oklch(0.89 0.025 85);
+  --sidebar-ring: oklch(0.72 0.14 70);
+  --background: oklch(0.977 0.013 90);
+  --foreground: oklch(0.24 0.02 60);
+  /* 載入骨架的掃光高光 = foreground 的低透明度 (light 深一階的沉影) */
+  --skeleton-sheen: oklch(0.24 0.02 60 / 14%);
+}
+
+.dark {
+  /* 儀表板原色系: #12141b 底 / #242938 卡 / #d9a441 金 */
+  --background: oklch(0.19 0.015 270);
+  --foreground: oklch(0.94 0.012 90);
+  --card: oklch(0.26 0.02 268);
+  --card-foreground: oklch(0.94 0.012 90);
+  --popover: oklch(0.24 0.02 268);
+  --popover-foreground: oklch(0.94 0.012 90);
+  --primary: oklch(0.76 0.12 78);
+  --primary-foreground: oklch(0.2 0.03 78);
+  --secondary: oklch(0.3 0.02 268);
+  --secondary-foreground: oklch(0.94 0.012 90);
+  --muted: oklch(0.3 0.02 268);
+  --muted-foreground: oklch(0.7 0.015 275);
+  --accent: oklch(0.32 0.025 268);
+  --accent-foreground: oklch(0.94 0.012 90);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.76 0.12 78);
+  --chart-1: oklch(0.76 0.12 78);
+  --chart-2: oklch(0.65 0.12 45);
+  --chart-3: oklch(0.6 0.1 150);
+  --chart-4: oklch(0.6 0.12 250);
+  --chart-5: oklch(0.55 0.1 320);
+  --sidebar: oklch(0.24 0.02 268);
+  --sidebar-foreground: oklch(0.94 0.012 90);
+  --sidebar-primary: oklch(0.76 0.12 78);
+  --sidebar-primary-foreground: oklch(0.2 0.03 78);
+  --sidebar-accent: oklch(0.32 0.025 268);
+  --sidebar-accent-foreground: oklch(0.94 0.012 90);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.76 0.12 78);
+  /* dark 則是亮一階的反光 (不寫死白色 — 夜藍底上的純白掃光會刺眼) */
+  --skeleton-sheen: oklch(0.94 0.012 90 / 12%);
+}
+
+/* 載入骨架的灰塊 — 全站唯一寫法 (components/skeletons.tsx 的 Sk 與 ui/skeleton.tsx 都吃這顆)。
+   必須寫在檔案頂層: @utility 包進 @layer 裡整個 class 不會產生。
+   高光走 --skeleton-sheen (light/dark 各給一個, 見上面的 token 區) 而不是 color-mix:
+   Tailwind 會替 color-mix 補一份不透明的 @supports fallback, 舊 Safari 會看到一道實色黑帶。
+   animation 這裡寫死不吃 var(--animate-skeleton-sweep): @theme inline 只把值內聯進
+   animate-* utility, 不會在 :root 留下那個變數 (驗過建置產物, 找不到 --animate-count-pop)。 */
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--muted);
+
+  /* 掃光是 ::after 的 transform, **不是**灰塊自己的 background-position —
+     一面骨架牆同時有兩三百顆灰塊, 動 background-position 每 frame 都要重繪整片漸層,
+     動 transform 才只走 compositor。等待畫面反過來吃掉低階手機的算力就本末倒置了。
+     節奏錯開走 --skeleton-delay (Sk 的 delay prop): 動畫掛在 ::after 上,
+     父層的 inline animationDelay 吃不到, 必須用自訂屬性傳進來。 */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      90deg,
+      transparent 25%,
+      var(--skeleton-sheen) 50%,
+      transparent 75%
+    );
+    animation: skeleton-sweep 1.6s ease-in-out infinite;
+    animation-delay: var(--skeleton-delay, 0ms);
+  }
+}
+
+/* 看板的手機「我要出刀」固定列 (65px) 疊在底部導覽列上方。它是 fixed 不佔文件流,
+   而頁尾在 BattleClient 外面 (root layout) —— 元件自己的 padding 補不到頁尾底下,
+   捲到底時整條「非官方第三方工具」聲明會被蓋住 (導覽列那份留白在 layout.tsx 的 body class)。
+   BattleClient 掛載時在 body 標記, 這裡補足額外的那 65px。 */
+@media (max-width: 639px) {
+  body[data-run-bar="1"] {
+    padding-bottom: calc(3.5rem + 1px + 4.0625rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* 減少動態偏好 = 靜態灰塊 (與全站 motion-reduce:* 同一個立場)。
+   寫在 layer 外面, 才蓋得過 utilities layer 的 .skeleton。 */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    content: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* 儀表板同款細格紋理 (light 用暖色極淡線, dark 用白色極淡線) */
+    background-image:
+      linear-gradient(oklch(0.5 0.05 70 / 4%) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.5 0.05 70 / 4%) 1px, transparent 1px);
+    background-size: 34px 34px;
+  }
+  .dark body {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  }
+  html {
+    @apply font-sans;
+  }
+  /* Tailwind v4 preflight 把 button 游標改成 default —
+     全站可點的東西一律手指游標, 不用逐顆加 class (新元件也自動涵蓋) */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  select:not(:disabled),
+  summary,
+  label:has(> input[type="checkbox"]:not(:disabled)),
+  label:has(> input[type="radio"]:not(:disabled)) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  /* 數字一律等寬 — 儀表板的 mono 數字質感 */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background: oklch(0.72 0.14 70 / 35%);
+  }
+}

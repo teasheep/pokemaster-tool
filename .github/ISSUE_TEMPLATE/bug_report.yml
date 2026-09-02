@@ -1,0 +1,41 @@
+name: 回報問題
+description: 東西壞了 / 行為和預期不同
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **安全性問題請不要開這裡** —— 走 [SECURITY.md](../blob/main/SECURITY.md) 的私下回報流程。
+  - type: textarea
+    id: what
+    attributes:
+      label: 發生什麼事
+      description: 你看到的行為，以及你預期的行為
+      placeholder: |
+        我在道館戰看板點了出刀登記，券數沒有扣。
+        預期：券數應該從 13 變成 12。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 重現步驟
+      placeholder: |
+        1. 進 /gyms/<id>/battles/<battleId>
+        2. 在第 3 關那一列按 Swords
+        3. 選主力，送出
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: 環境
+      description: 瀏覽器 / 裝置 / 線上還是本機
+      placeholder: iPhone Safari 26 / 線上 pokemaster-tool.com
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: 其他
+      description: console 錯誤、截圖、發生時間（有的話幫助很大）
