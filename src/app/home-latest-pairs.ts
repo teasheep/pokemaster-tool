@@ -2,7 +2,7 @@ import { pairName } from "@/lib/pairs/name";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 
 /**
- * 首頁拍組看板列的那幾組 —— **catalog 裡最新上架的五組** (2026-09-03 使用者指定),
+ * 首頁拍組看板列的那幾組 —— **catalog 裡最新上架的五組 5★** (2026-09-03 使用者指定),
  * 持有人數隨機 (使用者:「持有的數字就隨機就可以了」)。
  *
  * 為什麼首頁不寫死拍組: 寫死的話每次改版都要有人記得回來換, 而且遲早會變成一份過期名單。
@@ -22,6 +22,16 @@ export const HOME_GYM_MEMBERS = 20;
 
 /** 看板列幾組 */
 const BOARD_ROWS = 5;
+
+/**
+ * 只收 5★ (2026-09-03 使用者:「最新的 5 星拍組, 4 星的就先放一放」)。
+ *
+ * 每一波改版通常 5★ 與 4★ 一起上, 不濾的話首頁一半是 4★ —— 而道館戰在乎的、
+ * 大家會去抽的、值得放到門面上的都是 5★。星級一律看 `basePotential` (原始星級,
+ * AGENTS「圖鑑星級一律 basePotential」) 而不是個人升到幾星。
+ * 寫 `>=` 而不是 `===`: 之後遊戲真的長出更高的原始星級時不用回來改這裡。
+ */
+const MIN_BASE_POTENTIAL = 5;
 
 /**
  * 每一列「20 人中幾人有」的擲骰區間, 由新到舊。
@@ -56,7 +66,7 @@ export type HomePairRow = {
  */
 export function pickLatestPairRows(catalog: ClientPairRecord[]): HomePairRow[] {
   return catalog
-    .filter((p) => p.releaseDate)
+    .filter((p) => p.releaseDate && p.basePotential >= MIN_BASE_POTENTIAL)
     // pairId 當決勝鍵: 同一天上架好幾組時排序才是穩定的
     .sort((a, b) => b.releaseDate!.localeCompare(a.releaseDate!) || b.pairId.localeCompare(a.pairId))
     .slice(0, BOARD_ROWS)

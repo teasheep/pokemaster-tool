@@ -16,7 +16,10 @@
 //     「資料填進來」那一下, 但每輪回來都掃一次就變成吵。
 //  4. **點過圓點就停止自動輪替** (WCAG 2.2.2: 自動變動的內容要有辦法停下來)。
 //     滑鼠移上去 / 鍵盤 focus 進來也暫停 —— 有人正在看的時候不要抽換他在看的東西。
-//     `prefers-reduced-motion` 則一開始就不自動輪, 只留圓點讓人自己切。
+//     `prefers-reduced-motion` **照樣輪**, 只是換場不做淡入與上浮 (直接換)。
+//     那個偏好要擋的是「會動的東西」(視差、飄浮、滑入), 換一塊內容本身不是動態;
+//     整個停掉的話, 開了那個偏好的人會永遠只看得到第一塊看板 —— 少掉一半的內容,
+//     而不是少掉動畫。(這台開發機的 Windows 就關了動畫效果, 一度以為功能壞了。)
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 
@@ -93,10 +96,10 @@ export function HomeHeroBoards({
   }, [index, reduce]);
 
   useEffect(() => {
-    if (!auto || paused || reduce) return;
+    if (!auto || paused) return;
     const t = window.setTimeout(() => setIndex((i) => (i + 1) % BOARDS.length), HOLD_MS);
     return () => window.clearTimeout(t);
-  }, [auto, paused, reduce, index]);
+  }, [auto, paused, index]);
 
   return (
     <div

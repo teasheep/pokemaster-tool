@@ -134,10 +134,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   兩塊**一直都掛著**只是輪流淡入 (grid 疊同一格 + `h-full`), 切換時版面一個像素都不動;
   那一下變化 (券 13→12 / 持有 +1) **由 hero 統一計時** (`ticked` prop) —— 看板自己算 timer 的話
   兩顆都在載入時跑完, 輪到第二塊時動作早就播完了; 點過圓點就停止自動輪替 (WCAG 2.2.2),
-  `prefers-reduced-motion` 則一開始就不自動輪; 長條的掃入 (`revealed`) **只播第一次**,
-  每輪回來都掃一次會變吵。
-- **拍組看板列的是 catalog 最新上架的五組, 持有人數隨機** (`app/home-latest-pairs.ts`,
-  2026-09-03 使用者指定): 寫死名單遲早會過期, 吃 catalog 就自己跟著改版更新。兩件事:
+  `prefers-reduced-motion` **照樣輪**, 只是換場不淡入不上浮 (直接換) —— 那個偏好要擋的是
+  「會動的東西」(視差/飄浮/滑入), 換一塊內容本身不是動態; 整個停掉的話開了偏好的人會
+  **永遠只看得到第一塊看板**, 少掉的是內容不是動畫 (前科: 開發機的 Windows 關了動畫效果,
+  一度以為輪替功能壞了 —— 查 `SPI_GETCLIENTAREAANIMATION` 才知道是系統設定)。
+  長條的掃入 (`revealed`) **只播第一次**, 每輪回來都掃一次會變吵。
+- **拍組看板列的是 catalog 最新上架的五組 5★, 持有人數隨機** (`app/home-latest-pairs.ts`,
+  2026-09-03 使用者指定): 寫死名單遲早會過期, 吃 catalog 就自己跟著改版更新。三件事:
+  **只收 5★** (`basePotential >= 5`) —— 每一波改版 5★ 與 4★ 一起上, 不濾的話首頁一半是 4★,
+  而大家會去抽、道館戰在乎的都是 5★ (使用者:「4 星的就先放一放」);
   一律走 `loadPairsForClient()` (未公布的那批在那裡就濾掉了, 不會冒到對外的首頁);
   擲骰子**只能在 server 端擲一次再傳下去** —— 在 client 元件裡擲會 SSR 對不起來,
   而且 `react-hooks/purity` 會直接把 render 裡的 `Math.random()` 判成錯誤。
@@ -159,7 +164,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   4. **手機/窄視窗整層不掛載** (`useMedia("(min-width: 768px)")` 直接 return null, 不是 CSS 隱藏):
      挖空那招靠的是四周有留白, 手機沒有; 而且 **display:none 的圖瀏覽器照樣會下載**,
      用 CSS 藏等於白花流量 (手機 75KB / 桌機 179KB 的差就是這樣來的)。
-     滑鼠視差另外要求 `(pointer: fine)` —— 平板照樣看得到卡, 只是不跟著手指跑。
+     滑鼠視差另外要求 `(pointer: fine)` 與**沒開**減少動態 —— 平板照樣看得到卡, 只是不跟著手指跑;
+     視差與飄浮是這個偏好的正中紅心 (前庭敏感), 那兩個一定要照關, 不要為了 demo 好看而忽略。
+     **要在關了動畫效果的機器上驗這些**, 記得用 playwright 的 `reducedMotion: "no-preference"`
+     開真的 Chrome (`channel: "chrome"`), 不然會一直看到「什麼都沒動」。
   用到的拍組**只能是已上市的**: 這一層是對外的, 未公布拍組的美術素材不能出現 ——
   所以 slot 一律用 pairId 去 `loadPairsForClient()` 的結果撈, **撈不到就不畫**。
 - **成員頭像尺寸**: 名冊/一般清單用 md (44px), 排刀那種密集列用 28px — 不要再一邊 64 一邊 20。
