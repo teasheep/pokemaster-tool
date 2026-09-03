@@ -67,6 +67,15 @@ supabase/.branches/
 # 道館內部資料 (成員表單/LINE 記錄等隱私資料, 一律不上 git)
 ref/
 
+# 內部決策筆記 (使用者 2026-09-03 指定不上 git)
+#   devops.md       託管/資料庫的成本模型、實測數字、規模路線圖
+#   data-update.md  資料管線的操作手冊
+#   rebuff-notes.md 降抗重做前的查證筆記
+# **檔案仍然留在本機**, AGENTS.md 與程式註解照樣指得到它們; 只是不進版控,
+# 所以新 clone 會沒有這幾份 —— 引用它們的地方要標明「本機筆記」不要當成公開文件連結。
+# (2026-09-03 之前已經推上去的版本不回溯改寫, 使用者說不用。)
+docs/
+
 # Cloudflare (OpenNext build 產物 / wrangler 本地狀態 / 部署憑證)
 .open-next/
 .wrangler/

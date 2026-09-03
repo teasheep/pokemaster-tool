@@ -88,7 +88,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   四張表 + gym_pairs.tag/source_kind 兩欄 (drop 前備份在 ref/archive-ref-tables-2026-08-17.json)。
   「拍組共筆標籤」功能同時整個移除 — 使用者根本不知道它存在 (「共筆標籤是什麼 在哪裡啊」)。
 - **降抗整套待重做** (2026-08-16 使用者要求先拔掉): 排刀降抗先手、屬性戰力燈號、
-  「全體屬性戰力」面板都移除了。重做前先看 `docs/rebuff-notes.md`
+  「全體屬性戰力」面板都移除了。重做前先看 `docs/rebuff-notes.md` (本機筆記, 不在 git)
   (官方用語「屬性抵抗」, 有階數/單體/全體/觸發之分), 不要拿舊試算表數值長回來。
 - **沒有「館主」, 只有 管理員/成員/顧問** (0041): 建館的人就是管理員 (`create_gym` RPC),
   管理員可互相升降、也可把自己移除, 但**最後一位管理員動不了** (DB trigger `LAST_ADMIN`;
@@ -331,7 +331,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   **append 不是覆蓋**, 所以不要在 `/*` 寫 Cache-Control。CSP 只上 `frame-ancestors`/`base-uri`/
   `form-action`/`object-src` —— 完整 CSP 會被 Next 的 inline script (next-themes 防閃爍、
   `__next_f` flight 資料) 打掛。
-- **DevOps 的決策脈絡在 `docs/devops.md`** (成本模型、colo=SJC 的實測、RLS 34 倍、
+- **`docs/` 是本機筆記, 不進版控** (2026-09-03 使用者指定, `.gitignore` 已加):
+  `devops.md` / `data-update.md` / `rebuff-notes.md` 三份都還在本機, 下面與程式註解裡
+  照樣指得到; 但**新 clone 會沒有這幾份**, 所以 README/ROADMAP 那種對外文件不要連過去,
+  也不要因為「檔案不見了」就重新建一份或把它們加回 git。
+- **DevOps 的決策脈絡在 `docs/devops.md`** (本機筆記; 成本模型、colo=SJC 的實測、RLS 34 倍、
   訊號驅動的階段路線圖、PowerShell 操作手冊)。要動託管/資料庫/規模相關的決定前先讀那份。
 - **完整 645 筆 catalog 只有 PairPicker 勾「全圖鑑」時才載** (`/api/catalog?v=<CATALOG_VERSION>`):
   teams / battle 頁只送「道館名單 ∪ 已在隊伍裡」的子集 (464KB → 約 50KB)。三件事不能漏:

@@ -47,6 +47,7 @@ import {
 } from "./stage-board";
 import { ReportRunSheet } from "./report-run-sheet";
 import { createClient } from "@/lib/supabase/client";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { reportBattleLog } from "@/lib/gym/battle-log";
 import { cn } from "@/lib/utils";
 import type { GymViewer } from "@/lib/gym/queries";
@@ -60,6 +61,9 @@ import {
 } from "@/lib/gym/types";
 import { spentByMember } from "@/lib/gym/tickets";
 import type { BattleLogRole, Database, SyncPairType } from "@/lib/supabase/types";
+
+/** realtime 事件合併的窗口 (ms) — 理由見下面掛 channel 的那個 effect */
+const COALESCE_MS = 200;
 
 // StageRow / BattleLogRow 是 stage-board 那邊的欄位投影 (兩處讀的是同一批資料)
 type TicketRow = Pick<
@@ -242,12 +246,26 @@ export function BattleClient({
   }, [supabase, battle.id]);
 
   const refetchLogs = useCallback(async () => {
-    const { data } = await supabase
-      .from("battle_logs")
-      .select("id, member_id, stage_id, role, tickets_used, round, created_at")
-      .eq("battle_id", battle.id)
-      .order("created_at", { ascending: false });
-    if (data) setLogs(data);
+    // **一定要分頁** —— PostgREST 一次最多回 1000 列。這一支之前是純 .eq() 沒有 range:
+    // 首次 SSR (battles/[battleId]/page.tsx) 是分頁的, 但 realtime 刷新之後就會**靜默截斷**
+    // 在剛好 1000 列, 而且只在場次夠大時才發生 (券上限可調到 99, 0 張券也能插列)。
+    // AGENTS.md「PostgREST 一次最多 1000 列」列了三個地方, 這是漏掉的第四個。
+    //
+    // firstBatchPages: 1 —— 這支會被**每一個開著看板的人**同時呼叫, 預設的 3 頁平行
+    // 等於把 2 個空請求乘上人數 (見 fetch-all.ts 的 FetchAllOptions)。
+    // order 要有決勝鍵: offset 分頁在讀取期間有人寫入會讓列位移, 邊界會重複或漏。
+    const data = await fetchAllRows<BattleLogRow>(
+      (from, to) =>
+        supabase
+          .from("battle_logs")
+          .select("id, member_id, stage_id, role, tickets_used, round, created_at")
+          .eq("battle_id", battle.id)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .range(from, to),
+      { firstBatchPages: 1 }
+    );
+    setLogs(data);
   }, [supabase, battle.id]);
 
   const refetchRoundNotes = useCallback(async () => {
@@ -283,32 +301,65 @@ export function BattleClient({
     ]);
   }, [refetchStages, refetchLogs, refetchTickets, refetchTeams, refetchRoundNotes]);
 
+  /**
+   * Realtime → 重抓。**事件要先合併再抓**, 不要一個事件一次查詢。
+   *
+   * 這是全站唯一會被放大的地方: 看板開著的每一個人都訂了同樣四張表, 所以
+   * 「一個人做一件事」= 所有人各自發查詢。而且一次出刀本來就會產生**兩個**事件
+   * (`reportBattleLog` 插 battle_logs + `adjust_member_ticket` 更新 member_tickets),
+   * 道館戰進行中大家幾秒出一刀 —— 沒有合併的話, 每一刀都乘上開著看板的人數。
+   *
+   * 合併之後: 同一個 COALESCE_MS 窗口內不管進來幾個事件、幾張表, 每張表最多只重抓一次
+   * (`pending` 是 Set)。十個人同時出刀從 20 次查詢/人 變成 2 次查詢/人。
+   *
+   * 200ms 是「看起來仍然是即時的」與「真的合併得到東西」的折衷 —— 人對 200ms 的延遲
+   * 不會有感, 但同一批動作幾乎都落在同一個窗口裡。
+   */
   useEffect(() => {
     const filter = `battle_id=eq.${battle.id}`;
+    const jobs: Record<string, () => Promise<void>> = {
+      tickets: refetchTickets,
+      stages: refetchStages,
+      logs: refetchLogs,
+      status: refetchStatus,
+    };
+    const pending = new Set<keyof typeof jobs>();
+    let timer = 0;
+
+    const flush = () => {
+      timer = 0;
+      const due = [...pending];
+      pending.clear();
+      void Promise.all(due.map((k) => jobs[k]()));
+    };
+    const mark = (k: keyof typeof jobs) => {
+      pending.add(k);
+      if (!timer) timer = window.setTimeout(flush, COALESCE_MS);
+    };
+
     const channel = supabase
       .channel(`battle-${battle.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "member_tickets", filter },
-        () => void refetchTickets()
+        () => mark("tickets")
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "battle_stages", filter },
-        () => void refetchStages()
+        () => mark("stages")
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "battle_logs", filter },
-        () => void refetchLogs()
+      .on("postgres_changes", { event: "*", schema: "public", table: "battle_logs", filter }, () =>
+        mark("logs")
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "gym_battles", filter: `id=eq.${battle.id}` },
-        () => void refetchStatus()
+        () => mark("status")
       )
       .subscribe();
     return () => {
+      if (timer) window.clearTimeout(timer);
       void supabase.removeChannel(channel);
     };
   }, [supabase, battle.id, refetchTickets, refetchStages, refetchStatus, refetchLogs]);

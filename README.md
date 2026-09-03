@@ -12,7 +12,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E)](https://supabase.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-[線上站台](https://pokemaster-tool.com) · [開發藍圖](ROADMAP.md) · [更新日誌](CHANGELOG.md) · [DevOps 決策紀錄](docs/devops.md)
+[線上站台](https://pokemaster-tool.com) · [開發藍圖](ROADMAP.md) · [更新日誌](CHANGELOG.md)
 
 </div>
 
@@ -57,7 +57,7 @@ Serebii（太晶化／超覺醒）。每筆記錄帶 `verifiedSources` 標記誰
 第二條是實際外洩過才補上的 —— 詳見 [CHANGELOG](CHANGELOG.md) 的 `1.1.0`。
 
 **效能是量出來的** — Cloudflare Workers 免費方案每請求 CPU 上限 10 ms，而本站中位數是 286 ms。
-處理過程與數字（哪些有效、哪些推論被否證）完整記在 [`docs/devops.md`](docs/devops.md)：
+處理的結果：
 「全圖鑑」從每次 45–65 ms CPU 的 API 改成 0 CPU 的指紋化靜態資產、
 一個 IntersectionObserver 服務整面卡牆的延遲載圖（981 個請求 / 14.7 MB → 手機 93 個 / 1.04 MB）、
 部署 payload 從 109 MB 降到 5 MB。也記了**失敗的假設**：接自訂網域並沒有像推論的那樣改善 colo 路由。
@@ -149,9 +149,6 @@ src/
   data/           產生出來的 catalog 與交叉驗證報告
 scripts/          資料管線（10 個階段，冪等可重跑）+ 部署 + migration
 supabase/migrations/   依序編號的 SQL，由 setup-supabase.mjs 直接對雲端套用
-docs/
-  devops.md       託管／資料庫／規模的決策紀錄，含實測數字與被否證的推論
-  data-update.md  資料管線的操作說明
 AGENTS.md         這個 repo 的硬性慣例與踩過的坑
 ```
 

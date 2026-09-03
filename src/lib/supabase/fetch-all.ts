@@ -18,6 +18,15 @@ const PAGE_SIZE = 1000;
  */
 const FIRST_BATCH_PAGES = 3;
 
+/**
+ * 「一批 3 頁」是為了**省一趟跨太平洋往返**而多發 2 個空請求 —— 那個交換在 server 端划算。
+ * 但有一種呼叫端要反過來算: **同一件事會被 N 個瀏覽器同時做**的那種 (道館戰看板收到
+ * realtime 事件時, 每一個開著看板的人都會重抓一次)。那裡多發的 2 個空請求要乘上 N,
+ * 而省下的那趟往返只是自己這一台快一點。這種呼叫端傳 `firstBatchPages: 1`:
+ * 資料沒破 1000 列時就是**一個請求**, 破了才多等一趟。
+ */
+export type FetchAllOptions = { firstBatchPages?: number };
+
 /** 之後每批加倍, 但不要無限膨脹 (Workers 有 subrequest 上限) */
 const MAX_BATCH_PAGES = 8;
 
@@ -44,10 +53,13 @@ type PageQuery<T> = (from: number, to: number) => PromiseLike<{
  *    這在舊版逐頁 await 時一樣會發生, 而且窗口大上百倍。要根治得由呼叫端補一個穩定
  *    排序 (例如 `.order("id")`) —— 那是呼叫端的事, 不在這支。
  */
-export async function fetchAllRows<T>(query: PageQuery<T>): Promise<T[]> {
+export async function fetchAllRows<T>(
+  query: PageQuery<T>,
+  opts?: FetchAllOptions
+): Promise<T[]> {
   const out: T[] = [];
   let nextPage = 0;
-  let batchPages = FIRST_BATCH_PAGES;
+  let batchPages = Math.max(1, opts?.firstBatchPages ?? FIRST_BATCH_PAGES);
 
   for (;;) {
     const pages = await Promise.all(
