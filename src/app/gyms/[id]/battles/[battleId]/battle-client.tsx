@@ -302,21 +302,27 @@ export function BattleClient({
   }, [refetchStages, refetchLogs, refetchTickets, refetchTeams, refetchRoundNotes]);
 
   /**
-   * Realtime → 重抓。**事件要先合併再抓**, 不要一個事件一次查詢。
+   * Realtime。看板是全站**唯一會被人數放大**的地方 (一場道館戰 = 每個成員一個分頁),
+   * 所以這一段的每個決定都是在跟「乘上人數」對抗:
    *
-   * 這是全站唯一會被放大的地方: 看板開著的每一個人都訂了同樣四張表, 所以
-   * 「一個人做一件事」= 所有人各自發查詢。而且一次出刀本來就會產生**兩個**事件
-   * (`reportBattleLog` 插 battle_logs + `adjust_member_ticket` 更新 member_tickets),
-   * 道館戰進行中大家幾秒出一刀 —— 沒有合併的話, 每一刀都乘上開著看板的人數。
+   * 1. **走 broadcast 不走 postgres_changes** (0054)。postgres_changes 的成本是
+   *    O(訂閱人數) —— 每個變更事件, Realtime 伺服器要對每一個訂閱者各跑一次 RLS。
+   *    broadcast 只在**訂閱那一刻**授權一次 (`realtime.messages` 的 policy),
+   *    而且**同時連線數**才是真正的硬牆 (超過上限不是變慢, 是連不上)。
+   * 2. **直接套用 payload 裡的那一列, 不重抓整張表**。舊做法是「收到事件 → 重抓」,
+   *    那是第二層放大: N 個看板 = N 次查詢。現在是 0 次。
+   *    只有**順序會變**的情況 (關卡新增/刪除, 本地沒有 seq 排不了) 才退回重抓;
+   *    收到不認得的東西也退回重抓 —— 寧可多一次查詢, 不要畫面跟資料庫不一致。
+   * 3. **已結束的賽事不訂閱**。舊賽事會一直累積, 有人翻看板就佔一條連線, 但它不會再變。
+   * 4. **分頁看不見就斷線**, 回來再訂 + 補一次完整重抓 (斷線期間漏掉的事件靠這次補回來)。
+   *    手機使用者切走的分頁佔著連線是純浪費。
    *
-   * 合併之後: 同一個 COALESCE_MS 窗口內不管進來幾個事件、幾張表, 每張表最多只重抓一次
-   * (`pending` 是 Set)。十個人同時出刀從 20 次查詢/人 變成 2 次查詢/人。
-   *
-   * 200ms 是「看起來仍然是即時的」與「真的合併得到東西」的折衷 —— 人對 200ms 的延遲
-   * 不會有感, 但同一批動作幾乎都落在同一個窗口裡。
+   * 退回重抓時仍然先合併 (COALESCE_MS): 同一個窗口內每張表最多重抓一次。
    */
   useEffect(() => {
-    const filter = `battle_id=eq.${battle.id}`;
+    // 已結束的賽事不會再變 —— 連都不用連
+    if (status === "finished") return;
+
     const jobs: Record<string, () => Promise<void>> = {
       tickets: refetchTickets,
       stages: refetchStages,
@@ -325,44 +331,112 @@ export function BattleClient({
     };
     const pending = new Set<keyof typeof jobs>();
     let timer = 0;
-
     const flush = () => {
       timer = 0;
       const due = [...pending];
       pending.clear();
       void Promise.all(due.map((k) => jobs[k]()));
     };
-    const mark = (k: keyof typeof jobs) => {
+    const markRefetch = (k: keyof typeof jobs) => {
       pending.add(k);
       if (!timer) timer = window.setTimeout(flush, COALESCE_MS);
     };
 
-    const channel = supabase
-      .channel(`battle-${battle.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "member_tickets", filter },
-        () => mark("tickets")
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "battle_stages", filter },
-        () => mark("stages")
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "battle_logs", filter }, () =>
-        mark("logs")
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "gym_battles", filter: `id=eq.${battle.id}` },
-        () => mark("status")
-      )
-      .subscribe();
-    return () => {
-      if (timer) window.clearTimeout(timer);
-      void supabase.removeChannel(channel);
+    /** broadcast 的 payload 形狀 (realtime.broadcast_changes 產的) */
+    type ChangePayload = {
+      operation?: string;
+      table?: string;
+      record?: Record<string, unknown> | null;
+      old_record?: Record<string, unknown> | null;
     };
-  }, [supabase, battle.id, refetchTickets, refetchStages, refetchStatus, refetchLogs]);
+
+    const applyChange = (p: ChangePayload) => {
+      const op = p.operation;
+      const rec = p.record ?? null;
+      const old = p.old_record ?? null;
+      const id = (rec?.id ?? old?.id) as string | undefined;
+
+      switch (p.table) {
+        case "battle_logs": {
+          if (!id) return markRefetch("logs");
+          if (op === "DELETE") return setLogs((prev) => prev.filter((l) => l.id !== id));
+          const row = rec as unknown as BattleLogRow;
+          // 清單是 created_at 由新到舊 —— 新增的一定是最新的那筆, 放最前面就對了
+          if (op === "INSERT")
+            return setLogs((prev) => (prev.some((l) => l.id === id) ? prev : [row, ...prev]));
+          return setLogs((prev) => prev.map((l) => (l.id === id ? row : l)));
+        }
+        case "member_tickets": {
+          const memberId = (rec?.member_id ?? old?.member_id) as string | undefined;
+          if (!memberId) return markRefetch("tickets");
+          if (op === "DELETE")
+            return setTickets((prev) => prev.filter((t) => t.member_id !== memberId));
+          const row = rec as unknown as TicketRow;
+          return setTickets((prev) =>
+            prev.some((t) => t.member_id === memberId)
+              ? prev.map((t) => (t.member_id === memberId ? row : t))
+              : [...prev, row]
+          );
+        }
+        case "battle_stages": {
+          // 關卡的順序來自查詢的 `.order("seq")`, 而本地的 StageRow 沒有 seq ——
+          // 新增/刪除排不出正確位置, 只有「就地改」能安全套用。
+          if (op !== "UPDATE" || !id) return markRefetch("stages");
+          const row = rec as unknown as StageRow;
+          return setStages((prev) => prev.map((s) => (s.id === id ? row : s)));
+        }
+        case "gym_battles": {
+          if (!rec) return markRefetch("status");
+          return setDates({
+            startsOn: (rec.starts_on as string | null) ?? null,
+            endsOn: (rec.ends_on as string | null) ?? null,
+          });
+        }
+        default:
+          // 不認得的表 = 有人加了新的 trigger 但沒改這裡 → 整塊重抓, 不要靜靜地不同步
+          return void Object.keys(jobs).forEach((k) => markRefetch(k as keyof typeof jobs));
+      }
+    };
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const connect = async () => {
+      if (channel) return;
+      // 私有頻道要帶著使用者的 token 授權 (realtime.messages 的 policy 才判得出是誰)
+      await supabase.realtime.setAuth();
+      const ch = supabase.channel(`battle:${battle.id}`, { config: { private: true } });
+      for (const event of ["INSERT", "UPDATE", "DELETE"]) {
+        ch.on("broadcast", { event }, ({ payload }) => applyChange(payload as ChangePayload));
+      }
+      channel = ch.subscribe();
+    };
+
+    const disconnect = () => {
+      if (!channel) return;
+      const ch = channel;
+      channel = null;
+      void supabase.removeChannel(ch);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        disconnect();
+        return;
+      }
+      void connect();
+      // 斷線期間漏掉的事件沒有補送機制 —— 回來時整塊重抓一次才不會停在舊資料
+      for (const k of Object.keys(jobs)) markRefetch(k as keyof typeof jobs);
+    };
+
+    if (document.visibilityState !== "hidden") void connect();
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (timer) window.clearTimeout(timer);
+      disconnect();
+    };
+  }, [supabase, battle.id, status, refetchTickets, refetchStages, refetchStatus, refetchLogs]);
 
   async function updateDates(patch: { starts_on?: string | null; ends_on?: string | null }) {
     const { error } = await supabase.from("gym_battles").update(patch).eq("id", battle.id);

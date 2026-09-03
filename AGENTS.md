@@ -370,6 +370,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   不用官方 9+3/日記法), 上限可 ± (模擬用; 降上限會夾住剩餘)。寫入一律走
   `adjust_member_ticket(p_delta, p_cap_delta)` 原子 RPC, 不要 client 算絕對值回寫。
   燈號三列 (`TeamFitRows`) 是純檢視 — 點頭像預排刀已拔掉, 不要加回點擊寫入。
+- **看板的即時更新走 broadcast 不走 postgres_changes** (0054, 2026-09-03): 看板是全站
+  **唯一會被人數放大**的地方 (一場道館戰 = 每個成員一個分頁), 四件事都是在跟那個倍率對抗:
+  1. `postgres_changes` 的成本是 O(訂閱人數) —— 每個事件對每個訂閱者各跑一次 RLS;
+     broadcast 只在**訂閱那一刻**授權一次 (`realtime.messages` 的 policy)。
+     而且**同時連線數**是硬牆 (超過上限不是變慢, 是連不上)。
+  2. **直接套用 payload 裡的那一列, 不重抓整張表**。舊做法「收到事件 → 重抓」是第二層放大
+     (N 個看板 = N 次查詢)。只有順序會變的情況 (關卡新增/刪除, 本地 StageRow 沒有 seq)
+     與不認得的表才退回重抓, 退回時仍先合併 (200ms 窗口內每張表最多一次)。
+  3. **已結束的賽事不訂閱** (它不會再變, 但會一直被人翻); **分頁看不見就斷線**,
+     回來時要**補一次完整重抓** —— 斷線期間漏掉的事件沒有補送機制。
+  4. trigger **廣播失敗只 warning 不丟例外**: trigger 丟例外會讓整筆寫入 rollback,
+     出刀就報不了 (與 log_activity 那條同一個地雷)。
+  ⚠ **broadcast 是逐 topic 授權, postgres_changes 是逐列授權。** 現在等價是因為
+  battle_logs / member_tickets / battle_stages / gym_battles 的 SELECT policy 實測全是
+  `is_gym_member(gym_id)` (純道館層級, 沒有 row 層差異)。**哪天有人給這四張表加上 row 層的
+  可見性條件, 這個等價就不成立**, 要回頭改 0054 的 policy, 否則會從看板漏資料出去。
 - **新增對戰紀錄只有一條路** (`reportBattleLog`, `lib/gym/battle-log.ts`): 看板輪次列的
   Swords (自己出刀, 要選主力/降抗) 與 + (管理員幫成員記) 跟對戰紀錄側板都走它
   (插 battle_logs + round_label 派生 + 自動扣券)。排刀 (stage_assignments) 已無新增入口,
