@@ -2,9 +2,12 @@ import { redirect } from "next/navigation";
 
 import { GoogleSignInButton } from "@/components/google-signin-button";
 import { PageShell } from "@/components/page-shell";
+import { loadPairsForClient } from "@/lib/pairs/loader";
 import { getSessionUser } from "@/lib/supabase/server";
+import { ART_PAIR_IDS } from "./home-art-pairs";
 import { HomeHeroBoards } from "./home-hero-boards";
 import { HomePairArt } from "./home-pair-art";
+import { pickLatestPairRows } from "./home-latest-pairs";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +21,13 @@ export const dynamic = "force-dynamic";
  *   - **文案只講「這是什麼」**: 道館戰工具。功能細節 (挑戰券/出刀/持有率…) 一個字都不寫 ——
  *     使用者明講「產品的核心是道館戰工具, 不需要把細節描述出來」。
  *   - **用看的不用讀的**: 旁邊放兩塊看板縮影輪替 (home-hero-boards.tsx) 當插圖 —
- *     全館拍組持有 (20 人中幾人有) 與道館戰 (誰還剩幾張券), 正好對上標題那句的兩件事。
+ *     全館拍組持有 (最新上架的五組, 20 人中幾人有) 與道館戰 (誰還剩幾張券),
+ *     正好對上標題那句的兩件事。
  *     陌生人瞄一眼就知道這是個什麼樣的工具, 不用讀說明。
  *   - **看得出是哪一款遊戲** (2026-09-03 補, 使用者:「完全看不出來跟遊戲有關」):
- *     看板每一列帶真的拍組頭像, 背後再加一層散落的拍組頭像 (home-pair-art.tsx)。
- *     氛圍層中央是挖空的, 字與 CTA 上面永遠不會有東西。
+ *     看板每一列帶拍組頭像 (訓練家 + 右下角的寶可夢, 就是官方卡面的排法, 不是兩顆分開的圓),
+ *     背後再加一層**真的 SyncPairCard** 浮在有景深的空間裡 (home-pair-art.tsx),
+ *     滑鼠一動整個空間跟著微微傾斜。氛圍層中央是挖空的, 字與 CTA 上面永遠不會有東西。
  *   - **只有一顆 CTA, 而且是真正的 Google 按鈕**: 按下去直接去 Google, 不是先跳 /login。
  *     不放「逛圖鑑」—— 訪客在導覽列已經看得到「拍組」, 首頁再放一顆就是第二個入口。
  *   - **進場錯開**: 文案 → 看板 → CTA 依序淡入上浮 (0/140/260ms)。距離 8px、曲線收得慢,
@@ -38,11 +43,21 @@ export default async function HomePage() {
   // 順帶省掉舊版那次 gyms count 查詢 (每個登入者進首頁都要多跑一趟跨太平洋, 只為了決定要不要跳)。
   if (user) redirect("/gyms");
 
+  // 氛圍層要的是**真的 catalog 紀錄** (SyncPairCard 吃的就是它)。
+  // 一定要走 loadPairsForClient —— 它是所有對外輸出的唯一收口, 未公布拍組在這裡就被濾掉了
+  // (撈不到的 slot 由 HomePairArt 自己跳過)。結果有台北日期快取, 不會每個請求重算。
+  const catalog = await loadPairsForClient();
+  const wanted = new Set(ART_PAIR_IDS);
+  const artPairs = catalog.filter((p) => wanted.has(p.pairId));
+
+  // 看板列的是**最新上架的五組**, 持有人數隨機 (兩個都是使用者指定; 細節與理由見 home-latest-pairs.ts)
+  const pairRows = pickLatestPairRows(catalog);
+
   return (
     // relative 是氛圍層的定位基準 (它自己 absolute inset-0 + -z-10, 蓋不到內容也吃不到點擊);
     // 桌機把整塊垂直置中 (這頁很短, 貼著 header 會像沒排完), 手機不用 —— 第一屏要先看到內容
     <main className="relative flex flex-1 flex-col md:justify-center">
-      <HomePairArt />
+      <HomePairArt pairs={artPairs} />
       <PageShell className="py-8 sm:py-14 md:py-12">
         {/* 三個區塊共用一個 grid, 插圖**只渲染一次** (它是 client 元件, 渲染兩份 = 兩套 timer):
             手機 1 欄, 自然順序 文案 → 看板 → CTA (先看到東西再決定要不要按);
@@ -59,6 +74,7 @@ export default async function HomePage() {
           </div>
 
           <HomeHeroBoards
+            pairRows={pairRows}
             className="mx-auto w-full max-w-sm animate-rise-in motion-reduce:animate-none md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:justify-self-center"
             style={{ animationDelay: "140ms" }}
           />

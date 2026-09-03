@@ -26,12 +26,14 @@
   to { opacity: 1; transform: none; }
 }
 
-/* 首頁背景那些拍組頭像的呼吸 —— 每顆各自的 duration/delay 讓它們不同步 (同步 = 像在閃)。
-   只動 transform 走 compositor; 十幾顆同時動也不會讓低階手機掉幀。 */
+/* 首頁氛圍層那幾張拍組卡的呼吸 —— 每張各自的 duration/delay/振幅 (同步 = 像在閃)。
+   --float 由呼叫端給, **近的大、遠的小**: 那是空間感的一半, 另一半是滑鼠傾斜時
+   不同 translateZ 自然造成的位移差。只動 transform 走 compositor, 不佔主執行緒。 */
 @keyframes float-y {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-9px); }
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(var(--float, -10px)) rotate(calc(var(--tilt, 0deg) + 1.5deg)); }
 }
+
 @theme inline {
   --animate-count-pop: count-pop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-skeleton-sweep: skeleton-sweep 1.6s ease-in-out infinite;

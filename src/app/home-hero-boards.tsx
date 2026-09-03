@@ -25,7 +25,15 @@ import { cn } from "@/lib/utils";
 import { HomePairsBoard } from "./home-pairs-board";
 import { HomeTicketBoard } from "./home-ticket-board";
 
-type BoardProps = { ticked?: boolean; revealed?: boolean; className?: string };
+import type { HomePairRow } from "./home-latest-pairs";
+
+type BoardProps = {
+  /** 只有拍組看板會用 (道館戰看板收下但不理它 —— 型別上一份就好) */
+  rows?: HomePairRow[];
+  ticked?: boolean;
+  revealed?: boolean;
+  className?: string;
+};
 
 const BOARDS: { key: string; label: string; Board: React.ComponentType<BoardProps> }[] = [
   { key: "pairs", label: "全館拍組持有", Board: HomePairsBoard },
@@ -49,9 +57,12 @@ const getReduce = () =>
   typeof window.matchMedia === "function" ? window.matchMedia(REDUCE_QUERY).matches : false;
 
 export function HomeHeroBoards({
+  /** 拍組看板要列的那幾組 (catalog 最新五組, 由 page.tsx 在 server 端挑好) */
+  pairRows,
   className,
   style,
 }: {
+  pairRows: HomePairRow[];
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -107,7 +118,12 @@ export function HomeHeroBoards({
               i === index ? "opacity-100" : "pointer-events-none translate-y-2 opacity-0"
             )}
           >
-            <Board ticked={ticked} revealed={revealed.includes(i)} className="h-full" />
+            <Board
+              rows={pairRows}
+              ticked={ticked}
+              revealed={revealed.includes(i)}
+              className="h-full"
+            />
           </div>
         ))}
       </div>

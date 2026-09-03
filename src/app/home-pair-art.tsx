@@ -1,113 +1,167 @@
-// 首頁的氛圍層 —— 散落在四周的拍組頭像 (2026-09-03, 使用者: 「完全看不出來跟遊戲有關」)。
-//
-// 為什麼是「散落 + 各自呼吸」而不是跑馬燈: 跑馬燈要讓內容寬過視窗才不會露出接縫,
-// 一排就得塞二三十顆 (同一張圖重複貼) —— DOM 變重, 而且橫向流動會一直把視線從標題拉走。
-// 定點擺放只放需要的顆數, 每顆用自己的 duration/delay 慢慢上下浮 (同步 = 像在閃),
-// 視線不會被牽著跑, 但畫面不是死的。這就是「沉穩」要的量。
-//
-// 三個讓它不吵的設計:
-//  1. **中間挖空**: 整層套一個橢圓 mask, 中央 (標題/CTA/看板所在) 完全透明, 只有邊緣看得到 ——
-//     所以無論視窗多寬多窄, 頭像都不會壓在字上, 不必為每個斷點調位置。
-//  2. **低透明度 + 淺色底盤**: 每顆是一個 card 底色的圓盤 (立繪去背後是方形頭像裁圓,
-//     沒有底盤的話肩線會被切得很突兀)。
-//  3. **入場錯開**: 進站時依序淡入 (rise-in), 淡完才接上呼吸 —— 一次全亮會像跳出來。
-//
-// 圖檔: 線上一律 .webp (AGENTS「線上的圖一律 .webp」), 路徑格式與 sync-pair-card 同一套
-// (`/reference/{trainer,pokemon}/<id>_128.webp`)。**只能用已上市的拍組** —— 這一層是對外的,
-// 未公布拍組的美術素材不能出現在這裡 (下面每一顆都對過 catalog 的 releaseDate)。
-// 14 顆共約 68KB, 而且與 /pairs 共用同一批檔 (30 天快取), 逛過圖鑑的人是零成本。
-// fetchPriority=low: 它只是氛圍, 不要跟 LCP (標題與 Google 按鈕) 搶頻寬。
+"use client";
 
-// <img> 而不是 next/image (全站慣例, 同 candy.tsx / sync-pair-badges.tsx): 這些圖是資料管線
-// 產好的 128px WebP, 由 Workers Assets 直送 (public/_headers 給 30 天快取), 尺寸與格式都已經定死,
-// next/image 沒有東西可以再優化, 只會多一層 loader。
-/* eslint-disable @next/next/no-img-element */
+// 首頁的氛圍層 —— 幾張**真的拍組卡**浮在一個有景深的空間裡, 而且跟著滑鼠微微轉。
+// (2026-09-03, 使用者:「完全看不出來跟遊戲有關」→「用拍組組起來那個圖, 不要把人跟寶可夢分開」
+//  →「可以有個氛圍感的 3D 微微跟著滑鼠動的那種空間感」)
+//
+// 畫的就是 `SyncPairCard` 本人 —— 站內 /pairs 那一牆卡片同一個元件、同一份 catalog 紀錄。
+// 不是另外拼一張示意圖: 訓練家、寶可夢、外框、星星本來就是**一張卡**, 拆開擺才奇怪。
+//
+// 空間感由三件事疊出來 (少一件就會變回「貼了幾張圖」):
+//  1. **靜態的遠近**: 每張卡自己的 scale / opacity / blur (見 home-art-pairs.ts)。
+//  2. **跟著滑鼠的視差**: 指標位置寫進 CSS 變數 `--mx/--my` (-1…1), 每張卡用自己的
+//     `par`(位移 px) 與 `deg`(旋轉度) 換算 —— **近的位移大、遠的小**, 那個差就是空間感。
+//     旋轉走每張卡自己的 `perspective()`, 所以是真的翻轉不是斜切。
+//  3. **各自呼吸**: 每張卡自己的 float-y (振幅/週期/相位都不同)。滑鼠不動時畫面也還活著。
+//
+// **深度刻意不用 translateZ** (踩過): 共用 perspective 時 translateZ 會把元素往消失點
+// (畫面中央) 拉, 擺在 left:1.5% 的卡在 z=-560 會被拉到中間壓住文字, 位置完全不受控。
+// 現在每張卡各自 perspective, 寫哪就在哪。
+//
+// 追指標用 rAF + lerp (每幀補 6%) 而不是直接跟 —— 直接跟很躁, 這裡要的是慢半拍地飄。
+// 追到位就**停掉 rAF**, 不留一個永遠在跑的迴圈吃電; 指標再動時 onMove 會重新點火。
+//
+// 只在 md 以上**掛載** (不是 CSS 隱藏): 手機四周沒有留白, 中央挖空那招怎麼調都會壓到字;
+// 而且沒掛載就一張圖都不會下載 (display:none 的圖瀏覽器照樣抓)。
+// 指標視差另外要求 `(pointer: fine)` —— 平板照樣看得到卡, 只是不跟著手指跑。
 
+import { useEffect, useRef, useSyncExternalStore } from "react";
+
+import { SyncPairCard } from "@/components/sync-pair-card";
+import type { ClientPairRecord } from "@/lib/pairs/types";
 import { cn } from "@/lib/utils";
+import { ART_SLOTS } from "./home-art-pairs";
 
-type Chip = {
-  /** `/reference/` 底下的相對路徑 (不含副檔名) */
-  src: string;
-  /** 直徑 (px) */
-  size: number;
-  /** 位置 — 用百分比, 跟著 main 的尺寸縮放 */
-  pos: React.CSSProperties;
-  /** 呼吸一圈的秒數 (刻意都不同) */
-  cycle: number;
-  /** 小螢幕收掉 (手機的四周本來就沒有留白, 12 顆會變雜訊) */
-  wide?: boolean;
-};
+/** 中間挖空 —— 字與看板所在的那塊完全透明, 邊緣才看得到卡 */
+const CENTER_MASK = "radial-gradient(ellipse 58% 54% at 50% 50%, transparent 38%, #000 100%)";
 
-const CHIPS: Chip[] = [
-  // 左側
-  { src: "trainer/ch0000_80_red", size: 56, pos: { left: "3%", top: "13%" }, cycle: 9 },
-  { src: "pokemon/pm0025_00_pikachu", size: 40, pos: { left: "9%", top: "35%" }, cycle: 11, wide: true },
-  { src: "trainer/ch0158_00_carnet", size: 68, pos: { left: "4%", top: "61%" }, cycle: 10 },
-  { src: "pokemon/pm0384_00_rayquaza_rare", size: 44, pos: { left: "12%", top: "85%" }, cycle: 8, wide: true },
-  // 右側
-  { src: "pokemon/pm0150_00_mewtwo", size: 48, pos: { right: "4%", top: "11%" }, cycle: 12 },
-  { src: "trainer/ch0127_00_mikuri", size: 64, pos: { right: "8%", top: "33%" }, cycle: 9, wide: true },
-  { src: "pokemon/pm0448_00_lucario", size: 40, pos: { right: "3%", top: "59%" }, cycle: 13 },
-  { src: "trainer/ch0245_00_mary", size: 56, pos: { right: "7%", top: "83%" }, cycle: 10, wide: true },
-  // 上下兩條 (桌機才有足夠留白)
-  { src: "trainer/ch0257_00_qibana", size: 44, pos: { left: "33%", top: "4%" }, cycle: 11, wide: true },
-  { src: "pokemon/pm0133_00_eievui", size: 36, pos: { left: "59%", top: "6%" }, cycle: 9, wide: true },
-  { src: "trainer/ch0114_00_natsume", size: 52, pos: { left: "27%", bottom: "5%" }, cycle: 12, wide: true },
-  { src: "pokemon/pm0149_00_kairyu", size: 40, pos: { left: "63%", bottom: "8%" }, cycle: 10, wide: true },
-];
+/** 每幀往目標補多少 —— 0.06 ≈ 半秒才追到位, 那個「慢半拍」就是沉穩感的來源 */
+const EASE = 0.06;
+/** 追到這麼近就當作到位, 收掉 rAF */
+const SETTLED = 0.001;
 
-/** 中間挖空 —— 字與看板所在的那塊完全透明, 邊緣才看得到頭像 */
-const CENTER_MASK =
-  "radial-gradient(ellipse 62% 54% at 50% 50%, transparent 42%, #000 100%)";
+function subscribeMedia(query: string) {
+  return (onChange: () => void) => {
+    const mq = window.matchMedia(query);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  };
+}
+const snapshot = (query: string) => () =>
+  typeof window.matchMedia === "function" ? window.matchMedia(query).matches : false;
 
-export function HomePairArt({ className }: { className?: string }) {
+/** SSR 一律 false → 伺服器不畫, hydration 後才依實際視窗決定 (React 會自己補這次 re-render) */
+function useMedia(query: string) {
+  return useSyncExternalStore(subscribeMedia(query), snapshot(query), () => false);
+}
+
+export function HomePairArt({ pairs }: { pairs: ClientPairRecord[] }) {
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const wide = useMedia("(min-width: 768px)");
+  const canTilt = useMedia("(pointer: fine)");
+  const reduce = useMedia("(prefers-reduced-motion: reduce)");
+  const tilting = wide && canTilt && !reduce;
+
+  useEffect(() => {
+    if (!tilting) return;
+    const target = { x: 0, y: 0 };
+    const cur = { x: 0, y: 0 };
+    let raf = 0;
+
+    const tick = () => {
+      cur.x += (target.x - cur.x) * EASE;
+      cur.y += (target.y - cur.y) * EASE;
+      const el = sceneRef.current;
+      if (el) {
+        el.style.setProperty("--mx", cur.x.toFixed(4));
+        el.style.setProperty("--my", cur.y.toFixed(4));
+      }
+      if (Math.abs(target.x - cur.x) < SETTLED && Math.abs(target.y - cur.y) < SETTLED) {
+        raf = 0;
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e: PointerEvent) => {
+      target.x = (e.clientX / window.innerWidth) * 2 - 1;
+      target.y = (e.clientY / window.innerHeight) * 2 - 1;
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [tilting]);
+
+  // 手機/窄視窗完全不掛載 —— 一張卡的圖都不會下載
+  if (!wide || pairs.length === 0) return null;
+
+  const byId = new Map(pairs.map((p) => [p.pairId, p]));
+
   return (
     <div
+      ref={sceneRef}
       aria-hidden
-      className={cn(
-        "pointer-events-none absolute inset-0 -z-10 select-none overflow-hidden",
-        // **手機整層不渲染**: 中間挖空那招靠的是「四周有留白」, 而手機上內容本來就頂到左右兩邊,
-        // 挖空區怎麼調都會壓到字。手機的遊戲感由看板每一列的拍組頭像扛 (那塊反而更清楚)。
-        "hidden sm:block",
-        // light 的底是暖米色, 圖蓋上去很跳 → 壓到 55%; dark 底本來就吃光, 再低一階
-        "opacity-55 dark:opacity-35",
-        className
-      )}
+      className="pointer-events-none absolute inset-0 -z-10 select-none overflow-hidden dark:opacity-75"
       style={{ maskImage: CENTER_MASK, WebkitMaskImage: CENTER_MASK }}
     >
-      {CHIPS.map((c, i) => (
-        <span
-          key={c.src}
-          // 外層負責入場 (一次性), 內層負責呼吸 (無限) —— 兩個動畫不能疊在同一個元素上
-          className={cn(
-            "absolute animate-rise-in motion-reduce:animate-none",
-            c.wide && "hidden sm:block"
-          )}
-          style={{ ...c.pos, animationDelay: `${120 + i * 70}ms` }}
-        >
-          <span
-            className="block animate-float-y motion-reduce:animate-none"
-            style={{ animationDuration: `${c.cycle}s`, animationDelay: `${i * 400}ms` }}
+      {ART_SLOTS.map((slot, i) => {
+        const pair = byId.get(slot.pairId);
+        // catalog 撈不到 = 那組被 isUnreleasedPair 擋掉或改了 id → 直接不畫, 不要出現空卡
+        if (!pair) return null;
+        return (
+          <div
+            key={slot.pairId}
+            className="absolute will-change-transform"
+            style={{
+              ...slot.pos,
+              opacity: slot.opacity,
+              // --mx/--my 由上面的 rAF 寫在 scene 上 (-1…1); 沒有指標時 fallback 0 = 正面
+              transform: [
+                `translate3d(calc(var(--mx, 0) * ${slot.par}px), calc(var(--my, 0) * ${(slot.par * 0.55).toFixed(1)}px), 0)`,
+                `perspective(700px)`,
+                `rotateY(calc(var(--mx, 0) * ${slot.deg}deg))`,
+                `rotateX(calc(var(--my, 0) * ${-slot.deg * 0.7}deg))`,
+                `scale(${slot.scale})`,
+              ].join(" "),
+            }}
           >
-            <img
-              src={`/reference/${c.src}_128.webp`}
-              alt=""
-              width={c.size}
-              height={c.size}
-              draggable={false}
-              // lazy 不只是「晚一點載」—— `hidden sm:block` 在手機上是 display:none,
-              // 而 display:none 的 eager 圖 Chrome **照樣會下載** (12 張白花 65KB);
-              // lazy 的圖沒有版面框就永遠不會進視窗, 手機因此一張都不抓。
-              // 桌機這邊也順便讓它排在 LCP (標題與 Google 按鈕) 後面。
-              loading="lazy"
-              decoding="async"
-              fetchPriority="low"
-              className="rounded-full bg-card object-cover ring-1 ring-border/60"
-              style={{ width: c.size, height: c.size }}
-            />
-          </span>
-        </span>
-      ))}
+            {/* 入場 (一次性) 與呼吸 (無限) 必須分兩層 —— 疊在同一個元素上後者會蓋掉前者 */}
+            <div
+              className="animate-rise-in motion-reduce:animate-none"
+              style={{
+                animationDelay: `${200 + i * 90}ms`,
+                filter: slot.blur ? "blur(1.4px)" : undefined,
+              }}
+            >
+              <div
+                className="animate-float-y motion-reduce:animate-none"
+                style={
+                  {
+                    animationDuration: `${slot.cycle}s`,
+                    animationDelay: `${i * 500}ms`,
+                    "--float": `${slot.float}px`,
+                    "--tilt": `${slot.tilt}deg`,
+                  } as React.CSSProperties
+                }
+              >
+                {/* minimal + 不顯示名字 = 只留卡本身 (立繪/寶可夢/外框/星星), 背景不需要文字 */}
+                <SyncPairCard
+                  pair={pair}
+                  size={slot.size}
+                  minimal
+                  showName={false}
+                  eager
+                  className={cn("drop-shadow-lg", slot.blur && "drop-shadow-none")}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

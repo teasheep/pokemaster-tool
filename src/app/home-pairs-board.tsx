@@ -2,17 +2,18 @@
 
 // 首頁 hero 的看板之一 —— 「全館拍組持有」(與 home-ticket-board 輪替顯示, 這塊排第一)。
 //
-// 這塊回答標題那句的前半:「拍組…全館一目了然」—— 一份道館拍組名單 + 每一組「20 人中幾人有」。
+// 這塊回答標題那句的前半:「拍組…全館一目了然」—— 一份拍組名單 + 每一組「20 人中幾人有」。
+//
+// **列的是 catalog 裡最新上架的五組** (2026-09-03 使用者指定), 由 page.tsx 在 server 端挑好傳進來:
+// 首頁因此會自己跟著改版更新, 不用有人記得回來改死字串。持有人數是**隨機**的 (使用者:「隨機就可以了」),
+// 但在 server 端擲一次再傳下來 —— 在 client 擲會 SSR 與 hydration 對不起來。
+// 越新的組人越少有 (擲骰的區間是照名次分的), 所以長條的顏色一定有層次, 不會五條一樣長。
 //
 // 視覺語彙一律沿用真的那一頁 (gyms/[id]/pairs 的 CoverageBar): h-1 長條、同一組門檻與顏色、
 // `count/total` tabular-nums。看起來要像產品的一角, 不是另外畫一張示意圖。
 //
-// **每一列帶真的拍組頭像** (2026-09-03, 使用者:「完全看不出來跟遊戲有關」): 訓練家在前、
-// 寶可夢在後的兩顆疊圓 —— 那就是「拍組」這個詞在畫面上的樣子。圖檔路徑格式與 sync-pair-card
-// 同一套 (`/reference/{trainer,pokemon}/<id>_128.webp`, 線上一律 .webp)。
-// 拍組全部是**已上市**的 (對過 catalog 的 releaseDate); 名字用 `pairName()` 的「人名 & 寶可夢名」格式。
-// 讀者就是玩這款遊戲的人 —— 認得出「丹帝 & 噴火龍」比任何說明都快。
-// 示範成員仍是主角名 (小光), 與道館戰看板同一座假道館。
+// 每一列的圖是**一組拍組, 不是兩張圖**: 訓練家立繪當本體、寶可夢壓在右下角 ——
+// 官方卡面與站內 SyncPairCard 就是這個排法 (使用者:「不要把拍組的人跟寶可夢分開 不合理」)。
 //
 // 長條在看板進場時從 0 掃到實際值 (`revealed`, 每列錯開 60ms): 那不是裝飾 ——
 // 它演的就是「資料填進來」這件事本身, 也是這塊看板唯一的開場動作。
@@ -23,20 +24,10 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { cn } from "@/lib/utils";
+// 名單與人數怎麼來的 (最新五組 + 隨機持有數) 在這裡, 由 page.tsx 在 server 端算好傳進來
+import { HOME_GYM_MEMBERS, type HomePairRow } from "./home-latest-pairs";
 
-/** 假道館的人數 —— 與 home-ticket-board 的 4 位示範成員屬同一座館 (那邊只列了 4 位) */
-const MEMBERS = 20;
-
-const ROWS = [
-  { t: "ch0247_00_dande", p: "pm0006_00_lizardon", name: "丹帝 & 噴火龍", owners: 20 },
-  { t: "ch0193_00_aogiri", p: "pm0382_00_kyogre", name: "水梧桐 & 蓋歐卡", owners: 15 },
-  { t: "ch0090_00_daigo", p: "pm0376_00_metagross", name: "大吾 & 巨金怪", owners: 11 },
-  { t: "ch0249_00_rulina", p: "pm0834_00_00_kajirigame", name: "露璃娜 & 暴噬龜", owners: 4, ticks: true },
-  // 0 人 = 剛上架、全館還沒人抽到 —— 這一頁最常被拿來看的其實是「我們缺什麼」
-  { t: "ch0201_00_jindai", p: "pm0144_00_freezer", name: "神代 & 急凍鳥", owners: 0 },
-] as const;
-
-/** 門檻與顏色 = gyms/[id]/pairs 的 CoverageBar (全滿綠 / 過半藍 / 有人黃) */
+/** 門檻與顏色 = gyms/[id]/pairs 的 CoverageBar (全滿綠 / 過半藍 / 有人黃 / 沒人灰) */
 function toneOf(ratio: number) {
   if (ratio === 1) return "bg-emerald-500";
   if (ratio >= 0.5) return "bg-sky-500";
@@ -44,43 +35,53 @@ function toneOf(ratio: number) {
   return "bg-muted-foreground/30";
 }
 
-/** 訓練家在前、寶可夢在後的兩顆疊圓 —— 「拍組」在畫面上的樣子 */
-function PairChip({ t, p }: { t: string; p: string }) {
+/**
+ * 一組拍組 = **一個東西**, 不是兩顆並排的圓 (使用者:「不要把拍組的人跟寶可夢分開 不合理」)。
+ * 排法照官方卡面與站內 SyncPairCard: 訓練家立繪當本體, 寶可夢在右下角壓著邊。
+ * (這裡不能直接用 SyncPairCard —— 它最小 96px, 塞不進 32px 的清單列。)
+ */
+function PairChip({ trainerId, pokemonId }: { trainerId: string; pokemonId: string }) {
   return (
-    <span className="relative block h-7 w-11 shrink-0">
+    <span className="relative mr-1 block h-8 w-8 shrink-0">
       <img
-        src={`/reference/pokemon/${p}_128.webp`}
+        src={`/reference/trainer/${trainerId}_128.webp`}
         alt=""
-        width={24}
-        height={24}
+        width={32}
+        height={32}
         draggable={false}
         decoding="async"
-        className="absolute top-0.5 right-0 h-6 w-6 rounded-full bg-muted object-cover ring-1 ring-border/60"
+        className="h-8 w-8 rounded-lg bg-muted object-cover ring-1 ring-border/60"
       />
       <img
-        src={`/reference/trainer/${t}_128.webp`}
+        src={`/reference/pokemon/${pokemonId}_128.webp`}
         alt=""
-        width={28}
-        height={28}
+        width={18}
+        height={18}
         draggable={false}
         decoding="async"
-        className="absolute top-0 left-0 h-7 w-7 rounded-full bg-muted object-cover ring-2 ring-card"
+        // ring 用卡片底色而不是邊框色: 壓在立繪上要有一圈「挖空」才分得出來, 跟官方卡面一樣
+        className="absolute -right-1 -bottom-1 h-[18px] w-[18px] rounded-full bg-muted object-cover ring-2 ring-card"
       />
     </span>
   );
 }
 
 export function HomePairsBoard({
-  /** 由 HomeHeroBoards 統一掌控: 進場約一秒後播那一下變化 (持有 4 → 5) */
+  rows = [],
+  /** 由 HomeHeroBoards 統一掌控: 進場約一秒後播那一下變化 (第一列 +1 人) */
   ticked = false,
   /** 長條掃到實際值 — 看板第一次進場時才播, 之後輪回來不再重來 (每次都掃會變吵) */
   revealed = false,
   className,
 }: {
+  rows?: HomePairRow[];
   ticked?: boolean;
   revealed?: boolean;
   className?: string;
 }) {
+  // 第一列 = 最新上架的那組, 那一列演「剛剛有人抽到」
+  const bumped = rows[0]?.owners ?? 0;
+
   return (
     <div
       role="img"
@@ -96,17 +97,17 @@ export function HomePairsBoard({
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold">拍組</span>
         <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">
-          20 人
+          {HOME_GYM_MEMBERS} 人
         </span>
       </div>
 
       <ul className="mt-3 flex-1 space-y-2.5">
-        {ROWS.map((r, i) => {
-          const owners = "ticks" in r && ticked ? r.owners + 1 : r.owners;
-          const ratio = owners / MEMBERS;
+        {rows.map((r, i) => {
+          const owners = i === 0 && ticked ? r.owners + 1 : r.owners;
+          const ratio = owners / HOME_GYM_MEMBERS;
           return (
-            <li key={r.name} className="flex items-center gap-2.5">
-              <PairChip t={r.t} p={r.p} />
+            <li key={r.pairId} className="flex items-center gap-2.5">
+              <PairChip trainerId={r.trainerId} pokemonId={r.pokemonId} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
                   <span className="min-w-0 flex-1 truncate text-sm">{r.name}</span>
@@ -115,12 +116,12 @@ export function HomePairsBoard({
                       key={owners}
                       className={cn(
                         "inline-block text-foreground",
-                        "ticks" in r && ticked && "animate-count-pop"
+                        i === 0 && ticked && "animate-count-pop"
                       )}
                     >
                       {owners}
                     </span>
-                    /{MEMBERS}
+                    /{HOME_GYM_MEMBERS}
                   </span>
                 </div>
                 <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted">
@@ -150,7 +151,9 @@ export function HomePairsBoard({
         )}
       >
         <span className="text-foreground">小光</span> 更新練度 · 持有{" "}
-        <span className="font-mono tabular-nums">4 → 5</span>
+        <span className="font-mono tabular-nums">
+          {bumped} → {bumped + 1}
+        </span>
       </p>
     </div>
   );
