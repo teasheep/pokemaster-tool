@@ -11,17 +11,22 @@
 // 示範「登記時自動扣券」這件事本身。**時間由 HomeHeroBoards 統一掌控** (`ticked` prop):
 // 兩塊看板都是一直掛著只是輪流淡入, 自己算 timer 的話輪到自己時那一下早就播完了。
 //
-// 示範成員刻意用寶可夢主角的名字 (小智/小霞/小剛/小茂): 一看就知道是範例, 不會被誤認成真人。
+// 示範成員刻意用寶可夢主角的名字 (小智/小霞/小剛/小光): 一看就知道是範例, 不會被誤認成真人。
 // 數字格式與真看板一致: `remaining/cap`、tabular-nums (battle-client.tsx:476)。
 
+import { MemberAvatar } from "@/components/gym/member-card";
 import { cn } from "@/lib/utils";
 
 const CAP = 30;
+
+// 示範成員的頭貼用他們**自己**在 Pokémon Masters 裡的訓練家立繪 —— 真的成員在 onboarding
+// 就會設頭貼, 而且多半設一張自己喜歡的訓練家, 這塊看板照著演。(全走 MemberAvatar 的 avatarUrl,
+// 沒有第二套頭像實作; 四位都是 2019-2022 就上市的拍組, 不會動到未公布素材。)
 const ROWS = [
-  { name: "小智", remaining: 27 },
-  { name: "小霞", remaining: 13, ticks: true },
-  { name: "小剛", remaining: 30 },
-  { name: "小茂", remaining: 3 },
+  { name: "小智", face: "ch0264_00_satoshi", remaining: 27 },
+  { name: "小霞", face: "ch0110_01_kasumi", remaining: 13, ticks: true },
+  { name: "小剛", face: "ch0015_00_takeshi", remaining: 30 },
+  { name: "小光", face: "ch0116_00_hikari", remaining: 3 },
 ] as const;
 
 export function HomeTicketBoard({
@@ -52,13 +57,19 @@ export function HomeTicketBoard({
           const value = "ticks" in r && ticked ? r.remaining - 1 : r.remaining;
           const low = value <= 5;
           return (
-            <li key={r.name} className="flex items-center gap-3 py-2">
-              <span
-                aria-hidden
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary"
-              >
-                {r.name.slice(-1)}
-              </span>
+            <li key={r.name} className="flex items-center gap-3 py-2.5">
+              {/* 用真的 MemberAvatar (沒頭貼 → 名字 hash 出固定色相的縮寫圓),
+                  不要自己刻一顆 —— 這塊是產品的一角, 頭像就該長得跟看板上一模一樣。
+                  密集列一律 28px (AGENTS「成員頭像尺寸」), 與 gyms/[id]/pairs 的用法同一行寫法。 */}
+              <MemberAvatar
+                member={{
+                  id: r.name,
+                  displayName: r.name,
+                  avatarUrl: `/reference/trainer/${r.face}_128.webp`,
+                }}
+                size="sm"
+                className="h-7 w-7"
+              />
               <span className="min-w-0 flex-1 truncate text-sm">{r.name}</span>
               <span
                 className={cn(

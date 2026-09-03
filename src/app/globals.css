@@ -19,9 +19,24 @@
   to { transform: translateX(100%); }
 }
 
+/* 首頁 hero 的入場 — 淡入 + 往上 8px。距離小、曲線收得慢 = 沉穩, 不是彈出來。
+   終點就是元素的靜態樣式, 所以 motion-reduce:animate-none 直接就是正確畫面 (不用另外寫一份)。 */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 首頁背景那些拍組頭像的呼吸 —— 每顆各自的 duration/delay 讓它們不同步 (同步 = 像在閃)。
+   只動 transform 走 compositor; 十幾顆同時動也不會讓低階手機掉幀。 */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
 @theme inline {
   --animate-count-pop: count-pop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-skeleton-sweep: skeleton-sweep 1.6s ease-in-out infinite;
+  --animate-rise-in: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-float-y: float-y 9s ease-in-out infinite;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
