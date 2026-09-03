@@ -8,7 +8,8 @@
 // 四件刻意的設計:
 //  1. **兩塊一直都掛著**, 只是輪流淡入 —— 用 grid 把兩者疊在同一格 (col/row-start-1),
 //     所以容器高度 = 比較高的那塊, 切換時版面**一個像素都不動**。兩塊也都吃 `h-full`,
-//     卡片外框因此一樣高, 不會一下高一下矮。交換時帶 8px 的上浮 (距離小、收得慢 = 沉穩)。
+//     卡片外框因此一樣高, 不會一下高一下矮。交換**只做交叉淡入不做位移** —— 骨架已經對齊了,
+//     再加一段上浮只會讓人以為版面在跳。
 //  2. **那一下變化 (券 13→12 / 持有 4→5) 由這裡統一計時**: 看板自己算 timer 的話, 兩顆
 //     timer 都在頁面載入時跑完, 輪到第二塊時它的動作早就播完了。`tickedFor` 記「哪一格的
 //     動作已經播過」, index 一換就自動回到未播狀態, 每次輪回來都會重播一次。
@@ -111,8 +112,11 @@ export function HomeHeroBoards({
             key={key}
             aria-hidden={i !== index}
             className={cn(
-              "col-start-1 row-start-1 transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none",
-              i === index ? "opacity-100" : "pointer-events-none translate-y-2 opacity-0"
+              // **純交叉淡入, 不做位移** (2026-09-03 使用者:「不用把原來的 slide 硬放」):
+              // 兩塊看板的骨架本來就疊在同一格、外框一樣大, 硬加一段上浮反而讓人以為版面在跳。
+              // 淡入拉長到 600ms + linear 的對接: 兩塊同時半透明的那段最短, 看起來才像「換內容」。
+              "col-start-1 row-start-1 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none",
+              i === index ? "opacity-100" : "pointer-events-none opacity-0"
             )}
           >
             <Board

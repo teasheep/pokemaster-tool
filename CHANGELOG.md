@@ -43,6 +43,8 @@
   拍組是「灰卡 → 點左下角 → 寶1/2/3，卡片亮起、全館持有跟著 +1」（`syncMemberPair` 那條雙表同步）；
   道館戰是「選一組拍組 → 回報 → 那個人的挑戰券 13→12 並亮一下」（`reportBattleLog`）。
   用的是站內真的 `SyncPairCard` 與真的手勢，不是另外畫的示意圖。
+  看板換場是**純交叉淡入不做位移** —— 兩塊的骨架本來就疊在同一格、外框一樣大，硬加一段上浮
+  只會讓人以為版面在跳。
 - 登入後導向的閘門抽成 `lib/auth/post-login-destination.ts`，由 `/auth/callback` 與
   新的 `/auth/one-tap` Route Handler 共用。
 

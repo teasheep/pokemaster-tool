@@ -38,7 +38,8 @@ const STEP_MS = [1100, 520, 520, 2600] as const;
 const BUMP_AT = 3;
 
 /** 卡片左下角計數的中心 = SVG 的 (19, 108) / 128 —— 漣漪要蓋在那裡 */
-const CARD_PX = 96; // size="sm"
+const CARD_SIZE = "md" as const;
+const CARD_PX = 128; // md
 const COUNT_X = (CARD_PX * 19) / 128;
 const COUNT_Y = (CARD_PX * 108) / 128;
 
@@ -129,11 +130,13 @@ export function HomePairsBoard({
 
       {/* ── 示範: 點左下角調寶數 ── */}
       {demoPair ? (
-        <div className="mt-3 flex items-center gap-3 border-b border-border/60 pb-3">
+        // 示範這一段刻意跟清單分開: 自己一塊底色 + 內縮的圓角框, 讀者一眼知道
+        // 「上面是我在操作、下面是操作的結果」, 不會以為那張大卡也是清單的一列。
+        <div className="mt-3 -mx-1 flex items-center gap-3 rounded-xl bg-muted/40 p-3">
           <div className="relative shrink-0">
             <SyncPairCard
               pair={demoPair}
-              size="sm"
+              size={CARD_SIZE}
               potential={step}
               owned={step > 0}
               minimal
