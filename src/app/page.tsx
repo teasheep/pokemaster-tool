@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { GoogleSignInButton } from "@/components/google-signin-button";
 import { PageShell } from "@/components/page-shell";
 import { getSessionUser } from "@/lib/supabase/server";
-import { HomeTicketBoard } from "./home-ticket-board";
+import { HomeHeroBoards } from "./home-hero-boards";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,8 @@ export const dynamic = "force-dynamic";
  * 設計 (2026-09-02 重做, 使用者原話: 「簡潔明瞭 CTA 清楚 對手機板使用者友善」):
  *   - **文案只講「這是什麼」**: 道館戰工具。功能細節 (挑戰券/出刀/持有率…) 一個字都不寫 ——
  *     使用者明講「產品的核心是道館戰工具, 不需要把細節描述出來」。
- *   - **用看的不用讀的**: 旁邊放一塊道館戰看板的縮影 (home-ticket-board.tsx) 當插圖,
+ *   - **用看的不用讀的**: 旁邊放兩塊看板縮影輪替 (home-hero-boards.tsx) 當插圖 —
+ *     道館戰 (誰還有幾張券) 與全館拍組持有 (20 人中幾人有), 正好對上標題那句的兩件事。
  *     陌生人瞄一眼就知道這是個什麼樣的工具, 不用讀說明。
  *   - **只有一顆 CTA, 而且是真正的 Google 按鈕**: 按下去直接去 Google, 不是先跳 /login。
  *     不放「逛圖鑑」—— 訪客在導覽列已經看得到「拍組」, 首頁再放一顆就是第二個入口。
@@ -36,7 +37,7 @@ export default async function HomePage() {
     // 桌機把整塊垂直置中 (這頁很短, 貼著 header 會像沒排完); 手機不用 —— 第一屏要先看到內容
     <main className="flex flex-1 flex-col md:justify-center">
       <PageShell className="py-8 sm:py-14 md:py-12">
-        {/* 三個區塊共用一個 grid, 看板**只渲染一次** (它是 client 元件, 渲染兩份 = 兩個 timer):
+        {/* 三個區塊共用一個 grid, 插圖**只渲染一次** (它是 client 元件, 渲染兩份 = 兩套 timer):
             手機 1 欄, 自然順序 文案 → 看板 → CTA (先看到東西再決定要不要按);
             桌機 2 欄, 文案與 CTA 在左欄上下兩列, 看板在右欄跨兩列置中。 */}
         <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-[1.15fr_1fr] md:gap-x-12 md:gap-y-6">
@@ -50,7 +51,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <HomeTicketBoard className="mx-auto w-full max-w-sm md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:justify-self-center" />
+          <HomeHeroBoards className="mx-auto w-full max-w-sm md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:justify-self-center" />
 
           {/* CTA = **真正的 Google 按鈕**, 不是連到 /login 的假鈕。
               舊版是 shadcn primary Button 寫著「用 Google 登入」但只是換頁 —— 既不符合 Google

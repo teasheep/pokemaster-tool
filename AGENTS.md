@@ -112,14 +112,31 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      備援, cookie 被擋時 `signInWithIdToken` 仍會成功 resolve → 直接導頁就變成
      one-tap → /login → 又自動彈的迴圈。另有 sessionStorage 保險絲, **在排定 prompt 的當下就燒**
      (不是等成功), 否則站內 `<Link>` 走來走去每次重掛都會再彈一次。
-  4. **只掛 `/login`**: GIS script 載入本身就是一個帶 Google cookie 的請求, 掛首頁/圖鑑等於把
-     「有人來過」告訴 Google, 而使用者關掉 One Tap 會讓瀏覽器對本站進入 FedCM embargo (看不到、
-     查不出來) —— 那個額度要留給真的要登入的人。也**不要**改成訪客點卡片彈 One Tap (撞「卡片互動標準」)。
+  4. **掛在 root layout, 但只給訪客** (2026-09-02 改, 使用者指定「沒登入的時候哪裡都有 One Tap」):
+     入口是 `components/google-one-tap-slot.tsx` (async server 元件), **已登入就 `return null`** ——
+     連 GIS script 都不載 (20 位成員平常都是登入狀態, 不該為一個他們永遠看不到的提示付一支
+     第三方 script)。RootLayout 要用 `<Suspense>` 包它: layout 自己不准 await (老地雷)。
+     **代價要知道**: GIS script 載入本身就是一個帶 Google cookie 的請求, 每頁都掛 = 每頁都告訴
+     Google「有人來過」, 而訪客關掉 One Tap 會讓瀏覽器對本站進入 FedCM embargo (看不到、查不出來)。
+     這是使用者權衡過後要的, 不要自己改回只掛一頁。也**不要**改成訪客點卡片彈 One Tap (撞「卡片互動標準」)。
   前置條件在 Google Cloud Console 的「授權的 JavaScript 來源」(要含正式站與 `http://localhost:3030`),
   漏了就是**完全不顯示 + 畫面零徵兆**, 只有 console 一行 GSI_LOGGER。Supabase 端不用動
   (aud 對的就是既有的 `external_google_client_id`, 不需要 additional client ids, 也不要開 Skip nonce check)。
-  client id 由 `/login` 的 server component 讀執行期 `process.env.GOOGLE_OAUTH_CLIENT_ID` 傳下去,
+  client id 由 `GoogleOneTapSlot` 讀執行期 `process.env.GOOGLE_OAUTH_CLIENT_ID` 傳下去,
   **不需要 `NEXT_PUBLIC_`** (opennextjs-cloudflare 會把 .env.local 寫進 next-env.mjs 再灌回 process.env)。
+  **右上角那顆「登入」鈕在 `/` 與 `/login` 不渲染** (`components/header-sign-in.tsx`, 2026-09-03):
+  這兩頁畫面裡本來就有一顆真的 Google 按鈕, 再放一顆等於同一個動作兩個入口, 而且兩顆長得不一樣
+  (shadcn 主色鈕 vs 官方 Google 鈕)。**其他頁一定要留著** —— 訪客還看得到 `/pairs` 與
+  `/share/[token]`, 那些頁沒有 CTA, 那顆就是唯一的保底入口 (One Tap 偵測不到, 不算入口)。
+- **首頁 hero 的插圖是兩塊看板輪替** (`app/home-hero-boards.tsx`, 2026-09-03): 道館戰 (誰還剩幾張券)
+  與全館拍組持有 (20 人中幾人有) —— 正好對上標題那句「拍組、道館戰分配」的兩件事, 少一塊就有半句
+  沒有畫面。三件不要改壞的事: 兩塊**一直都掛著**只是輪流淡入 (grid 疊同一格 + `h-full`), 切換時版面
+  一個像素都不動; 那一下變化 (券 13→12 / 持有 4→5) **由 hero 統一計時** (`ticked` prop) —— 看板自己
+  算 timer 的話兩顆都在載入時跑完, 輪到第二塊時動作早就播完了; 點過圓點就停止自動輪替
+  (WCAG 2.2.2), `prefers-reduced-motion` 則一開始就不自動輪。假資料: 成員名一律用主角名
+  (小智/小霞/小剛/小茂, 一看就知道是範例), 拍組名用**真的存在的拍組** (讀者就是玩這款的人),
+  視覺語彙沿用真頁面 (CoverageBar 的門檻與顏色、`remaining/cap` tabular-nums)。首頁**不放圖檔** ——
+  陌生人的第一個請求不該扛立繪。
 - **成員頭像尺寸**: 名冊/一般清單用 md (44px), 排刀那種密集列用 28px — 不要再一邊 64 一邊 20。
 - **道館拍組 ★ 只有一個開關**: 一律走 `setGymPair()` (`lib/gym/gym-pairs-client.ts`),
   文案固定「設為道館拍組 / 已設為道館拍組 (點擊取消)」。不要再做第二個搜尋新增面板 —

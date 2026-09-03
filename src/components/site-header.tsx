@@ -3,6 +3,7 @@ import { Upload, BookOpen, Candy, Shield, Sofa } from "lucide-react";
 
 import { getSessionUser } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { HeaderSignIn } from "@/components/header-sign-in";
 import { ShellRow } from "@/components/page-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
@@ -77,15 +78,7 @@ export async function SiteHeader() {
               用 sm:inline-flex 不是 sm:flex — Button base 是 inline-flex, 寫 flex 會被
               tailwind-merge 拿去改掉桌機的 display。 */}
           <ThemeToggle className={user ? "hidden sm:inline-flex" : undefined} />
-          {user ? (
-            <UserMenu email={user.email ?? ""} />
-          ) : (
-            <>
-              <Button asChild size="sm">
-                <Link href="/login">登入</Link>
-              </Button>
-            </>
-          )}
+          {user ? <UserMenu email={user.email ?? ""} /> : <HeaderSignIn />}
         </div>
       </ShellRow>
     </header>

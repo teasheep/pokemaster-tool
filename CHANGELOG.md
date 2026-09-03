@@ -18,10 +18,14 @@
 
 - **自訂網域 `pokemaster-tool.com`** 取代 `*.workers.dev`。Worker Custom Domain 由
   `wrangler.jsonc` 宣告（`custom_domain: true`），同時 `workers_dev: false` 關掉舊入口。
-- **Google One Tap** 登入（`signInWithIdToken`），只掛在 `/login`。
-  GIS script 的載入本身就是一個帶 Google cookie 的請求，掛在首頁或圖鑑等於把「有人來過」
-  告訴 Google；而使用者關掉 One Tap 會讓瀏覽器對整站進入 FedCM embargo，那個額度要留給真的要登入的人。
-- **首頁的道館戰看板縮影** — 取代原本三段功能介紹文字。
+- **Google One Tap** 登入（`signInWithIdToken`），**沒登入時全站都有**（`GoogleOneTapSlot` 掛在
+  root layout）。已登入者整個不渲染，連 GIS script 都不載。
+  代價是知情接受的：GIS script 的載入本身就是一個帶 Google cookie 的請求，每頁都掛等於每頁都把
+  「有人來過」告訴 Google；而使用者關掉 One Tap 會讓瀏覽器對整站進入 FedCM embargo。
+- **首頁的看板縮影** — 取代原本三段功能介紹文字。道館戰（誰還剩幾張券）與全館拍組持有
+  （20 人中幾人有）兩塊輪替，正好對上標題那句「拍組、道館戰分配」的兩件事。
+  兩塊一直都掛著、只是輪流淡入，所以切換時版面不動；點圓點就停止自動輪替，
+  `prefers-reduced-motion` 則一開始就不自動輪。
 - 登入後導向的閘門抽成 `lib/auth/post-login-destination.ts`，由 `/auth/callback` 與
   新的 `/auth/one-tap` Route Handler 共用。
 
@@ -35,6 +39,9 @@
 - **首頁只服務訪客**：已登入者一律直接進 `/gyms`（那頁本來就有「建立／加入道館」的空狀態），
   順帶省掉一次跨太平洋的 gyms count 查詢。CTA 從兩顆（都連 `/login`）收成一顆。
 - 手機版 header 只剩「品牌｜頭像」，主題切換移進頭像選單。
+- **右上角的「登入」鈕在首頁與登入頁不再渲染**：這兩頁畫面裡已經有一顆真的 Google 按鈕，
+  再放一顆等於同一個動作兩個入口、而且兩顆長得不一樣。其他訪客看得到的頁（`/pairs`、分享頁）
+  一定要留著 —— One Tap 偵測不到有沒有跳出來，那顆是唯一的保底入口。
 - 已登入者打 `/login` 的落點由 `/pairs` 改為 `/gyms`，與 `safeNextPath` 的預設值對齊。
 
 ### 修正
