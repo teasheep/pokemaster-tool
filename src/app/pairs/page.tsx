@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { PageShell } from "@/components/page-shell";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { getUserCollection, type CollectionMap } from "@/lib/collection";
@@ -6,6 +8,23 @@ import { getMyMemberships } from "@/lib/gym/active-gym";
 import { PairsHub } from "./pairs-hub";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * 這是全站**唯一「不登入也有實質內容」**的頁 —— 訪客看得到整本圖鑑 (灰卡),
+ * 所以 SEO 上它是除了首頁以外唯一值得被收錄的網址 (見 `app/sitemap.ts`)。
+ * 描述寫的是「訪客會看到什麼」, 不是登入後的功能。
+ */
+export const metadata: Metadata = {
+  title: "拍組圖鑑",
+  description:
+    "Pokémon Masters EX 全拍組圖鑑：依屬性、角色定位、系列、地區、原始星級篩選，不用登入就能查。登入後可以記錄自己的寶數與超覺醒。",
+  alternates: { canonical: "/pairs" },
+  openGraph: {
+    title: "拍組圖鑑",
+    description: "Pokémon Masters EX 全拍組圖鑑：依屬性、角色定位、系列、地區、原始星級篩選。",
+    url: "/pairs",
+  },
+};
 
 /**
  * 拍組頁 — 這裡**只有個人的東西**。子分頁 (client 端):

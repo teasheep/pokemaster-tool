@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { GoogleSignInButton } from "@/components/google-signin-button";
 import { PageShell } from "@/components/page-shell";
 import { loadPairsForClient } from "@/lib/pairs/loader";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { getSessionUser } from "@/lib/supabase/server";
 import { ART_PAIR_IDS } from "./home-art-pairs";
 import { HomeHeroBoards } from "./home-hero-boards";
@@ -59,6 +60,26 @@ export default async function HomePage() {
     // relative 是氛圍層的定位基準 (它自己 absolute inset-0 + -z-10, 蓋不到內容也吃不到點擊);
     // 桌機把整塊垂直置中 (這頁很短, 貼著 header 會像沒排完), 手機不用 —— 第一屏要先看到內容
     <main className="relative flex flex-1 flex-col md:justify-center">
+      {/* 結構化資料 —— 讓搜尋結果知道站名與這是什麼 (SearchAction 之類的刻意不寫:
+          站上沒有 `?q=` 的搜尋網址, 宣告一個不存在的東西只會被判成不實)。 */}
+      <script
+        type="application/ld+json"
+        // 內容是本檔寫死的常數, 沒有任何使用者輸入
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: SITE_NAME,
+            url: SITE_URL,
+            description: SITE_DESCRIPTION,
+            applicationCategory: "GameApplication",
+            operatingSystem: "Web",
+            inLanguage: "zh-Hant",
+            isAccessibleForFree: true,
+            offers: { "@type": "Offer", price: "0", priceCurrency: "TWD" },
+          }),
+        }}
+      />
       <HomePairArt pairs={artPairs} />
       <PageShell className="py-8 sm:py-14 md:py-12">
         {/* 三個區塊共用一個 grid, 插圖**只渲染一次** (它是 client 元件, 渲染兩份 = 兩套 timer):

@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+
+import { NOINDEX } from "@/lib/site";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -6,6 +9,8 @@ import { PageHeading, PageShell } from "@/components/page-shell";
 import { getSessionUser } from "@/lib/supabase/server";
 import { getMyMemberships } from "@/lib/gym/active-gym";
 import { ResourcesClient } from "./resources-client";
+
+export const metadata: Metadata = { title: "我的資源", ...NOINDEX };
 
 export const dynamic = "force-dynamic";
 

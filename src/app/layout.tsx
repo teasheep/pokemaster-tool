@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { SyncPairDefs } from "@/components/sync-pair-defs";
 import { GoogleOneTapSlot } from "@/components/google-one-tap-slot";
+import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { getSessionUser } from "@/lib/supabase/server";
 
 import "./globals.css";
@@ -34,10 +35,44 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * 站台層級的 metadata。子頁只覆寫自己那幾個欄位, 其餘由這裡繼承。
+ *
+ * 幾個刻意的選擇:
+ *  - **`metadataBase` 一定要給**: 沒有它, `openGraph.images` 與 `alternates.canonical`
+ *    這種相對路徑會被解成 localhost, 而那個錯只有在別人分享連結時才看得到。
+ *  - **`title.template`**: 子頁只寫自己的名字 (例如「拍組圖鑑」), 後綴自動接上。
+ *  - **預設 `index: true`, 私密頁自己關掉**。全站可索引的其實只有 `/` 與 `/pairs`,
+ *    其餘 (道館、個人設定、分享頁、onboarding) 一律在各自的頁面/layout 設 `index: false` ——
+ *    尤其 `/share/<token>`: token 是半秘密, 被搜尋引擎收錄等於把別人的收藏攤出來。
+ */
 export const metadata: Metadata = {
-  title: "教練休息室",
-  description:
-    "Pokemon Masters EX 道館賽協作: 成員拍組持有、挑戰隊伍庫、挑戰券即時看板與對戰紀錄, 一個地方即時同步。",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — Pokémon Masters EX 道館戰工具`,
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "zh_TW",
+    siteName: SITE_NAME,
+    url: "/",
+    title: `${SITE_NAME} — Pokémon Masters EX 道館戰工具`,
+    description: SITE_DESCRIPTION,
+    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: `${SITE_NAME} — 道館戰工具` }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — Pokémon Masters EX 道館戰工具`,
+    description: SITE_DESCRIPTION,
+    images: [OG_IMAGE],
+  },
+  robots: { index: true, follow: true },
+  // 站上的數字 (券數 27/30、持有 4/20) 會被 iOS Safari 當成電話號碼加上撥號連結
+  formatDetection: { telephone: false },
 };
 
 /**

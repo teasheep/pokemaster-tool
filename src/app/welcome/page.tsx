@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
+
+import { NOINDEX } from "@/lib/site";
 import { redirect } from "next/navigation";
 
 import { PageShell } from "@/components/page-shell";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { WelcomeClient } from "./welcome-client";
+
+export const metadata: Metadata = { title: "設定你的名稱", ...NOINDEX };
 
 export const dynamic = "force-dynamic";
 

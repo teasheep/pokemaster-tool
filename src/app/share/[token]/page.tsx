@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import { NOINDEX } from "@/lib/site";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -22,10 +24,16 @@ type SharedRow = {
   ex_unlocked: boolean;
 };
 
+/**
+ * ⚠ **一定要 noindex**。分享連結的 token 是半秘密 —— 誰拿到網址誰就看得到,
+ * 所以它被搜尋引擎收錄等於把成員的收藏攤在搜尋結果上。
+ * `robots.txt` 也 Disallow 了 `/share/`, 兩層都要 (兩個機制擋的東西不一樣, 見 lib/site.ts)。
+ */
 export const metadata: Metadata = {
-  title: "分享的拍組收藏 — Pokemon Masters",
-  description: "Pokemon Masters EX 拍組收藏清單, 不需登入即可瀏覽。",
+  title: "分享的拍組收藏",
+  description: "Pokémon Masters EX 拍組收藏清單, 不需登入即可瀏覽。",
   openGraph: { title: "分享的拍組收藏", type: "website" },
+  ...NOINDEX,
 };
 
 export default async function SharePage({ params }: { params: Promise<Params> }) {

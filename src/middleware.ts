@@ -10,8 +10,14 @@ export async function middleware(request: NextRequest) {
   return proxySupabase(request);
 }
 
+/**
+ * robots.txt / sitemap.xml 一定要排除 —— 它們是 `app/robots.ts` 與 `app/sitemap.ts` 產的
+ * **路由**, 不是靜態檔, 所以不會被下面的副檔名規則擋掉。忘了排除的症狀是:
+ * 爬蟲拿到的不是 robots.txt 而是 `302 → /login?redirect=%2Frobots.txt`
+ * (2026-09-03 實測到才發現)。這兩個網址對誰都一樣, 本來也沒有理由跑一次登入判定。
+ */
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

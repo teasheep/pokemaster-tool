@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+
+import { NOINDEX } from "@/lib/site";
 import { Suspense } from "react";
 
 import { PageShell } from "@/components/page-shell";
@@ -13,6 +16,8 @@ import { GymNav } from "./gym-nav";
  * loading 的 fallback 不會顯示 (Next 16 layout 文件「Interaction with loading.js」)。
  * 取資料的部分全在 <GymNav/> 裡, 用 Suspense 串流進來。
  */
+export const metadata: Metadata = { title: "道館", ...NOINDEX };
+
 export default async function GymLayout({
   children,
   params,

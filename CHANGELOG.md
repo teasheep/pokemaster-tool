@@ -8,6 +8,16 @@
 
 預計要做的事見 [ROADMAP.md](ROADMAP.md)。
 
+### 新增
+
+- **基本 SEO**。`robots.txt` 與 `sitemap.xml`（`app/robots.ts` / `app/sitemap.ts`）、
+  canonical、Open Graph／Twitter card、分享卡片圖 `public/og.png`（1200×630）、
+  首頁的 `WebApplication` 結構化資料。站台常數集中在 `lib/site.ts`，網域只有一份。
+- **全站只有 `/` 與 `/pairs` 可以被收錄**。其餘（道館、個人設定、onboarding、登入流程）
+  一律 `noindex`；**`/share/<token>` 尤其重要** —— token 是半秘密，被搜尋引擎收錄
+  等於把成員的收藏攤在搜尋結果上，所以 `noindex` 與 robots 的 `Disallow` 兩層都下。
+  `tests/seo.test.ts` 釘住這幾條（它們壞掉不會有任何徵兆）。
+
 ### 變更
 
 - **道館戰看板的即時更新改走 broadcast**（migration `0054`）。`postgres_changes` 的成本是
@@ -27,6 +37,9 @@
   所以「一個人出一刀」= 每一個開著看板的人各發兩次查詢，道館戰進行中大家幾秒一刀，
   倍率是乘在每一刀上的。改成先合併再抓：同一個 200 ms 窗口內不管進來幾個事件、幾張表，
   每張表最多重抓一次。十個人同時出刀從 20 次查詢／人變成 2 次查詢／人。
+- **`robots.txt` 與 `sitemap.xml` 被登入牆導去 `/login`**。它們是 `app/robots.ts` /
+  `app/sitemap.ts` 產的**路由**不是靜態檔，middleware matcher 的副檔名規則擋不到 ——
+  爬蟲拿到的是 `302 → /login?redirect=%2Frobots.txt`。（加 SEO 的同一輪實測抓到。）
 - **看板的 `battle_logs` 重抓沒有分頁**（會靜默截斷）。首次 SSR 是分頁的，但 realtime 刷新
   走的是另一支純 `.eq()` 的查詢 —— 一旦單場超過 1000 列，看板會**無聲**停在剛好 1000。
   AGENTS.md 列了三個必須分頁的地方，這是漏掉的第四個。順帶給 `fetchAllRows` 加了

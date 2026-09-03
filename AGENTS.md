@@ -326,6 +326,21 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   `get_share_meta` / `get_shared_collection`。
   收 `log_activity` 之前務必確認呼叫它的 trigger 函式是 `security definer` 且 owner 保有
   EXECUTE —— trigger 失敗會讓整個 INSERT rollback, 出刀回報/券數/糖果會全部寫不進去。
+- **SEO: 全站只有 `/` 與 `/pairs` 可以被收錄** (2026-09-03)。站台常數在 `lib/site.ts`
+  (`SITE_URL` / `SITE_NAME` / `SITE_DESCRIPTION` / `OG_IMAGE` / `NOINDEX`), root layout 的
+  metadata 吃它, `app/robots.ts` 與 `app/sitemap.ts` 也吃它 —— **網域只有一份**。
+  四條規則:
+  1. **新增任何需要登入或半秘密的頁, 一定要 `...NOINDEX`** (展開到該頁的 `export const metadata`),
+     並在 `app/robots.ts` 補一行 Disallow。**最要緊的是 `/share/<token>`** ——
+     token 是半秘密, 被收錄等於把成員的收藏攤在搜尋結果上。`tests/seo.test.ts` 釘住這條。
+  2. **`robots.txt` / `sitemap.xml` 要排除在 middleware 的 matcher 外**。它們是
+     `app/robots.ts` / `app/sitemap.ts` 產的**路由**不是靜態檔, 副檔名規則擋不到 ——
+     漏了的症狀是爬蟲拿到 `302 → /login?redirect=%2Frobots.txt` (2026-09-03 實測抓到的)。
+  3. **`metadataBase` 一定要在 root layout 給**, 否則 OG 圖與 canonical 會被解成 localhost,
+     而那個錯只有在別人分享連結時才看得到。
+  4. **OG 圖 `public/og.png` 進版控**, 由 `scripts/make-og-image.mjs` 用瀏覽器截圖產
+     (中文字型交給瀏覽器排, sharp 的 SVG 文字會因機器而異; `next/og` 則是每次請求現算 CPU)。
+     它**不在** `.assetsignore` 的排除範圍 (那幾行只針對 `reference/`), 改文案或配色才要重跑。
 - **安全標頭寫在 `next.config.ts` 的 `headers()` 不是 `public/_headers`**: 後者只作用在
   **靜態資產命中的回應**, 而頁面 HTML 是 Worker 動態產的。`_headers` 裡第二次設同一個 key 是
   **append 不是覆蓋**, 所以不要在 `/*` 寫 Cache-Control。CSP 只上 `frame-ancestors`/`base-uri`/

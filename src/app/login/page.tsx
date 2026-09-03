@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
+
+import { NOINDEX } from "@/lib/site";
 import { Suspense } from "react";
 import { Sofa } from "lucide-react";
 
 import { PageShell } from "@/components/page-shell";
 import { LoginForm } from "./login-form";
+
+export const metadata: Metadata = { title: "登入", ...NOINDEX };
 
 export const dynamic = "force-dynamic";
 

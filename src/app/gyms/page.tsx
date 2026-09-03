@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
+
+import { NOINDEX } from "@/lib/site";
 import { redirect } from "next/navigation";
 
 import { PageHeading, PageShell } from "@/components/page-shell";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { getMyGyms } from "@/lib/gym/queries";
 import { GymsClient } from "./gyms-client";
+
+export const metadata: Metadata = { title: "我的道館", ...NOINDEX };
 
 export const dynamic = "force-dynamic";
 
