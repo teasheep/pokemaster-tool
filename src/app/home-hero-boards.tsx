@@ -28,12 +28,15 @@ import { cn } from "@/lib/utils";
 import { HomePairsBoard } from "./home-pairs-board";
 import { HomeTicketBoard } from "./home-ticket-board";
 
+import type { ClientPairRecord } from "@/lib/pairs/types";
 import type { HomePairRow } from "./home-latest-pairs";
 
 type BoardProps = {
-  /** 只有拍組看板會用 (道館戰看板收下但不理它 —— 型別上一份就好) */
   rows?: HomePairRow[];
-  ticked?: boolean;
+  /** 只有拍組看板會用 (道館戰看板收下但不理它 —— 型別上一份就好) */
+  demoPair?: ClientPairRecord | null;
+  /** **只有現在被看到的那塊在跑示範動作** — 背面那塊自己算 timer 會在沒人看的時候演完 */
+  active?: boolean;
   revealed?: boolean;
   className?: string;
 };
@@ -45,8 +48,6 @@ const BOARDS: { key: string; label: string; Board: React.ComponentType<BoardProp
 
 /** 每塊看板停留多久 (含開場那一秒的動作, 剩下約 5 秒讓人看完五列) */
 const HOLD_MS = 6000;
-/** 進場後多久播那一下變化 (券 13→12 / 持有 4→5) */
-const TICK_MS = 1100;
 /** 進場後多久開始掃長條 —— 要等淡入起了頭才掃, 同時發生會糊成一團 */
 const REVEAL_MS = 220;
 
@@ -62,30 +63,23 @@ const getReduce = () =>
 export function HomeHeroBoards({
   /** 拍組看板要列的那幾組 (catalog 最新五組, 由 page.tsx 在 server 端挑好) */
   pairRows,
+  /** 示範用的那張卡 (= pairRows[0] 那一組的完整 catalog 紀錄) */
+  demoPair,
   className,
   style,
 }: {
   pairRows: HomePairRow[];
+  demoPair?: ClientPairRecord | null;
   className?: string;
   style?: React.CSSProperties;
 }) {
   const [index, setIndex] = useState(0);
-  // 「已經播過動作的是哪一格」— 存 index 而不是 boolean, 換格時 `ticked` 自動回 false,
-  // 不必在 effect 裡同步 setState (那會被 react-hooks 的規則擋下)
-  const [tickedFor, setTickedFor] = useState(-1);
   // 長條掃過的格子 (累積, 不重置)
   const [revealed, setRevealed] = useState<number[]>([]);
   const [auto, setAuto] = useState(true);
   const [paused, setPaused] = useState(false);
   // SSR 一律當作「不需要減少動態」→ 首次 render 兩端一致, 沒有 hydration mismatch
   const reduce = useSyncExternalStore(subscribeReduce, getReduce, () => false);
-
-  const ticked = tickedFor === index;
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setTickedFor(index), reduce ? 0 : TICK_MS);
-    return () => window.clearTimeout(t);
-  }, [index, reduce]);
 
   useEffect(() => {
     const t = window.setTimeout(
@@ -123,7 +117,8 @@ export function HomeHeroBoards({
           >
             <Board
               rows={pairRows}
-              ticked={ticked}
+              demoPair={demoPair}
+              active={i === index}
               revealed={revealed.includes(i)}
               className="h-full"
             />

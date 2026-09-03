@@ -40,15 +40,15 @@ export type ArtSlot = {
 
 export const ART_SLOTS: ArtSlot[] = [
   // 左側 — 近 / 中 / 遠
-  { pairId: "10000000000", pos: { left: "-2.5%", top: "9%" }, size: "md", scale: 1, opacity: 0.78, par: 28, deg: 9, tilt: -5, float: -20, cycle: 9, },
-  { pairId: "10158000000", pos: { left: "0.5%", top: "47%" }, size: "md", scale: 0.78, opacity: 0.6, par: 15, deg: 6, tilt: 4, float: -14, cycle: 11 },
-  { pairId: "10192000000", pos: { left: "15%", bottom: "5%" }, size: "sm", scale: 0.8, opacity: 0.42, par: 7, deg: 4, tilt: -3, float: -8, cycle: 13, blur: true },
+  { pairId: "10000000000", pos: { left: "-2.5%", top: "9%" }, size: "md", scale: 1, opacity: 0.78, par: 48, deg: 13, tilt: -5, float: -20, cycle: 9, },
+  { pairId: "10158000000", pos: { left: "0.5%", top: "47%" }, size: "md", scale: 0.78, opacity: 0.6, par: 26, deg: 8, tilt: 4, float: -14, cycle: 11 },
+  { pairId: "10192000000", pos: { left: "15%", bottom: "5%" }, size: "sm", scale: 0.8, opacity: 0.42, par: 12, deg: 6, tilt: -3, float: -8, cycle: 13, blur: true },
   // 右側 — 近 / 中 / 遠
-  { pairId: "10245000000", pos: { right: "-2.5%", top: "6%" }, size: "md", scale: 0.95, opacity: 0.74, par: 26, deg: 9, tilt: 5, float: -18, cycle: 10 },
-  { pairId: "10127000000", pos: { right: "2%", top: "45%" }, size: "md", scale: 0.72, opacity: 0.56, par: 13, deg: 6, tilt: -4, float: -13, cycle: 12 },
-  { pairId: "10257000000", pos: { right: "14%", bottom: "3%" }, size: "sm", scale: 0.76, opacity: 0.4, par: 6, deg: 4, tilt: 3, float: -8, cycle: 14, blur: true },
+  { pairId: "10245000000", pos: { right: "-2.5%", top: "6%" }, size: "md", scale: 0.95, opacity: 0.74, par: 44, deg: 13, tilt: 5, float: -18, cycle: 10 },
+  { pairId: "10127000000", pos: { right: "2%", top: "45%" }, size: "md", scale: 0.72, opacity: 0.56, par: 22, deg: 8, tilt: -4, float: -13, cycle: 12 },
+  { pairId: "10257000000", pos: { right: "14%", bottom: "3%" }, size: "sm", scale: 0.76, opacity: 0.4, par: 10, deg: 6, tilt: 3, float: -8, cycle: 14, blur: true },
   // 下緣中間 — 最遠的一張, 給畫面一個底 (刻意切在視窗外一點)
-  { pairId: "10114000000", pos: { left: "36%", bottom: "-3%" }, size: "sm", scale: 0.66, opacity: 0.34, par: 4, deg: 3, tilt: -6, float: -6, cycle: 15, blur: true },
+  { pairId: "10114000000", pos: { left: "36%", bottom: "-3%" }, size: "sm", scale: 0.66, opacity: 0.34, par: 7, deg: 4, tilt: -6, float: -6, cycle: 15, blur: true },
 ];
 
 export const ART_PAIR_IDS = ART_SLOTS.map((s) => s.pairId);

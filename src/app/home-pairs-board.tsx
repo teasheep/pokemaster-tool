@@ -1,31 +1,46 @@
 "use client";
 
-// 首頁 hero 的看板之一 —— 「全館拍組持有」(與 home-ticket-board 輪替顯示, 這塊排第一)。
+// 首頁 hero 的看板之一 —— 「拍組」(與 home-ticket-board 輪替顯示, 這塊排第一)。
 //
-// 這塊回答標題那句的前半:「拍組…全館一目了然」—— 一份拍組名單 + 每一組「20 人中幾人有」。
+// 這塊回答標題那句的前半:「拍組…一目了然」, 而且**演一次真正的操作**
+// (2026-09-03 使用者:「太死板了, 能不能做一個 click 拍組左下就可以調整寶數的動態」):
 //
-// **列的是 catalog 裡最新上架的五組** (2026-09-03 使用者指定), 由 page.tsx 在 server 端挑好傳進來:
-// 首頁因此會自己跟著改版更新, 不用有人記得回來改死字串。持有人數是**隨機**的 (使用者:「隨機就可以了」),
-// 但在 server 端擲一次再傳下來 —— 在 client 擲會 SSR 與 hydration 對不起來。
-// 越新的組人越少有 (擲骰的區間是照名次分的), 所以長條的顏色一定有層次, 不會五條一樣長。
+//   上半 = 一張真的 `SyncPairCard`。灰卡 (寶0) → 左下角浮出點擊漣漪 → 寶1 → 寶2 → 寶3,
+//          卡片同時亮起來。那就是站內 /pairs 的手勢本人 (AGENTS「點左下角 = 寶數循環」),
+//          用的是同一個元件, 不是另外畫的示意圖。
+//   下半 = 全館持有清單。寶數一調到 3, **第一列的持有人數跟著 +1、長條跟著長**
+//          —— 演的是 `syncMemberPair` 那條雙表同步: 你改自己的練度, 全館的統計就變了。
+//          「一目了然」講的就是這件事, 用看的比用寫的快。
+//
+// 列的是 catalog 裡**最新上架的五組 5★** (使用者指定), 由 page.tsx 在 server 端挑好傳進來;
+// 持有人數隨機但照名次分區間 (越新的越少人有) —— 細節見 home-latest-pairs.ts。
 //
 // 視覺語彙一律沿用真的那一頁 (gyms/[id]/pairs 的 CoverageBar): h-1 長條、同一組門檻與顏色、
 // `count/total` tabular-nums。看起來要像產品的一角, 不是另外畫一張示意圖。
-//
-// 每一列的圖是**一組拍組, 不是兩張圖**: 訓練家立繪當本體、寶可夢壓在右下角 ——
-// 官方卡面與站內 SyncPairCard 就是這個排法 (使用者:「不要把拍組的人跟寶可夢分開 不合理」)。
-//
-// 長條在看板進場時從 0 掃到實際值 (`revealed`, 每列錯開 60ms): 那不是裝飾 ——
-// 它演的就是「資料填進來」這件事本身, 也是這塊看板唯一的開場動作。
 
 // <img> 而不是 next/image (全站慣例, 同 candy.tsx / sync-pair-badges.tsx): 這些圖是資料管線
 // 產好的 128px WebP, 由 Workers Assets 直送 (public/_headers 給 30 天快取), 尺寸與格式都已經定死,
 // next/image 沒有東西可以再優化, 只會多一層 loader。
 /* eslint-disable @next/next/no-img-element */
 
+import { SyncPairCard } from "@/components/sync-pair-card";
+import type { ClientPairRecord } from "@/lib/pairs/types";
 import { cn } from "@/lib/utils";
-// 名單與人數怎麼來的 (最新五組 + 隨機持有數) 在這裡, 由 page.tsx 在 server 端算好傳進來
+import { useDemoStep } from "./home-demo-step";
 import { HOME_GYM_MEMBERS, type HomePairRow } from "./home-latest-pairs";
+
+/**
+ * 示範動作的時間軸 —— 格號**就是寶數** (0=灰卡)。
+ * 第一格久一點 (讓人先看到灰卡是什麼樣), 中間兩下快 (連點的節奏), 最後一格停久一點看結果。
+ */
+const STEP_MS = [1100, 520, 520, 2600] as const;
+/** 演到這一格 (寶3) 時, 全館持有 +1 */
+const BUMP_AT = 3;
+
+/** 卡片左下角計數的中心 = SVG 的 (19, 108) / 128 —— 漣漪要蓋在那裡 */
+const CARD_PX = 96; // size="sm"
+const COUNT_X = (CARD_PX * 19) / 128;
+const COUNT_Y = (CARD_PX * 108) / 128;
 
 /** 門檻與顏色 = gyms/[id]/pairs 的 CoverageBar (全滿綠 / 過半藍 / 有人黃 / 沒人灰) */
 function toneOf(ratio: number) {
@@ -38,11 +53,19 @@ function toneOf(ratio: number) {
 /**
  * 一組拍組 = **一個東西**, 不是兩顆並排的圓 (使用者:「不要把拍組的人跟寶可夢分開 不合理」)。
  * 排法照官方卡面與站內 SyncPairCard: 訓練家立繪當本體, 寶可夢在右下角壓著邊。
- * (這裡不能直接用 SyncPairCard —— 它最小 96px, 塞不進 32px 的清單列。)
+ * (清單列塞不下真的 SyncPairCard —— 它最小 96px, 這裡是同一種排法的縮小版。)
  */
-function PairChip({ trainerId, pokemonId }: { trainerId: string; pokemonId: string }) {
+export function PairChip({
+  trainerId,
+  pokemonId,
+  className,
+}: {
+  trainerId: string;
+  pokemonId: string;
+  className?: string;
+}) {
   return (
-    <span className="relative mr-1 block h-8 w-8 shrink-0">
+    <span className={cn("relative mr-1 block h-8 w-8 shrink-0", className)}>
       <img
         src={`/reference/trainer/${trainerId}_128.webp`}
         alt=""
@@ -68,24 +91,27 @@ function PairChip({ trainerId, pokemonId }: { trainerId: string; pokemonId: stri
 
 export function HomePairsBoard({
   rows = [],
-  /** 由 HomeHeroBoards 統一掌控: 進場約一秒後播那一下變化 (第一列 +1 人) */
-  ticked = false,
+  /** 示範用的那張卡 (= rows[0] 那一組的完整 catalog 紀錄) */
+  demoPair,
+  /** 是不是**現在被看到**的那塊 —— 只有它在跑示範動作 */
+  active = false,
   /** 長條掃到實際值 — 看板第一次進場時才播, 之後輪回來不再重來 (每次都掃會變吵) */
   revealed = false,
   className,
 }: {
   rows?: HomePairRow[];
-  ticked?: boolean;
+  demoPair?: ClientPairRecord | null;
+  active?: boolean;
   revealed?: boolean;
   className?: string;
 }) {
-  // 第一列 = 最新上架的那組, 那一列演「剛剛有人抽到」
-  const bumped = rows[0]?.owners ?? 0;
+  const step = useDemoStep(active, STEP_MS);
+  const bumped = step >= BUMP_AT;
 
   return (
     <div
       role="img"
-      aria-label="全館拍組持有率示範"
+      aria-label="拍組持有率示範: 點卡片左下角調寶數, 全館持有跟著更新"
       // flex-col + 下面那個 flex-1 的 ul: 兩塊看板疊在同一格 (高度取最高的那塊), 比較矮的那塊
       // 把多出來的高度留給清單, 底部那條分隔線與最後一行就會停在**同一個位置** —— 輪替時
       // 只有內容換掉, 卡片的骨架不動。
@@ -101,9 +127,49 @@ export function HomePairsBoard({
         </span>
       </div>
 
+      {/* ── 示範: 點左下角調寶數 ── */}
+      {demoPair ? (
+        <div className="mt-3 flex items-center gap-3 border-b border-border/60 pb-3">
+          <div className="relative shrink-0">
+            <SyncPairCard
+              pair={demoPair}
+              size="sm"
+              potential={step}
+              owned={step > 0}
+              minimal
+              showName={false}
+              eager
+            />
+            {/* 點擊漣漪 —— key 帶著格號, 換格就重新掛載 = 重播一次。
+                第 0 格 (回到灰卡) 不播: 那一下是「重來」不是使用者點的。 */}
+            {step > 0 ? (
+              <span
+                key={step}
+                aria-hidden
+                className="pointer-events-none absolute h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 animate-tap-ripple motion-reduce:animate-none"
+                style={{ left: COUNT_X, top: COUNT_Y }}
+              />
+            ) : null}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{rows[0]?.name}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {"點左下角 · "}
+              <span
+                key={step}
+                className="inline-block font-medium text-foreground animate-count-pop motion-reduce:animate-none"
+              >
+                {step === 0 ? "未持有" : `寶${step}`}
+              </span>
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       <ul className="mt-3 flex-1 space-y-2.5">
         {rows.map((r, i) => {
-          const owners = i === 0 && ticked ? r.owners + 1 : r.owners;
+          // 第一列 = 示範的那一組: 寶數調上去的同時全館持有 +1
+          const owners = i === 0 && bumped ? r.owners + 1 : r.owners;
           const ratio = owners / HOME_GYM_MEMBERS;
           return (
             <li key={r.pairId} className="flex items-center gap-2.5">
@@ -116,7 +182,7 @@ export function HomePairsBoard({
                       key={owners}
                       className={cn(
                         "inline-block text-foreground",
-                        i === 0 && ticked && "animate-count-pop"
+                        i === 0 && bumped && "animate-count-pop motion-reduce:animate-none"
                       )}
                     >
                       {owners}
@@ -141,20 +207,6 @@ export function HomePairsBoard({
           );
         })}
       </ul>
-
-      {/* 剛更新的那一筆 —— 出現的同時上面的持有數才加, 兩者是同一件事 */}
-      <p
-        className={cn(
-          "mt-3 border-t border-border/60 pt-3 text-xs text-muted-foreground",
-          "transition-opacity duration-300 motion-reduce:transition-none",
-          ticked ? "opacity-100" : "opacity-0"
-        )}
-      >
-        <span className="text-foreground">小光</span> 更新練度 · 持有{" "}
-        <span className="font-mono tabular-nums">
-          {bumped} → {bumped + 1}
-        </span>
-      </p>
     </div>
   );
 }

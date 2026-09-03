@@ -34,6 +34,13 @@
   50% { transform: translateY(var(--float, -10px)) rotate(calc(var(--tilt, 0deg) + 1.5deg)); }
 }
 
+/* 首頁看板示範「這裡被點了一下」的漣漪。基礎樣式是 opacity:0,
+   所以開了減少動態 (animate-none) 時它就是不存在, 不用另外寫一份。 */
+@keyframes tap-ripple {
+  from { transform: scale(0.35); opacity: 0.5; }
+  to { transform: scale(1.75); opacity: 0; }
+}
+
 /* 開了「減少動態」時 rise-in 的替身 —— 只淡入, 不位移。
    整個不做 (animate-none) 也安全, 但畫面會變成硬生生地跳出來;
    純不透明度的變化不會造成前庭不適, 是這個偏好下公認可以留的那一種。 */
@@ -47,6 +54,7 @@
   --animate-skeleton-sweep: skeleton-sweep 1.6s ease-in-out infinite;
   --animate-rise-in: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-in: fade-in 0.55s ease both;
+  --animate-tap-ripple: tap-ripple 0.6s ease-out both;
   --animate-float-y: float-y 9s ease-in-out infinite;
 
   --color-background: var(--background);

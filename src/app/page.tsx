@@ -52,6 +52,8 @@ export default async function HomePage() {
 
   // 看板列的是**最新上架的五組**, 持有人數隨機 (兩個都是使用者指定; 細節與理由見 home-latest-pairs.ts)
   const pairRows = pickLatestPairRows(catalog);
+  // 示範卡 = 清單第一列那組的完整紀錄 (SyncPairCard 吃的是 catalog 紀錄不是那份精簡列)
+  const demoPair = catalog.find((p) => p.pairId === pairRows[0]?.pairId) ?? null;
 
   return (
     // relative 是氛圍層的定位基準 (它自己 absolute inset-0 + -z-10, 蓋不到內容也吃不到點擊);
@@ -69,12 +71,13 @@ export default async function HomePage() {
               道館戰工具
             </h1>
             <p className="mx-auto mt-4 max-w-md text-base text-balance text-muted-foreground sm:text-lg md:mx-0">
-              拍組、道館戰分配，全館一目了然。
+              拍組、道館、分配，一目了然。
             </p>
           </div>
 
           <HomeHeroBoards
             pairRows={pairRows}
+            demoPair={demoPair}
             className="mx-auto w-full max-w-sm animate-rise-in motion-reduce:animate-fade-in md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:justify-self-center"
             style={{ animationDelay: "140ms" }}
           />
