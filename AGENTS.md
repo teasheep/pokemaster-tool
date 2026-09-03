@@ -164,12 +164,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   4. **手機/窄視窗整層不掛載** (`useMedia("(min-width: 768px)")` 直接 return null, 不是 CSS 隱藏):
      挖空那招靠的是四周有留白, 手機沒有; 而且 **display:none 的圖瀏覽器照樣會下載**,
      用 CSS 藏等於白花流量 (手機 75KB / 桌機 179KB 的差就是這樣來的)。
-     滑鼠視差另外要求 `(pointer: fine)` 與**沒開**減少動態 —— 平板照樣看得到卡, 只是不跟著手指跑;
-     視差與飄浮是這個偏好的正中紅心 (前庭敏感), 那兩個一定要照關, 不要為了 demo 好看而忽略。
-     **要在關了動畫效果的機器上驗這些**, 記得用 playwright 的 `reducedMotion: "no-preference"`
-     開真的 Chrome (`channel: "chrome"`), 不然會一直看到「什麼都沒動」。
+     滑鼠視差另外要求 `(pointer: fine)` —— 平板照樣看得到卡, 只是不跟著手指跑。
   用到的拍組**只能是已上市的**: 這一層是對外的, 未公布拍組的美術素材不能出現 ——
   所以 slot 一律用 pairId 去 `loadPairsForClient()` 的結果撈, **撈不到就不畫**。
+- **`prefers-reduced-motion` 要分兩種來處理, 不要一刀切關掉** (2026-09-03 修正, 有前科):
+  - **自己會動的** (卡片呼吸 float-y、滑入 rise-in、看板換場的位移): 使用者控制不了、會自動播,
+    那才是這個偏好要擋的 → 呼吸照關; 滑入換成 `motion-reduce:animate-fade-in` (純不透明度,
+    不會造成前庭不適) 而不是 `animate-none` (硬生生跳出來); 看板照樣輪, 只是直接換。
+  - **跟著指標走的** (氛圍層視差): 不動滑鼠就不動、動多少跟多少、幅度上限 37px 又在背景層 ——
+    比較接近「游標本身在移動」而不是「畫面朝我動」。規範叫 **reduced** 不是 removed,
+    所以照做, 幅度乘 `REDUCED_GAIN` (0.5)。
+  **前科**: 一開始兩種一起關掉, 而這台開發機的 Windows 剛好關了動畫效果
+  (`SPI_GETCLIENTAREAANIMATION = False` → Chrome 回報 reduce), 整頁完全不動,
+  差點得出「要改系統設定才看得到自己的網站」這種結論 —— 那是設計錯了不是設定錯了。
+  **驗證方法**: 用 playwright 開**真的那個 Chrome** (`channel: "chrome"`, headed);
+  `reducedMotion: null` 照系統設定、`"no-preference"` 模擬一般訪客。
+  自帶的 headless shell 預設就是 no-preference, 這條驗不出來 (前科就是這樣漏掉的)。
 - **成員頭像尺寸**: 名冊/一般清單用 md (44px), 排刀那種密集列用 28px — 不要再一邊 64 一邊 20。
 - **道館拍組 ★ 只有一個開關**: 一律走 `setGymPair()` (`lib/gym/gym-pairs-client.ts`),
   文案固定「設為道館拍組 / 已設為道館拍組 (點擊取消)」。不要再做第二個搜尋新增面板 —

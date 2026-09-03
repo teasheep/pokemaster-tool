@@ -63,7 +63,7 @@ export default async function HomePage() {
             手機 1 欄, 自然順序 文案 → 看板 → CTA (先看到東西再決定要不要按);
             桌機 2 欄, 文案與 CTA 在左欄上下兩列, 看板在右欄跨兩列置中。 */}
         <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-[1.15fr_1fr] md:gap-x-12 md:gap-y-6">
-          <div className="animate-rise-in text-center motion-reduce:animate-none md:col-start-1 md:row-start-1 md:self-end md:text-left">
+          <div className="animate-rise-in text-center motion-reduce:animate-fade-in md:col-start-1 md:row-start-1 md:self-end md:text-left">
             <p className="text-sm font-medium text-muted-foreground">Pokémon Masters EX</p>
             <h1 className="mt-2 text-[2.25rem] font-bold leading-tight tracking-tight sm:text-5xl">
               道館戰工具
@@ -75,7 +75,7 @@ export default async function HomePage() {
 
           <HomeHeroBoards
             pairRows={pairRows}
-            className="mx-auto w-full max-w-sm animate-rise-in motion-reduce:animate-none md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:justify-self-center"
+            className="mx-auto w-full max-w-sm animate-rise-in motion-reduce:animate-fade-in md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:justify-self-center"
             style={{ animationDelay: "140ms" }}
           />
 
@@ -86,7 +86,7 @@ export default async function HomePage() {
               這**不是第二個登入實作** —— 全站只有 google-signin-button.tsx 一份, 這裡只是多一個掛載點。
               「先逛拍組圖鑑」刻意不放: 訪客在桌機 header 與手機底部分頁列都已經看得到「拍組」。 */}
           <div
-            className="flex animate-rise-in justify-center motion-reduce:animate-none md:col-start-1 md:row-start-2 md:justify-start md:self-start"
+            className="flex animate-rise-in justify-center motion-reduce:animate-fade-in md:col-start-1 md:row-start-2 md:justify-start md:self-start"
             style={{ animationDelay: "260ms" }}
           >
             <GoogleSignInButton />

@@ -24,6 +24,17 @@
 // 只在 md 以上**掛載** (不是 CSS 隱藏): 手機四周沒有留白, 中央挖空那招怎麼調都會壓到字;
 // 而且沒掛載就一張圖都不會下載 (display:none 的圖瀏覽器照樣抓)。
 // 指標視差另外要求 `(pointer: fine)` —— 平板照樣看得到卡, 只是不跟著手指跑。
+//
+// **`prefers-reduced-motion` 在這裡是「減半」不是「關掉」** (2026-09-03 修正)。
+// 一開始我把兩種東西混為一談, 全部關掉 —— 結果開發機的 Windows 剛好關了動畫效果,
+// 整頁完全不動, 差點得出「要改系統設定才看得到自己的網站」這種結論。兩者要分開看:
+//   - **自己會動的**: 卡片的呼吸 (float-y)、滑入 (rise-in)。使用者控制不了、會自動播,
+//     那才是這個偏好要擋的東西 → 呼吸照關, 滑入換成純淡入 (opacity 不會造成前庭不適)。
+//   - **跟著指標走的**: 這裡的視差。不動滑鼠就不動, 動多少跟多少, 幅度上限 37px 又在背景層 ——
+//     比較接近「游標本身在移動」而不是「畫面朝我動」。規範叫 **reduced** motion 不是 removed,
+//     所以照做, 幅度乘 `REDUCED_GAIN` 砍半。
+// (要在關了動畫效果的機器上驗有動畫的那一半, 用 playwright 的 `reducedMotion: "no-preference"`
+//  開真的 Chrome: `channel: "chrome"`。headless shell 預設就是 no-preference, 驗不出這件事。)
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
@@ -39,6 +50,8 @@ const CENTER_MASK = "radial-gradient(ellipse 58% 54% at 50% 50%, transparent 38%
 const EASE = 0.06;
 /** 追到這麼近就當作到位, 收掉 rAF */
 const SETTLED = 0.001;
+/** 開了「減少動態」時視差的幅度倍率 (減半, 不是關掉 —— 見檔頭) */
+const REDUCED_GAIN = 0.5;
 
 function subscribeMedia(query: string) {
   return (onChange: () => void) => {
@@ -60,7 +73,9 @@ export function HomePairArt({ pairs }: { pairs: ClientPairRecord[] }) {
   const wide = useMedia("(min-width: 768px)");
   const canTilt = useMedia("(pointer: fine)");
   const reduce = useMedia("(prefers-reduced-motion: reduce)");
-  const tilting = wide && canTilt && !reduce;
+  // 視差跟著指標走 = 直接操作, 開了偏好也照做, 只是幅度砍半 (見檔頭)
+  const tilting = wide && canTilt;
+  const gain = reduce ? REDUCED_GAIN : 1;
 
   useEffect(() => {
     if (!tilting) return;
@@ -121,17 +136,17 @@ export function HomePairArt({ pairs }: { pairs: ClientPairRecord[] }) {
               opacity: slot.opacity,
               // --mx/--my 由上面的 rAF 寫在 scene 上 (-1…1); 沒有指標時 fallback 0 = 正面
               transform: [
-                `translate3d(calc(var(--mx, 0) * ${slot.par}px), calc(var(--my, 0) * ${(slot.par * 0.55).toFixed(1)}px), 0)`,
+                `translate3d(calc(var(--mx, 0) * ${(slot.par * gain).toFixed(2)}px), calc(var(--my, 0) * ${(slot.par * gain * 0.55).toFixed(2)}px), 0)`,
                 `perspective(700px)`,
-                `rotateY(calc(var(--mx, 0) * ${slot.deg}deg))`,
-                `rotateX(calc(var(--my, 0) * ${-slot.deg * 0.7}deg))`,
+                `rotateY(calc(var(--mx, 0) * ${(slot.deg * gain).toFixed(2)}deg))`,
+                `rotateX(calc(var(--my, 0) * ${(-slot.deg * gain * 0.7).toFixed(2)}deg))`,
                 `scale(${slot.scale})`,
               ].join(" "),
             }}
           >
             {/* 入場 (一次性) 與呼吸 (無限) 必須分兩層 —— 疊在同一個元素上後者會蓋掉前者 */}
             <div
-              className="animate-rise-in motion-reduce:animate-none"
+              className="animate-rise-in motion-reduce:animate-fade-in"
               style={{
                 animationDelay: `${200 + i * 90}ms`,
                 filter: slot.blur ? "blur(1.4px)" : undefined,
@@ -145,6 +160,10 @@ export function HomePairArt({ pairs }: { pairs: ClientPairRecord[] }) {
                     animationDelay: `${i * 500}ms`,
                     "--float": `${slot.float}px`,
                     "--tilt": `${slot.tilt}deg`,
+                    // 靜態的歪斜要寫在這裡而不是只寫在 keyframe 裡: 關了呼吸 (減少動態)
+                    // 之後 keyframe 整個不套, 只靠它的話七張卡會全部站得直挺挺, 散落感沒了。
+                    // keyframe 自己也帶 rotate(var(--tilt)), 所以動的時候不會打架。
+                    transform: `rotate(${slot.tilt}deg)`,
                   } as React.CSSProperties
                 }
               >
