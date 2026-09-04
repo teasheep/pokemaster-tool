@@ -62,8 +62,18 @@ import {
 import { spentByMember } from "@/lib/gym/tickets";
 import type { BattleLogRole, Database, SyncPairType } from "@/lib/supabase/types";
 
-/** realtime 事件合併的窗口 (ms) — 理由見下面掛 channel 的那個 effect */
-const COALESCE_MS = 200;
+/**
+ * 回到分頁時重抓的節流下限 —— 某些瀏覽器切回來會同時送 `focus` 與 `visibilitychange`,
+ * 沒有這個就會連打兩次。
+ */
+const REFRESH_MIN_MS = 5_000;
+
+/**
+ * 賽事進行中、分頁看得見時的輪詢間隔。
+ * 45 秒是「看板上的數字不會讓人覺得卡住」與「不要一直打資料庫」的折衷 ——
+ * 這裡沒有任何東西需要秒級延遲 (誰打了哪一關, 晚半分鐘知道沒有差別)。
+ */
+const POLL_MS = 45_000;
 
 // StageRow / BattleLogRow 是 stage-board 那邊的欄位投影 (兩處讀的是同一批資料)
 type TicketRow = Pick<
@@ -302,141 +312,72 @@ export function BattleClient({
   }, [refetchStages, refetchLogs, refetchTickets, refetchTeams, refetchRoundNotes]);
 
   /**
-   * Realtime。看板是全站**唯一會被人數放大**的地方 (一場道館戰 = 每個成員一個分頁),
-   * 所以這一段的每個決定都是在跟「乘上人數」對抗:
+   * 看板的資料新鮮度 —— **沒有 Realtime**。
    *
-   * 1. **走 broadcast 不走 postgres_changes** (0054)。postgres_changes 的成本是
-   *    O(訂閱人數) —— 每個變更事件, Realtime 伺服器要對每一個訂閱者各跑一次 RLS。
-   *    broadcast 只在**訂閱那一刻**授權一次 (`realtime.messages` 的 policy),
-   *    而且**同時連線數**才是真正的硬牆 (超過上限不是變慢, 是連不上)。
-   * 2. **直接套用 payload 裡的那一列, 不重抓整張表**。舊做法是「收到事件 → 重抓」,
-   *    那是第二層放大: N 個看板 = N 次查詢。現在是 0 次。
-   *    只有**順序會變**的情況 (關卡新增/刪除, 本地沒有 seq 排不了) 才退回重抓;
-   *    收到不認得的東西也退回重抓 —— 寧可多一次查詢, 不要畫面跟資料庫不一致。
-   * 3. **已結束的賽事不訂閱**。舊賽事會一直累積, 有人翻看板就佔一條連線, 但它不會再變。
-   * 4. **分頁看不見就斷線**, 回來再訂 + 補一次完整重抓 (斷線期間漏掉的事件靠這次補回來)。
-   *    手機使用者切走的分頁佔著連線是純浪費。
+   * 2026-09-04 把 Supabase Realtime 整套拆掉了 (0055 撤掉 0054 的 trigger 與 policy)。
+   * 拆的理由是量出來的, 不是嫌它複雜:
+   *   線上 `battle_logs` 的 291 筆**全部**是 2026-08-13 06:19:53–06:20:06 那 13 秒內寫進去的
+   *   —— 那是 ref 試算表的匯入, 不是有人在看板上回報。真正透過 UI 回報過的次數,
+   *   看 `gym_activity` 的 `battle_log` 只有 **5 次**, 而且橫跨 3 天。
+   *   換句話說: 即時推播推給了零個觀眾, 卻換來一條硬性連線上限、一個掛在**出刀回報**
+   *   這條關鍵寫入路徑上的 trigger, 以及全站唯一無法在正式環境驗證的程式碼路徑。
    *
-   * 退回重抓時仍然先合併 (COALESCE_MS): 同一個窗口內每張表最多重抓一次。
+   * 取代它的是兩件很無聊但夠用的事:
+   *   1. **回到分頁就重抓** (visibilitychange + focus)。這是實際的使用型態 ——
+   *      這是手機遊戲: 人在遊戲裡打, 切到瀏覽器登記, 再切回去。看板不會有 20 個人
+   *      同時開著盯。節流 `REFRESH_MIN_MS` 是因為某些瀏覽器會同時送 focus 與 visibilitychange。
+   *   2. **賽事進行中且分頁看得見時, 慢速輪詢** `POLL_MS`。這只補「一直盯著看板」那一種情況,
+   *      而且只抓**會變的那兩張表** (出戰紀錄 + 券數), 不是整塊 ——
+   *      20 人開著兩小時 ≈ 20×160×2 ≈ 6,400 次輕量查詢, 對這個規模是雜訊。
+   *      看不見就停 (setInterval 在背景分頁本來就會被節流, 但停掉才是真的不花)。
+   *
+   * 已結束的賽事**兩件都不做**: 它不會再變。
+   *
+   * ⚠ 要加回即時推播的話, 判準寫在 ROADMAP —— 先看下一場真正的道館戰之後
+   *   `gym_activity` 的 `battle_log` 是不是成群出現 (幾分鐘內好幾筆、不同人)。
+   *   不是的話就不要加, 這一段已經夠了。
    */
   useEffect(() => {
-    // 已結束的賽事不會再變 —— 連都不用連
     if (status === "finished") return;
 
-    const jobs: Record<string, () => Promise<void>> = {
-      tickets: refetchTickets,
-      stages: refetchStages,
-      logs: refetchLogs,
-      status: refetchStatus,
-    };
-    const pending = new Set<keyof typeof jobs>();
-    let timer = 0;
-    const flush = () => {
-      timer = 0;
-      const due = [...pending];
-      pending.clear();
-      void Promise.all(due.map((k) => jobs[k]()));
-    };
-    const markRefetch = (k: keyof typeof jobs) => {
-      pending.add(k);
-      if (!timer) timer = window.setTimeout(flush, COALESCE_MS);
-    };
+    let lastFull = Date.now(); // SSR 剛給的資料就是新的, 掛載當下不用再抓一次
+    let poll = 0;
 
-    /** broadcast 的 payload 形狀 (realtime.broadcast_changes 產的) */
-    type ChangePayload = {
-      operation?: string;
-      table?: string;
-      record?: Record<string, unknown> | null;
-      old_record?: Record<string, unknown> | null;
+    const fullRefresh = () => {
+      lastFull = Date.now();
+      void Promise.all([refetchBoard(), refetchStatus()]);
+    };
+    /** 輪詢只抓會變的那兩張 (關卡/隊伍/敘述是管理員偶爾才改的, 交給「回到分頁」那條) */
+    const pollOnce = () => void Promise.all([refetchLogs(), refetchTickets()]);
+
+    const startPoll = () => {
+      if (poll || status !== "active") return;
+      poll = window.setInterval(pollOnce, POLL_MS);
+    };
+    const stopPoll = () => {
+      if (poll) window.clearInterval(poll);
+      poll = 0;
     };
 
-    const applyChange = (p: ChangePayload) => {
-      const op = p.operation;
-      const rec = p.record ?? null;
-      const old = p.old_record ?? null;
-      const id = (rec?.id ?? old?.id) as string | undefined;
-
-      switch (p.table) {
-        case "battle_logs": {
-          if (!id) return markRefetch("logs");
-          if (op === "DELETE") return setLogs((prev) => prev.filter((l) => l.id !== id));
-          const row = rec as unknown as BattleLogRow;
-          // 清單是 created_at 由新到舊 —— 新增的一定是最新的那筆, 放最前面就對了
-          if (op === "INSERT")
-            return setLogs((prev) => (prev.some((l) => l.id === id) ? prev : [row, ...prev]));
-          return setLogs((prev) => prev.map((l) => (l.id === id ? row : l)));
-        }
-        case "member_tickets": {
-          const memberId = (rec?.member_id ?? old?.member_id) as string | undefined;
-          if (!memberId) return markRefetch("tickets");
-          if (op === "DELETE")
-            return setTickets((prev) => prev.filter((t) => t.member_id !== memberId));
-          const row = rec as unknown as TicketRow;
-          return setTickets((prev) =>
-            prev.some((t) => t.member_id === memberId)
-              ? prev.map((t) => (t.member_id === memberId ? row : t))
-              : [...prev, row]
-          );
-        }
-        case "battle_stages": {
-          // 關卡的順序來自查詢的 `.order("seq")`, 而本地的 StageRow 沒有 seq ——
-          // 新增/刪除排不出正確位置, 只有「就地改」能安全套用。
-          if (op !== "UPDATE" || !id) return markRefetch("stages");
-          const row = rec as unknown as StageRow;
-          return setStages((prev) => prev.map((s) => (s.id === id ? row : s)));
-        }
-        case "gym_battles": {
-          if (!rec) return markRefetch("status");
-          return setDates({
-            startsOn: (rec.starts_on as string | null) ?? null,
-            endsOn: (rec.ends_on as string | null) ?? null,
-          });
-        }
-        default:
-          // 不認得的表 = 有人加了新的 trigger 但沒改這裡 → 整塊重抓, 不要靜靜地不同步
-          return void Object.keys(jobs).forEach((k) => markRefetch(k as keyof typeof jobs));
-      }
-    };
-
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-
-    const connect = async () => {
-      if (channel) return;
-      // 私有頻道要帶著使用者的 token 授權 (realtime.messages 的 policy 才判得出是誰)
-      await supabase.realtime.setAuth();
-      const ch = supabase.channel(`battle:${battle.id}`, { config: { private: true } });
-      for (const event of ["INSERT", "UPDATE", "DELETE"]) {
-        ch.on("broadcast", { event }, ({ payload }) => applyChange(payload as ChangePayload));
-      }
-      channel = ch.subscribe();
-    };
-
-    const disconnect = () => {
-      if (!channel) return;
-      const ch = channel;
-      channel = null;
-      void supabase.removeChannel(ch);
-    };
-
-    const onVisibility = () => {
+    const onBack = () => {
       if (document.visibilityState === "hidden") {
-        disconnect();
+        stopPoll();
         return;
       }
-      void connect();
-      // 斷線期間漏掉的事件沒有補送機制 —— 回來時整塊重抓一次才不會停在舊資料
-      for (const k of Object.keys(jobs)) markRefetch(k as keyof typeof jobs);
+      if (Date.now() - lastFull >= REFRESH_MIN_MS) fullRefresh();
+      startPoll();
     };
 
-    if (document.visibilityState !== "hidden") void connect();
-    document.addEventListener("visibilitychange", onVisibility);
+    document.addEventListener("visibilitychange", onBack);
+    window.addEventListener("focus", onBack);
+    if (document.visibilityState !== "hidden") startPoll();
 
     return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-      if (timer) window.clearTimeout(timer);
-      disconnect();
+      document.removeEventListener("visibilitychange", onBack);
+      window.removeEventListener("focus", onBack);
+      stopPoll();
     };
-  }, [supabase, battle.id, status, refetchTickets, refetchStages, refetchStatus, refetchLogs]);
+  }, [status, refetchBoard, refetchStatus, refetchLogs, refetchTickets]);
 
   async function updateDates(patch: { starts_on?: string | null; ends_on?: string | null }) {
     const { error } = await supabase.from("gym_battles").update(patch).eq("id", battle.id);

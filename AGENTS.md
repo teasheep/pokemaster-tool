@@ -385,22 +385,20 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   不用官方 9+3/日記法), 上限可 ± (模擬用; 降上限會夾住剩餘)。寫入一律走
   `adjust_member_ticket(p_delta, p_cap_delta)` 原子 RPC, 不要 client 算絕對值回寫。
   燈號三列 (`TeamFitRows`) 是純檢視 — 點頭像預排刀已拔掉, 不要加回點擊寫入。
-- **看板的即時更新走 broadcast 不走 postgres_changes** (0054, 2026-09-03): 看板是全站
-  **唯一會被人數放大**的地方 (一場道館戰 = 每個成員一個分頁), 四件事都是在跟那個倍率對抗:
-  1. `postgres_changes` 的成本是 O(訂閱人數) —— 每個事件對每個訂閱者各跑一次 RLS;
-     broadcast 只在**訂閱那一刻**授權一次 (`realtime.messages` 的 policy)。
-     而且**同時連線數**是硬牆 (超過上限不是變慢, 是連不上)。
-  2. **直接套用 payload 裡的那一列, 不重抓整張表**。舊做法「收到事件 → 重抓」是第二層放大
-     (N 個看板 = N 次查詢)。只有順序會變的情況 (關卡新增/刪除, 本地 StageRow 沒有 seq)
-     與不認得的表才退回重抓, 退回時仍先合併 (200ms 窗口內每張表最多一次)。
-  3. **已結束的賽事不訂閱** (它不會再變, 但會一直被人翻); **分頁看不見就斷線**,
-     回來時要**補一次完整重抓** —— 斷線期間漏掉的事件沒有補送機制。
-  4. trigger **廣播失敗只 warning 不丟例外**: trigger 丟例外會讓整筆寫入 rollback,
-     出刀就報不了 (與 log_activity 那條同一個地雷)。
-  ⚠ **broadcast 是逐 topic 授權, postgres_changes 是逐列授權。** 現在等價是因為
-  battle_logs / member_tickets / battle_stages / gym_battles 的 SELECT policy 實測全是
-  `is_gym_member(gym_id)` (純道館層級, 沒有 row 層差異)。**哪天有人給這四張表加上 row 層的
-  可見性條件, 這個等價就不成立**, 要回頭改 0054 的 policy, 否則會從看板漏資料出去。
+- **全站沒有 Realtime, 不要再加回去** (0055 撤掉 0054, 2026-09-04)。看板的新鮮度靠
+  `battle-client.tsx` 那個 effect: **回到分頁就重抓** (visibilitychange + focus, 5 秒節流)
+  \+ **賽事進行中且分頁看得見時每 45 秒抓一次出戰紀錄與券數**; 已結束的賽事兩件都不做。
+  **拆掉的理由是量出來的**: 線上 `battle_logs` 291 筆**全部**寫在 2026-08-13 06:19:53–06:20:06
+  那 13 秒內 (= ref 試算表匯入), 真正透過 UI 回報過的看 `gym_activity` 的 `battle_log`
+  只有 **5 次**, 橫跨 3 天。同期 `pair` 78 次、`candy` 87 次 —— 工具有人用, 但用的是
+  `/pairs` 與 `/resources`。即時推播推給了零個觀眾, 換來的卻是**一條硬性連線上限**
+  (全站唯一的擴展硬牆)、一個掛在**出刀回報**這條關鍵寫入路徑上的 trigger,
+  以及全站唯一**無法在正式環境驗證**的程式碼路徑。
+  ⚠ 想加回來之前**先看數據**: 下一場真正的道館戰之後, `gym_activity` 的 `battle_log`
+  有沒有成群出現 (幾分鐘內好幾筆、不同人)。沒有就不要加, 現在這兩條已經夠了。
+  真要加, `0054_battle_broadcast.sql` 原封不動重跑即可 (那份的註解與取捨都還有效,
+  包括「broadcast 是逐 topic 授權」那個前提 —— 它成立是因為那四張表的 SELECT policy
+  實測全是 `is_gym_member(gym_id)`, 哪天有人加 row 層可見性條件就不成立了)。
 - **新增對戰紀錄只有一條路** (`reportBattleLog`, `lib/gym/battle-log.ts`): 看板輪次列的
   Swords (自己出刀, 要選主力/降抗) 與 + (管理員幫成員記) 跟對戰紀錄側板都走它
   (插 battle_logs + round_label 派生 + 自動扣券)。排刀 (stage_assignments) 已無新增入口,
