@@ -8,9 +8,42 @@
 
 預計要做的事見 [ROADMAP.md](ROADMAP.md)。
 
+---
+
+## [1.2.0] — 2026-09-04
+
+首頁重做、基本 SEO、看板拿掉即時推播。
+
+> 這是**第一個透過 tag 部署的版本**。1.1.0 以前是在本機 `npm run deploy:cf` 推的，
+> 所以那幾版在這個版本庫裡沒有對應的 git tag。
+
 ### 新增
 
+- **首頁 hero 改成兩塊看板輪替**：全館拍組持有（20 人中幾人有）與道館戰（誰還剩幾張券），
+  正好對上標題那句的兩件事。兩塊一直都掛著、只是輪流交叉淡入，所以切換時版面不動；
+  點圓點就停止自動輪替。`prefers-reduced-motion` 照樣輪，只是換場不做位移 ——
+  那個偏好要擋的是會動的東西，換一塊內容本身不是動態，整個停掉等於讓人少看到一半的內容。
+- **兩塊看板各自演一段真正的操作**（不是靜態插圖）：
+  拍組是「灰卡 → 點左下角 → 寶1/2/3，卡片亮起、全館持有跟著 +1」（`syncMemberPair` 那條雙表同步）；
+  道館戰是「選一組拍組 → 回報 → 那個人的挑戰券 13→12 並亮一下」（`reportBattleLog`）。
+  用的是站內真的 `SyncPairCard` 與真的手勢，不是另外畫的示意圖。
+- **首頁看得出是哪一款遊戲**：看板每一列的圖是**一組拍組**（訓練家立繪當本體、寶可夢壓右下角，
+  官方卡面的排法），示範成員用他們自己的訓練家立繪當頭貼。
+  背後再擺七張**真的 `SyncPairCard`**，各自有遠近（scale／透明度／景深模糊）、各自慢慢浮動，
+  **滑鼠一動整個空間跟著微微轉** —— 近的卡位移大、遠的小，那個差就是空間感。
+  中央挖空，字與 CTA 上面永遠不會有東西。手機/觸控整層不掛載（一張圖都不會下載）。
+  只吃既有的 WebP：手機 14 張 / 75KB，桌機 42 張 / 179KB。
+  `prefers-reduced-motion` 分兩種處理：自己會動的（呼吸、滑入的位移）關掉或換成純淡入，
+  但**跟著指標走的視差照做、幅度調弱** —— 那是直接操作不是自動播放，規範叫 reduced 不是 removed。
+- **首頁拍組看板列的是最新上架的五組 5★**（吃 catalog，會自己跟著改版更新），持有人數隨機。
+  4★ 不列 —— 每一波改版 5★ 與 4★ 一起上，不濾的話首頁一半是 4★。
+- **Google One Tap 改成沒登入時全站都有**（`GoogleOneTapSlot` 掛在 root layout）。
+  已登入者整個不渲染，連 GIS script 都不載。代價是知情接受的：每頁都掛等於每頁都把
+  「有人來過」告訴 Google；而使用者關掉 One Tap 會讓瀏覽器對整站進入 FedCM embargo。
 - **基本 SEO**。`robots.txt` 與 `sitemap.xml`（`app/robots.ts` / `app/sitemap.ts`）、
+  canonical、Open Graph／Twitter card、分享卡片圖 `public/og.png`（1200×630）、
+  首頁的 `WebApplication` 結構化資料。站台常數集中在 `lib/site.ts`，網域只有一份。
+- **全站只有 `/` 與 `/pairs` 可以被收錄**。`robots.txt` 與 `sitemap.xml`（`app/robots.ts` / `app/sitemap.ts`）、
   canonical、Open Graph／Twitter card、分享卡片圖 `public/og.png`（1200×630）、
   首頁的 `WebApplication` 結構化資料。站台常數集中在 `lib/site.ts`，網域只有一份。
 - **全站只有 `/` 與 `/pairs` 可以被收錄**。其餘（道館、個人設定、onboarding、登入流程）
@@ -20,6 +53,11 @@
 
 ### 變更
 
+- **右上角的「登入」鈕在首頁與登入頁不再渲染**：這兩頁畫面裡已經有一顆真的 Google 按鈕，
+  再放一顆等於同一個動作兩個入口、而且兩顆長得不一樣。其他訪客看得到的頁（`/pairs`、分享頁）
+  一定要留著 —— One Tap 偵測不到有沒有跳出來，那顆是唯一的保底入口。
+- `docs/` 改為**本機筆記，不進版控**（決策脈絡、資料管線操作、降抗查證）。
+  檔案仍在本機，AGENTS.md 與程式註解照樣指得到；README／ROADMAP 的連結已改掉。
 - **道館戰看板拿掉 Supabase Realtime**（`0054` 加了 broadcast，`0055` 又整套撤掉；
   兩個都沒上線過）。改成兩件無聊但夠用的事：**回到分頁就重抓**（visibilitychange + focus），
   以及**賽事進行中、分頁看得見時每 45 秒抓一次出戰紀錄與券數**。已結束的賽事兩件都不做。
@@ -45,11 +83,6 @@
   但這支會被 N 個瀏覽器同時呼叫，那個交換要反過來算。
   `tests/fetch-all.test.ts` 釘住兩種行為。
 
-### 變更
-
-- `docs/` 改為**本機筆記，不進版控**（決策脈絡、資料管線操作、降抗查證）。
-  檔案仍在本機，AGENTS.md 與程式註解照樣指得到；README／ROADMAP 的連結已改掉。
-
 ---
 
 ## [1.1.0] — 2026-09-02
@@ -60,33 +93,10 @@
 
 - **自訂網域 `pokemaster-tool.com`** 取代 `*.workers.dev`。Worker Custom Domain 由
   `wrangler.jsonc` 宣告（`custom_domain: true`），同時 `workers_dev: false` 關掉舊入口。
-- **Google One Tap** 登入（`signInWithIdToken`），**沒登入時全站都有**（`GoogleOneTapSlot` 掛在
-  root layout）。已登入者整個不渲染，連 GIS script 都不載。
-  代價是知情接受的：GIS script 的載入本身就是一個帶 Google cookie 的請求，每頁都掛等於每頁都把
-  「有人來過」告訴 Google；而使用者關掉 One Tap 會讓瀏覽器對整站進入 FedCM embargo。
-- **首頁的看板縮影** — 取代原本三段功能介紹文字。全館拍組持有（20 人中幾人有）與道館戰
-  （誰還剩幾張券）兩塊輪替，正好對上標題那句「拍組、道館戰分配」的兩件事。
-  兩塊一直都掛著、只是輪流淡入，所以切換時版面不動；點圓點就停止自動輪替。
-  `prefers-reduced-motion` 照樣輪，只是換場不淡入不上浮 —— 那個偏好要擋的是會動的東西，
-  換一塊內容本身不是動態，整個停掉等於讓人少看到一半的內容。
-- **首頁看得出是哪一款遊戲**：拍組看板每一列的圖是**一組拍組**（訓練家立繪當本體、寶可夢壓右下角，
-  官方卡面的排法），道館戰看板的示範成員用他們自己的訓練家立繪當頭貼。
-  背後再擺七張**真的 `SyncPairCard`**（站內 /pairs 同一個元件、同一份 catalog 紀錄），
-  各自有遠近（scale／透明度／景深模糊）、各自慢慢浮動，**滑鼠一動整個空間跟著微微轉** ——
-  近的卡位移大、遠的小，那個差就是空間感。中央挖空，字與 CTA 上面永遠不會有東西。
-  進場時文案 → 看板 → CTA 依序淡入上浮，長條從 0 掃到實際值。
-  `prefers-reduced-motion` 分兩種處理：自己會動的（呼吸、滑入的位移）關掉或換成純淡入，
-  但**跟著指標走的視差照做、幅度調弱** —— 那是直接操作不是自動播放，規範叫 reduced 不是 removed。
-  手機/觸控整層不掛載（一張圖都不會下載）。
-  只吃既有的 WebP：手機 14 張 / 75KB，桌機 42 張 / 179KB。
-- **首頁拍組看板列的是最新上架的五組 5★**（吃 catalog，會自己跟著改版更新），持有人數隨機。
-  4★ 不列 —— 每一波改版 5★ 與 4★ 一起上，不濾的話首頁一半是 4★。
-- **兩塊看板各自演一段真正的操作**（不是靜態插圖）：
-  拍組是「灰卡 → 點左下角 → 寶1/2/3，卡片亮起、全館持有跟著 +1」（`syncMemberPair` 那條雙表同步）；
-  道館戰是「選一組拍組 → 回報 → 那個人的挑戰券 13→12 並亮一下」（`reportBattleLog`）。
-  用的是站內真的 `SyncPairCard` 與真的手勢，不是另外畫的示意圖。
-  看板換場是**純交叉淡入不做位移** —— 兩塊的骨架本來就疊在同一格、外框一樣大，硬加一段上浮
-  只會讓人以為版面在跳。
+- **Google One Tap** 登入（`signInWithIdToken`），掛在 `/login`。
+  GIS script 的載入本身就是一個帶 Google cookie 的請求，所以當時只掛需要登入的那一頁。
+- **首頁的道館戰看板縮影** — 取代原本三段功能介紹文字。四個示範成員 + 一筆剛登記的出刀，
+  陌生道館的人瞄一眼就有概念，不用讀說明。
 - 登入後導向的閘門抽成 `lib/auth/post-login-destination.ts`，由 `/auth/callback` 與
   新的 `/auth/one-tap` Route Handler 共用。
 
@@ -100,9 +110,6 @@
 - **首頁只服務訪客**：已登入者一律直接進 `/gyms`（那頁本來就有「建立／加入道館」的空狀態），
   順帶省掉一次跨太平洋的 gyms count 查詢。CTA 從兩顆（都連 `/login`）收成一顆。
 - 手機版 header 只剩「品牌｜頭像」，主題切換移進頭像選單。
-- **右上角的「登入」鈕在首頁與登入頁不再渲染**：這兩頁畫面裡已經有一顆真的 Google 按鈕，
-  再放一顆等於同一個動作兩個入口、而且兩顆長得不一樣。其他訪客看得到的頁（`/pairs`、分享頁）
-  一定要留著 —— One Tap 偵測不到有沒有跳出來，那顆是唯一的保底入口。
 - 已登入者打 `/login` 的落點由 `/pairs` 改為 `/gyms`，與 `safeNextPath` 的預設值對齊。
 
 ### 修正
@@ -173,7 +180,9 @@
 初版。原本的目標是「上傳遊戲截圖自動辨識拍組」（DINOv2 embedding 兩階段比對），
 2026-08 中轉向道館賽協作功能，辨識管線暫緩但程式碼保留。
 
-[未發布]: https://github.com/teasheep/pokemaster-tool/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/teasheep/pokemaster-tool/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/teasheep/pokemaster-tool/compare/v0.1.0...v1.0.0
-[0.1.0]: https://github.com/teasheep/pokemaster-tool/releases/tag/v0.1.0
+[未發布]: https://github.com/teasheep/pokemaster-tool/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/teasheep/pokemaster-tool/releases/tag/v1.2.0
+
+<!-- 1.1.0 以前是在本機 `npm run deploy:cf` 部署的，這個版本庫裡沒有對應的 tag，
+     所以不放比較連結（連過去會 404）。 -->
+
