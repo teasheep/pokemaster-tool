@@ -338,7 +338,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      漏了的症狀是爬蟲拿到 `302 → /login?redirect=%2Frobots.txt` (2026-09-03 實測抓到的)。
   3. **`metadataBase` 一定要在 root layout 給**, 否則 OG 圖與 canonical 會被解成 localhost,
      而那個錯只有在別人分享連結時才看得到。
-  4. **OG 圖 `public/og.png` 進版控**, 由 `scripts/make-og-image.mjs` 用瀏覽器截圖產
+  4. **線上的 `/robots.txt` 比本機大很多是正常的, 不要「修」它** (2026-09-04 查證過):
+     Cloudflare zone 開了 Managed robots.txt, 會把「AI 內容訊號 + 擋 GPTBot/ClaudeBot/CCBot/
+     Google-Extended 等」那一段**接在我們那份前面** (本機 295B → 線上 2131B)。
+     結果是兩個 `User-agent: *` 群組, 看起來像會互相蓋掉 —— **不會**。
+     RFC 9309 §2.2.1 明訂同名群組 MUST 合併, §2.2.2 是最長匹配勝
+     (`Disallow: /share/` 7 octets 贏過 `Allow: /` 1 octet)。
+     依 RFC 對線上那份實測過: Googlebot 合併後 14 條規則, `/share/`、`/api/`、`/gyms/`、
+     `/login` 都擋下, `/` 與 `/pairs` 允許, GPTBot/ClaudeBot/CCBot 整站擋下 —— 全部正確。
+     **關掉 Managed robots.txt 是淨損失** (少掉 AI 爬蟲那段, 換不到任何東西)。
+  5. **OG 圖 `public/og.png` 進版控**, 由 `scripts/make-og-image.mjs` 用瀏覽器截圖產
      (中文字型交給瀏覽器排, sharp 的 SVG 文字會因機器而異; `next/og` 則是每次請求現算 CPU)。
      它**不在** `.assetsignore` 的排除範圍 (那幾行只針對 `reference/`), 改文案或配色才要重跑。
 - **安全標頭寫在 `next.config.ts` 的 `headers()` 不是 `public/_headers`**: 後者只作用在
