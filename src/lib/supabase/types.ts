@@ -427,6 +427,35 @@ export type Database = {
         };
         Relationships: [];
       };
+      // 成員的屬性資源方向 (0056): kind = want (想投入) / invested (已投入較多)
+      // 只有「有這一列 / 沒這一列」兩種狀態 → 沒有 Update (切換 = insert 或 delete)
+      member_type_focus: {
+        Row: {
+          id: string;
+          gym_id: string;
+          member_id: string;
+          kind: string;
+          type: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          member_id: string;
+          kind: string;
+          type: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          gym_id?: string;
+          member_id?: string;
+          kind?: string;
+          type?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
 
       // 攻略庫 (0012): 打法筆記共筆
       gym_guides: {

@@ -20,6 +20,7 @@
 //   看板 lg:grid-cols-2、關卡卡 .. app/gyms/[id]/battles/[battleId]/stage-board.tsx
 //   隊伍格 minmax(19rem,1fr) ..... components/gym/team-sheet.tsx
 //   糖果圖標 56px + 兩側 ± 鈕 h-7  components/gym/candy.tsx
+//   屬性格 min-h-11 / 4-6-9 欄 ..... components/gym/type-focus.tsx TypeToggle
 //
 // 骨架卡一律是 rounded-xl 灰塊 — **不要**去仿 SyncPairCard 的 SVG:
 // 那等於多出第二份卡片規格, 之後必然走鐘 (卡片外觀是照遊戲重現的, 一像素都不能歪)。
@@ -333,6 +334,20 @@ export function CandyBarSkeleton() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 屬性資源方向的 18 格 (type-focus.tsx 的 TypeToggle): min-h-11, 手機 4 欄 / sm 6 欄 / lg 9 欄。
+ * 每格是等寬的圓角格子 — 格數與欄數要跟著那邊改, 否則資料一到整片重排。
+ */
+export function TypeFocusGridSkeleton() {
+  return (
+    <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6 lg:grid-cols-9">
+      {range(18).map((i) => (
+        <Sk key={i} className="h-11 w-full rounded-lg" delay={wave(i)} />
+      ))}
     </div>
   );
 }

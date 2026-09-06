@@ -37,7 +37,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - 技術: Next.js 16 App Router + Supabase (雲端) + @opennextjs/cloudflare + Tailwind 4 + vitest
 - **資訊架構 (使用者指定, 別改回去)**: 頂部只有兩個分頁 —
-  `/pairs` 拍組 (只有自己的資料) 與 `/gyms` 道館, 外加 `/resources` 我的資源 (糖果)。
+  `/pairs` 拍組 (只有自己的資料) 與 `/gyms` 道館, 外加 `/resources` 我的資源 (糖果 + 屬性資源方向)。
   道館底下目前 3 個分頁 (使用者指定的順序, 2026-08-17 起成員與拍組排最前 = 根路徑預設頁),
   **分頁名 = 頁面 h1 = 該頁唯一職責, 三者要一起改**:
   成員與拍組 (名冊+角色 / 成員碼與顧問碼緊貼 h1 (`PageHeading beside`) / 名冊第一項「全館拍組」= ★名單+持有率 / 選成員 = 他的練度+糖果+紀錄) /
@@ -221,6 +221,31 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **雙表同步**: `user_collection` 任何寫入都要經 `syncMemberPair()` (`src/lib/collection-sync.ts`) 同步
   `member_pairs`, 否則排刀/道館拍組頁看到舊資料。新增 `CollectionEntry` 欄位時三處都要接: collection.ts
   讀取、兩個 client 的 upsert、syncMemberPair。
+- **`/resources` 是「資源」不是「糖果頁」** (2026-09-06 使用者指定): 三塊 —
+  糖果庫存 (有幾顆) + **想投入資源的屬性** + **已投入較多資源的屬性** (裝備/等級/潛能),
+  後兩塊是複選 18 屬性 (`member_type_focus`, 0056), 用途是「之後方便安排」。
+  五件不要改壞的事:
+  1. **兩塊不互斥** — 已經練得深、還想再練是常態, 不要做成單選或互相排除。
+  2. **不要塞進 `member_candies`**: 那張表是「有幾顆」(數量), 這裡是「哪些屬性」(集合)。
+     混在一起 count 欄位永遠是雜訊, 而且排刀的「吃糖可達」會讀到不該讀的列。
+     (0036 已經把 member_candies 放寬成「不只糖果」, 那條是給潛能餅乾/之魂/羽毛這種**有數量**的素材用的。)
+  3. **切換 = insert 或 delete, 不要用 upsert** — 這張表只有「有列 / 沒列」兩種狀態,
+     0056 沒給 update policy, PostgREST 的 upsert 走 UPDATE 會被 RLS 擋。
+     連點兩下的 23505 (unique_violation) 當成成功, 不要 toast 錯誤。
+  4. **元件只有一份** (`components/gym/type-focus.tsx` 的 `TypeFocusBlock`):
+     `/resources` (自己編輯, 標題 h2) 與道館成員頁的「資源」分頁 (h3, 唯讀時只列選中的屬性)
+     共用它 — 兩邊的文案與版面不要各長各的。**唯讀時不要畫 18 格灰卡**, 看別人只需要看選了什麼。
+  5. **刻意不記進 `gym_activity`**: 那份是「成員身上發生的事」, 這兩塊是隨時會改的偏好,
+     記了只會把真正的異動洗掉。
+- ⚠ **migration 裡的 `grant` 不代表「只有這些權限」** (2026-09-06 實測, 與 `security definer`
+  那條是同一個坑的另一面): Supabase 對 public schema 的 default privileges 已經把七種權限
+  (含 **UPDATE / TRUNCATE**) 都授給 `anon` 與 `authenticated` —— **全站每一張表都是**
+  (`member_candies` / `member_pairs` / `member_tickets` / `gym_activity` 實測全開,
+  0026 對 gym_activity 只寫 `grant select` 也一樣)。
+  所以**「沒寫 grant update」不等於「不能 UPDATE」** —— 真正擋住的是 RLS:
+  沒有對應的 policy 就沒有那個動作。要真的收權限必須明寫
+  `revoke ... from anon, authenticated` (照 0050/0051 對函式的寫法)。
+  (TRUNCATE 不吃 RLS, 但 PostgREST 只會發 SELECT/INSERT/UPDATE/DELETE 與 RPC, 打不出 TRUNCATE。)
 - **糖果制度**是查證過的遊戲規則 (角色糖五種+通用黃糖+棒棒糖): **遊戲制度不確定時先上網查證, 不要自己設計**。
 - `/gyms/[id]/*` 子頁**不要**自帶 SiteHeader/SiteFooter — layout.tsx 統一渲染。
 - hover-only 控制項一律加 `pointer-coarse:opacity-100` (手機沒有 hover); 觸控目標 ≥44px。

@@ -214,6 +214,7 @@ export function ConnectClient({
   "gyms": [{
     "name", "myRole",
     "members":  [{ "name", "role", "availability", "tickets": { "remaining", "cap" }, "candies",
+                   "typeFocus": { "want": [], "invested": [] },
                    "pairs": [{ "name", "type", "role", "grade", "superAwakening" }] }],
     "gymPairs": [{ "name", "type" }],
     "teams":    [{ "name", "type", "tag", "note", "pairs": [{ "name", "minGrade" }] }],
@@ -222,7 +223,8 @@ export function ConnectClient({
   }]
 }
 
-grade 0-10: 0 = 未持有 ・ 1-5 = 寶1-寶5 ・ 6-10 = 超覺醒1-5`}</code>
+grade 0-10: 0 = 未持有 ・ 1-5 = 寶1-寶5 ・ 6-10 = 超覺醒1-5
+typeFocus: 成員自選的屬性 — want = 想投入資源 ・ invested = 已投入較多 (裝備/等級/潛能)`}</code>
         </pre>
       </details>
     </div>

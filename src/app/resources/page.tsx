@@ -15,7 +15,8 @@ export const metadata: Metadata = { title: "我的資源", ...NOINDEX };
 export const dynamic = "force-dynamic";
 
 /**
- * 我的資源 — 糖果庫存 (排刀媒合會把「吃糖可達的寶數」算進去)。
+ * 我的資源 — 三塊: 糖果庫存 (排刀媒合會把「吃糖可達的寶數」算進去) +
+ * 想投入資源的屬性 + 已投入較多資源的屬性 (後兩塊是 0056, 給安排道館戰的人看)。
  * 原本擠在拍組頁上方, 卡片牆被壓得很難看 → 獨立一頁。
  */
 export default async function ResourcesPage() {
@@ -29,7 +30,7 @@ export default async function ResourcesPage() {
         <PageShell width="prose">
           <PageHeading title="我的資源" />
           <div className="rounded-xl border border-dashed bg-card/50 p-10 text-center">
-            <p className="text-sm text-muted-foreground">加入道館後才會有糖果庫存。</p>
+            <p className="text-sm text-muted-foreground">加入道館後才會有資源可以記。</p>
             <Button asChild className="mt-4">
               <Link href="/gyms">去道館</Link>
             </Button>

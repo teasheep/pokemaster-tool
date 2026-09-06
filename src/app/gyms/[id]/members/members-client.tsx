@@ -36,6 +36,11 @@ import { MemberAvatar, MemberCard, memberLabel } from "@/components/gym/member-c
 import { PageHeading } from "@/components/page-shell";
 import { CandyBarSkeleton, PairWallSkeleton } from "@/components/skeletons";
 import { CandyBar, useMyCandies } from "@/components/gym/candy";
+import {
+  TYPE_FOCUS_KINDS,
+  TypeFocusBlock,
+  useMyTypeFocus,
+} from "@/components/gym/type-focus";
 import { SidePanel } from "@/components/ui/side-panel";
 import { setGymPair } from "@/lib/gym/gym-pairs-client";
 import { GymPairsClient, type PackedGrades, type GymPairRow } from "../pairs/pairs-client";
@@ -371,8 +376,8 @@ export function MembersClient({
                   <TabsTrigger value="pairs" className="max-lg:min-h-11">
                     持有拍組
                   </TabsTrigger>
-                  <TabsTrigger value="candy" className="max-lg:min-h-11">
-                    糖果
+                  <TabsTrigger value="resources" className="max-lg:min-h-11">
+                    資源
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -396,9 +401,9 @@ export function MembersClient({
                 onChanged={reloadSelected}
               />
             </TabsContent>
-            <TabsContent value="candy">
+            <TabsContent value="resources">
               {/* key = 換人就整顆重來: 庫存 state 才不會殘留上一位的數字 */}
-              <CandyPanel
+              <ResourcePanel
                 key={selected.id}
                 gymId={gymId}
                 memberId={selected.id}
@@ -694,9 +699,11 @@ function MemberEditDialog({
   );
 }
 
-// ── 糖果 (每位成員各自的庫存; 排刀會把「吃糖可達的寶數」算進去) ──
+// ── 資源 (每位成員各自的): 糖果庫存 + 屬性資源方向 ──
+// 糖果 = 排刀會把「吃糖可達的寶數」算進去; 兩塊屬性 = 安排道館戰時看得出誰在練哪一路。
+// 與 /resources 是同一組元件, 兩邊文案不會各走各的。
 
-function CandyPanel({
+function ResourcePanel({
   gymId,
   memberId,
   canEdit,
@@ -706,19 +713,39 @@ function CandyPanel({
   canEdit: boolean;
 }) {
   const candies = useMyCandies(gymId, memberId);
+  const focus = useMyTypeFocus(gymId, memberId);
   // 抓取一律在 effect: 寫在 render 階段的話第一次 render 必定是 null → 「載入中…」一定會閃。
-  // deps 只認 memberId — useMyCandies 的 load 每次 render 都是新函式, 放進 deps 會無限重抓。
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => void candies.load(), [memberId]);
-  // 未到位時畫同尺寸的骨架 (七顆糖), 資料一到直接換上, 不會整排重排
-  if (!candies.counts) return <CandyBarSkeleton />;
+  useEffect(() => {
+    void candies.load();
+    void focus.load();
+    // deps 只認 memberId — 兩個 hook 的 load 每次 render 都是新函式, 放進 deps 會無限重抓。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberId]);
   return (
-    <div className="space-y-4">
-      <CandyBar
-        counts={candies.counts}
-        onChange={canEdit ? candies.change : undefined}
-        editable={canEdit}
-      />
+    <div className="space-y-5">
+      <div>
+        <h3 className="mb-2 text-base font-semibold">糖果</h3>
+        {/* 未到位時畫同尺寸的骨架 (七顆糖), 資料一到直接換上, 不會整排重排 */}
+        {candies.counts ? (
+          <CandyBar
+            counts={candies.counts}
+            onChange={canEdit ? candies.change : undefined}
+            editable={canEdit}
+          />
+        ) : (
+          <CandyBarSkeleton />
+        )}
+      </div>
+      {TYPE_FOCUS_KINDS.map((kind) => (
+        <TypeFocusBlock
+          key={kind}
+          kind={kind}
+          selected={focus.focus?.[kind] ?? null}
+          onToggle={focus.toggle}
+          editable={canEdit}
+          level={3}
+        />
+      ))}
     </div>
   );
 }

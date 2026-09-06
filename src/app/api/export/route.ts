@@ -112,6 +112,7 @@ export async function GET(req: Request) {
       { data: members },
       memberPairs,
       { data: candies },
+      typeFocus,
       { data: gymPairs },
       { data: teams },
       { data: teamPairs },
@@ -133,6 +134,16 @@ export async function GET(req: Request) {
           .range(a, b)
       ),
       db.from("member_candies").select("member_id, candy_type, count").eq("gym_id", gymId),
+      // 屬性資源方向 (0056) — 每人最多 2×18 列, 28 人就會頂到 PostgREST 的 1000 列上限,
+      // 而截斷是靜默的 (少的人看起來就像「沒選」) → 一律分頁。
+      fetchAllRows((a, b) =>
+        db
+          .from("member_type_focus")
+          .select("member_id, kind, type")
+          .eq("gym_id", gymId)
+          .order("id")
+          .range(a, b)
+      ),
       db.from("gym_pairs").select("pair_id, pair_label").eq("gym_id", gymId),
       db.from("gym_teams").select("id, name, type, tag, note").eq("gym_id", gymId),
       db.from("gym_team_pairs").select("team_id, pair_id, min_grade, slot").eq("gym_id", gymId),
@@ -178,6 +189,12 @@ export async function GET(req: Request) {
       m[c.candy_type] = c.count;
       candyByMember.set(c.member_id, m);
     }
+    const focusByMember = new Map<string, { want: string[]; invested: string[] }>();
+    for (const f of typeFocus) {
+      const m = focusByMember.get(f.member_id) ?? { want: [], invested: [] };
+      if (f.kind === "want" || f.kind === "invested") m[f.kind].push(f.type);
+      focusByMember.set(f.member_id, m);
+    }
     const ticketByMember = new Map(
       (tickets ?? []).map((t) => [t.member_id, { remaining: t.remaining, cap: t.cap }])
     );
@@ -193,6 +210,8 @@ export async function GET(req: Request) {
         /** 挑戰券「剩餘 / 上限」(0043) — 未發券為 null */
         tickets: ticketByMember.get(m.id) ?? null,
         candies: candyByMember.get(m.id) ?? {},
+        /** 屬性資源方向 (0056): want = 想投入, invested = 已投入較多 */
+        typeFocus: focusByMember.get(m.id) ?? { want: [], invested: [] },
         pairs: memberPairs
           .filter((p) => p.member_id === m.id)
           .map((p) => ({
