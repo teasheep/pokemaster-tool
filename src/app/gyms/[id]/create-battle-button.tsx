@@ -58,7 +58,7 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" data-tour="battle-create">
           <Plus className="mr-1 h-4 w-4" />
           建立賽事
         </Button>

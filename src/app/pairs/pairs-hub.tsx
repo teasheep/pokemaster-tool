@@ -347,7 +347,10 @@ export function PairsHub({
       {/* 子分頁 (看哪一批) + 持有開關 (看多少) — 兩件事分開。
           手機: 兩者各自佔滿一列的等寬控制項 (44px 高, 拇指按得到, 也不會擠成一排半);
           桌機: 維持「底線分頁 + 靠右藥丸開關」同一列 */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:border-b">
+      <div
+        className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:border-b"
+        data-tour="pairs-tabs"
+      >
         <nav className="flex gap-1 border-b sm:border-b-0">
           {(signedIn && hasGym ? (["gym", "all"] as const) : (["all"] as const)).map((v) => (
             <button

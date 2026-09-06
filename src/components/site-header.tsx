@@ -35,7 +35,7 @@ export async function SiteHeader() {
             手機 (< sm) 整排隱藏 — 同樣三個分頁在 MobileTabBar (底部固定列), 不做第二個入口 */}
         <nav className="hidden min-w-0 items-center gap-0.5 text-sm sm:flex sm:gap-1">
           <Button asChild variant="ghost" size="sm">
-            <Link href="/pairs" title="拍組">
+            <Link href="/pairs" title="拍組" data-tour="nav-pairs">
               <BookOpen className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">拍組</span>
             </Link>
@@ -43,14 +43,14 @@ export async function SiteHeader() {
           {user ? (
             <>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/gyms" title="道館">
+                <Link href="/gyms" title="道館" data-tour="nav-gyms">
                   <Shield className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">道館</span>
                 </Link>
               </Button>
               {/* 糖果之類的個人資源 — 原本擠在拍組頁上方, 卡片牆被壓得很難看 */}
               <Button asChild variant="ghost" size="sm">
-                <Link href="/resources" title="我的資源">
+                <Link href="/resources" title="我的資源" data-tour="nav-resources">
                   <Candy className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">我的資源</span>
                 </Link>

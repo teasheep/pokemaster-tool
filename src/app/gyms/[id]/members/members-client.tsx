@@ -283,6 +283,7 @@ export function MembersClient({
         aria-haspopup="dialog"
         aria-expanded={pickerOpen}
         className="flex min-h-14 w-full items-center gap-2.5 rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-accent/40 lg:hidden"
+        data-tour="gym-pairs-row"
       >
         {selectedId === ALL_GYM || !selected ? (
           <>
@@ -471,6 +472,7 @@ function Roster({
           "flex min-h-14 w-full items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left transition-colors",
           selectedId === ALL_GYM ? "border-primary/60 bg-accent font-medium" : "hover:bg-accent/50"
         )}
+        data-tour="gym-pairs-row"
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-muted">
           <Users className="h-5 w-5 text-muted-foreground" />
@@ -800,7 +802,7 @@ function InviteCodes({
     toast.success(`${kind}已複製`);
   };
   return (
-    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+    <div className="flex flex-wrap items-center gap-1.5 text-xs" data-tour="invite-codes">
       {invite.code ? (
         <button
           onClick={() => void copy(invite.code!, "成員碼")}

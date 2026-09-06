@@ -19,14 +19,16 @@ type Tab = {
   href: string;
   label: string;
   Icon: LucideIcon;
+  /** 使用教學要框的目標 — 與 SiteHeader 那顆同名 (兩邊只有一個看得見) */
+  tour: string;
   /** 訪客 (未登入) 也看得到 */
   guest?: boolean;
 };
 
 const TABS: Tab[] = [
-  { href: "/pairs", label: "拍組", Icon: BookOpen, guest: true },
-  { href: "/gyms", label: "道館", Icon: Shield },
-  { href: "/resources", label: "我的資源", Icon: Candy },
+  { href: "/pairs", label: "拍組", Icon: BookOpen, guest: true, tour: "nav-pairs" },
+  { href: "/gyms", label: "道館", Icon: Shield, tour: "nav-gyms" },
+  { href: "/resources", label: "我的資源", Icon: Candy, tour: "nav-resources" },
 ];
 
 /**
@@ -73,6 +75,7 @@ export function MobileTabBar({ signedIn }: { signedIn: boolean }): React.ReactEl
             <li key={t.href} className="flex-1">
               <Link
                 href={t.href}
+                data-tour={t.tour}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   // 整格可點: 56px 高 (> 44px 觸控下限), 文字 12px (手機字級下限)

@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { SyncPairDefs } from "@/components/sync-pair-defs";
 import { GoogleOneTapSlot } from "@/components/google-one-tap-slot";
+import { TourSlot } from "@/components/tour/tour-slot";
 import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { getSessionUser } from "@/lib/supabase/server";
 
@@ -143,6 +144,11 @@ export default function RootLayout({
               已登入就整個不渲染, 連 GIS script 都不載。 */}
           <Suspense fallback={null}>
             <GoogleOneTapSlot />
+          </Suspense>
+          {/* 使用教學 (只給已登入者; 訪客連 client 程式碼都不送)。
+              第一次登入落地時自己跳一次, 之後從頭像選單再叫。 */}
+          <Suspense fallback={null}>
+            <TourSlot />
           </Suspense>
           <Toaster richColors position="top-right" />
         </ThemeProvider>

@@ -90,7 +90,7 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
       <div className="flex flex-wrap gap-2">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button data-tour="gym-create">
               <Plus className="mr-1 h-4 w-4" />
               建立道館
             </Button>
@@ -122,7 +122,7 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
 
         <Dialog open={joinOpen} onOpenChange={setJoinOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline">
+            <Button variant="outline" data-tour="gym-join">
               <Users className="mr-1 h-4 w-4" />
               用邀請碼加入
             </Button>

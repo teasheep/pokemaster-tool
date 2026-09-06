@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut, Moon, Plug, Settings, Sun, User } from "lucide-react";
+import { GraduationCap, LogOut, Moon, Plug, Settings, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
+import { openTour } from "@/components/tour/tour-store";
 
 export function UserMenu({ email }: { email: string }) {
   const router = useRouter();
@@ -69,6 +70,15 @@ export function UserMenu({ email }: { email: string }) {
         <DropdownMenuItem className="pointer-coarse:min-h-11" onClick={() => router.push("/connect")}>
           <Plug className="mr-2 h-4 w-4" />
           資料連線
+        </DropdownMenuItem>
+        {/* 使用教學 —— 第一次登入會自己跳一次, 這裡是「再看一次」的唯一入口。
+            選單關閉有動畫, 教學的 overlay 要等它關完才不會搶焦點 → 下一個 tick 再開。 */}
+        <DropdownMenuItem
+          className="pointer-coarse:min-h-11"
+          onClick={() => setTimeout(() => openTour(), 0)}
+        >
+          <GraduationCap className="mr-2 h-4 w-4" />
+          使用教學
         </DropdownMenuItem>
         {/* 主題切換 —— 只在手機 (<sm) 出現, 桌機是 header 上那顆獨立的 ThemeToggle。
             兩者是同一個設定在不同裝置的唯一入口, 不是兩條路。

@@ -58,6 +58,7 @@ const GridCell = memo(function GridCell({
   scrollRoot,
   onSelect,
   onCount,
+  first = false,
 }: {
   item: GridItem;
   size: "sm" | "md";
@@ -66,6 +67,8 @@ const GridCell = memo(function GridCell({
   scrollRoot?: Element | null;
   onSelect?: (key: string) => void;
   onCount?: (key: string) => void;
+  /** 整面牆的第一張 — 使用教學要框的目標 (只標一張, 645 張都標沒有意義) */
+  first?: boolean;
 }) {
   const key = item.key;
   const select = useCallback(() => onSelect?.(key), [onSelect, key]);
@@ -75,7 +78,7 @@ const GridCell = memo(function GridCell({
   const handleCount = onCount ? count : item.onCountClick;
 
   return (
-    <div className="relative w-24">
+    <div className="relative w-24" data-tour={first ? "pair-card" : undefined}>
       {item.corner ? (
         <span className="pointer-events-none absolute -right-0.5 -top-0.5 z-10 leading-none drop-shadow">
           {item.corner}
@@ -253,6 +256,7 @@ export const PairTypeGrid = memo(function PairTypeGrid({
                 scrollRoot={scrollRoot}
                 onSelect={onSelect}
                 onCount={onCount}
+                first={offset + i === 0}
               />
             ))}
           </div>
