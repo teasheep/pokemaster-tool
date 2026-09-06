@@ -32,10 +32,8 @@ export const TYPE_FOCUS_LABELS: Record<TypeFocusKind, string> = {
   invested: "已投入較多資源的屬性",
 };
 
-export const TYPE_FOCUS_HINTS: Record<TypeFocusKind, string> = {
-  want: "接下來想把糖果這些資源花在哪 — 安排道館戰時看得到",
-  invested: "裝備、等級、潛能盤已經練得比較深的屬性",
-};
+/** 括號裡是「資源」指什麼 (使用者的用字), 灰色小字, 兩塊共用 */
+export const TYPE_FOCUS_NOTE = "(裝備、突破等級、潛能)";
 
 export type TypeFocus = Record<TypeFocusKind, SyncPairType[]>;
 
@@ -157,17 +155,19 @@ export function TypeFocusBlock({
   const Heading = level === 3 ? "h3" : "h2";
   return (
     <div>
-      <div className="flex items-baseline justify-between gap-2">
-        <Heading className="text-base font-semibold">{TYPE_FOCUS_LABELS[kind]}</Heading>
+      <div className="mb-2.5 flex items-baseline justify-between gap-2 sm:mb-3">
+        <Heading className="min-w-0 text-base font-semibold">
+          {TYPE_FOCUS_LABELS[kind]}
+          <span className="ml-0.5 text-xs font-normal text-muted-foreground">
+            {TYPE_FOCUS_NOTE}
+          </span>
+        </Heading>
         {selected && selected.length > 0 ? (
-          <span className="tabular-nums text-xs text-muted-foreground">
+          <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
             已選 {selected.length}
           </span>
         ) : null}
       </div>
-      <p className="mb-2.5 mt-0.5 text-xs text-muted-foreground sm:mb-3">
-        {TYPE_FOCUS_HINTS[kind]}
-      </p>
       {selected === null ? (
         <TypeFocusGridSkeleton />
       ) : editable ? (

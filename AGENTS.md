@@ -222,9 +222,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   `member_pairs`, 否則排刀/道館拍組頁看到舊資料。新增 `CollectionEntry` 欄位時三處都要接: collection.ts
   讀取、兩個 client 的 upsert、syncMemberPair。
 - **`/resources` 是「資源」不是「糖果頁」** (2026-09-06 使用者指定): 三塊 —
-  糖果庫存 (有幾顆) + **想投入資源的屬性** + **已投入較多資源的屬性** (裝備/等級/潛能),
+  糖果庫存 (有幾顆) + **想投入資源的屬性** + **已投入較多資源的屬性**,
   後兩塊是複選 18 屬性 (`member_type_focus`, 0056), 用途是「之後方便安排」。
-  五件不要改壞的事:
+  六件不要改壞的事:
   1. **兩塊不互斥** — 已經練得深、還想再練是常態, 不要做成單選或互相排除。
   2. **不要塞進 `member_candies`**: 那張表是「有幾顆」(數量), 這裡是「哪些屬性」(集合)。
      混在一起 count 欄位永遠是雜訊, 而且排刀的「吃糖可達」會讀到不該讀的列。
@@ -232,10 +232,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   3. **切換 = insert 或 delete, 不要用 upsert** — 這張表只有「有列 / 沒列」兩種狀態,
      0056 沒給 update policy, PostgREST 的 upsert 走 UPDATE 會被 RLS 擋。
      連點兩下的 23505 (unique_violation) 當成成功, 不要 toast 錯誤。
-  4. **元件只有一份** (`components/gym/type-focus.tsx` 的 `TypeFocusBlock`):
+  4. **標題後面那串是灰色小字** (`TYPE_FOCUS_NOTE` = 「(裝備、突破等級、潛能)」, 使用者的用字):
+     兩塊共用同一串, 它解釋的是「資源」指什麼。**標題底下不要再放一行說明** ——
+     使用者看過原本那行 (「接下來想把糖果這些資源花在哪…」) 直接說「不要廢話」。
+  5. **元件只有一份** (`components/gym/type-focus.tsx` 的 `TypeFocusBlock`):
      `/resources` (自己編輯, 標題 h2) 與道館成員頁的「資源」分頁 (h3, 唯讀時只列選中的屬性)
      共用它 — 兩邊的文案與版面不要各長各的。**唯讀時不要畫 18 格灰卡**, 看別人只需要看選了什麼。
-  5. **刻意不記進 `gym_activity`**: 那份是「成員身上發生的事」, 這兩塊是隨時會改的偏好,
+  6. **刻意不記進 `gym_activity`**: 那份是「成員身上發生的事」, 這兩塊是隨時會改的偏好,
      記了只會把真正的異動洗掉。
 - ⚠ **migration 裡的 `grant` 不代表「只有這些權限」** (2026-09-06 實測, 與 `security definer`
   那條是同一個坑的另一面): Supabase 對 public schema 的 default privileges 已經把七種權限
