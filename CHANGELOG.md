@@ -8,6 +8,10 @@
 
 預計要做的事見 [ROADMAP.md](ROADMAP.md)。
 
+## [1.3.0] — 2026-09-07
+
+使用教學、賽事模板、「我的資源」屬性方向、換頁提速。
+
 ### 新增
 
 - **使用教學**。分兩條路：「我是道館負責人 → 我要建立道館」與
@@ -243,7 +247,8 @@
 初版。原本的目標是「上傳遊戲截圖自動辨識拍組」（DINOv2 embedding 兩階段比對），
 2026-08 中轉向道館賽協作功能，辨識管線暫緩但程式碼保留。
 
-[未發布]: https://github.com/teasheep/pokemaster-tool/compare/v1.2.0...HEAD
+[未發布]: https://github.com/teasheep/pokemaster-tool/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/teasheep/pokemaster-tool/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/teasheep/pokemaster-tool/releases/tag/v1.2.0
 
 <!-- 1.1.0 以前是在本機 `npm run deploy:cf` 部署的，這個版本庫裡沒有對應的 tag，
