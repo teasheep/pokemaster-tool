@@ -201,7 +201,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **使用教學是全站唯一的導覽層** (`components/tour/`, 2026-09-06 使用者指定): 兩條路 —
   「我是到館負責人 → 我要建立道館」與「我是成員 → 我要管理拍組資訊」,
   **第一次登入落地時自己跳一次**, 之後從**頭像選單**的「使用教學」再叫。
-  八件不要改壞的事:
+  九件不要改壞的事:
   1. **入口只有頭像選單那一個** (使用者指定)。不要在頁面裡再長「需要幫助?」之類的第二個入口 ——
      自動跳出來的那一次不是第二個入口, 是同一個東西。
   2. **「第一次」= 開的當下就記 localStorage** (`pm-gym:tour-seen:v1:<userId>`),
@@ -220,7 +220,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      「建立道館 / 用邀請碼加入」兩顆就不見了。`tests/tour.test.ts` 釘住這條。
   7. **整層吃掉所有點擊** (連亮著的那塊也是)。教學是唯讀的 —— 開放點擊就要處理
      「按錯了」「按了會換頁」兩種分岔, 步驟一定會跟畫面對不起來。
-  8. **步驟內容要講「不講就沒人會發現」的事** (點左下角循環寶數、顧問碼不佔名額、
+  8. **順不順有四條, 都是量出來才改的** (2026-09-07 使用者:「動效不夠絲滑」「按了下一步整個都要等一段時間」):
+     **下一步要去的那頁先 `router.prefetch`** (讀這一步的那幾秒就是預抓的時間窗);
+     **每一幀的幾何直接寫 DOM 不走 state** (框要跟著捲動走, 用 setState 等於每幀重繪整張卡 ——
+     與首頁氛圍層同一條教訓); **位移補間只在「同一畫面內換目標」時開** (要捲動的改成框黏著元素走,
+     補間跟捲動同時進行就是互相追); **換步驟當下先收掉上一步的框** (留著會在換頁後停在
+     一個不相干的位置, 那是看起來最像當掉的地方)。
+  9. **步驟內容要講「不講就沒人會發現」的事** (點左下角循環寶數、顧問碼不佔名額、
      賽事狀態由日期推導), 不是把畫面上看得到的字再唸一次。
   `tests/tour.test.ts` 會在 `data-tour` 被改名/刪掉時變紅 —— 那個壞法沒有任何徵兆
   (只是靜靜少框一個東西), 所以一定要靠測試擋。
@@ -313,6 +319,20 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   `gyms/[id]/layout.tsx`), `/pairs` 與 `/share` 的 page.tsx 自己包所以 fallback 要跟著包。
   **不要**替 `/`、`/gyms`、`/gyms/[id]`、`/welcome` 加 loading.tsx — 它們 await 完才 redirect,
   加了只會先串流出骨架再跳走 (redirect + loading 的老地雷)。
+- **`force-dynamic` 的路由沒有 `loading.tsx` 就不會被 prefetch** (2026-09-07 查證, Next 文件
+  「Dynamic Route: prefetching is skipped, or the route is partially prefetched if loading.tsx
+  is present」)。少了它, 從導覽列/使用教學按過去就是**整頁乾等伺服器回應, 畫面零反應**;
+  加上之後 = 骨架立刻出現, 而且那條路由才進得了 `<Link>` 與 `router.prefetch()` 的預抓。
+  這條與上面「**不要**替 `/`、`/gyms`、`/gyms/[id]`、`/welcome` 加 loading.tsx」**不衝突** ——
+  那四個是 `await` 完才 `redirect` 的頁 (加了只會先串流骨架再跳走)。其餘受保護的頁一律要有。
+  (2026-09-07 補了 `/resources` 的; 它對已登入成員不轉導, 訪客早在 middleware 就被擋掉。)
+- **量線上速度不要用「每次一條新連線」的方式量** (2026-09-07 差點誤判): 分開跑三次 curl 量到
+  `/pairs` TTFB 0.5-1.6 秒, 看起來像伺服器很慢; 但那裡面有 **140ms 的 TCP+TLS 握手**,
+  而且每次都重來一遍 —— 瀏覽器不是這樣連的。同一條連線連續抓的真實數字是:
+  靜態圖 142ms / 首頁 176ms / `/pairs` 206-235ms (扣掉 140ms 的網路來回, Worker 自己只花
+  30-90ms)。**線上 TTFB 沒有問題**; `/pairs` 慢的是 **526KB 的 HTML** 要傳 (再多花約 480ms),
+  以及已登入頁面每次導覽都要付的 auth 往返 (middleware 一趟 + 頁面一趟, 見
+  `lib/supabase/server.ts` 檔內那段長註解裡寫好的樂觀檢查方案)。
 - **layout 不准 await 執行期資料**: layout 一 await, 導覽就整個 block 住, `loading.tsx` 的
   fallback 根本不會顯示 (Next 16 layout 文件「Interaction with loading.js」)。道館的導覽列
   資料在 `gyms/[id]/gym-nav.tsx`, 由 layout 用 `<Suspense fallback={<GymNavSkeleton/>}>` 串流;
