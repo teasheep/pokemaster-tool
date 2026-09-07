@@ -516,6 +516,21 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   就是為此 — 呼叫端傳 inline 箭頭函式 = 645 張卡的 memo 全部失效, 每按一鍵跑兩次全量 render
   (useDeferredValue 也會一起白做)。GridItem 自己的 onClick/onCountClick 留著給「圖鑑未收錄
   拍組」那條純文字按鈕當 fallback。
+- **道館戰的關卡屬性有系統層級的模板** (`lib/gym/battle-templates.ts`, 2026-09-07 使用者指定):
+  建立賽事時選「第一次／第二次／第三次道館戰」就把 8 關的弱點屬性一次填好。
+  **寫在程式裡不是開一張表** —— 這是**遊戲本身的規則** (每一回帕希歐道館對戰的 8 關對所有
+  玩家都一樣), 不是某個道館的資料; 做成資料表等於 20 個道館各自維護同一份東西,
+  而且第一個建館的人得自己點 8 次。與「糖果制度是查證過的遊戲規則」同一類。
+  四件事:
+  1. **順序 = 陣列順序 = 第 1..8 關**, 每個模板一定剛好 8 筆 (DB trigger `handle_new_battle`
+     也是開 8 關, 兩邊要一致 —— `tests/battle-templates.test.ts` 釘住)。
+  2. **套用是 upsert 不是 insert**: 建立賽事的 insert 一落地, trigger 就已經把 8 關開好
+     (屬性預設 `normal`), 所以走 `(battle_id, seq)` 的唯一鍵 upsert 覆蓋, 一趟請求。
+     線上乾跑驗過 (BEGIN → 建賽事 → trigger 開 8 關 → upsert → 屬性正確 → ROLLBACK)。
+  3. **「先不套用」永遠要留著** —— 遊戲開了新的一回而模板還沒補上時, 那是唯一能用的路。
+  4. **屬性套用失敗不算建立失敗**: 賽事已經建起來了, 只 toast 提醒他去賽事頁自己選,
+     不要讓人以為要重建一場。
+  之後遊戲開新的一回, 在那個檔案加一筆就好 (測試會自動涵蓋新的那一筆)。
 - **賽事狀態由賽期日期推導** (`battleStatusFromDates`, 台北時區): 沒到開賽日=籌備中,
   過結束日=已結束, 其間=進行中 — **沒有手動狀態下拉**;「目前輪」同樣由 battle_logs
   的最大已回報輪推導。gym_battles.status / current_round 已 drop (0047)。單場看板

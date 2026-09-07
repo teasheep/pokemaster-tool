@@ -168,11 +168,13 @@ export const TRACKS: TourTrackDef[] = [
     hint: "出刀、挑戰券、看板",
     steps: [
       {
-        target: "gym-tab-battles",
+        // 從「建立賽事」開始 (使用者:「那就從建立賽事開始阿」)。
+        // 人不在道館戰那一頁時, wayTo 會先框「道館戰」分頁把他帶過來 —— 不必為此多一步。
+        target: "battle-create",
         at: "gym:/battles",
-        title: "道館戰在這個分頁",
-        body: "點看看。賽事一覽在這裡，管理員可以開新的一場。",
-        advance: { on: "path", path: "/battles" },
+        title: "開一場道館戰",
+        body: "管理員用右上角的「建立賽事」開一場。裡面可以直接套用模板 —— 遊戲每一回的 8 關弱點屬性是固定的，選「第一次／第二次／第三次」就一次填好，不用建立完再一格一格點。",
+        advance: { on: "next" },
       },
       {
         target: "battle-card",
