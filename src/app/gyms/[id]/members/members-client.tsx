@@ -911,15 +911,18 @@ function PairsPanel({
   const [panelPair, setPanelPair] = useState<ClientPairRecord | null>(null);
 
   /**
-   * 卡牆 = (範圍內的圖鑑拍組) ∪ (這位成員持有的其他拍組)。
-   * 灰卡 = 沒有這隻 → 點左下角就點亮; 不需要「新增」搜尋框, 也不需要「移除」按鈕。
+   * 「道館拍組」分頁 = **只有道館名單**, 與旁邊「全館拍組」那個同名分頁完全一樣的定義。
+   * 灰卡 = 這位成員沒有這隻 → 點左下角就點亮; 不需要「新增」搜尋框, 也不需要「移除」按鈕。
    * 點擊 handler 一律不掛在 item 上 (交給下面的 grid 級 onSelect/onCount)。
+   *
+   * **前科 (2026-09-07 使用者抓到)**: 這裡原本是「名單 ∪ 這位成員持有的其他拍組」,
+   * 於是沒被設為道館拍組的卡 (例如某位成員自己有的 卡魯穆 & 火狐狸) 會出現在
+   * 「道館拍組」分頁裡 —— 同一頁的兩個同名分頁講的是兩件事。
+   * 他持有的其他拍組看「所有遊戲拍組」, 那才是那個分頁的職責。
    */
   const items = useMemo<GridItem[]>(() => {
     const q = deferredFilters.search.trim().toLowerCase();
-    const inScope = catalog.filter(
-      (c) => scope === "all" || gymSet.has(c.pairId) || rowByPairId.has(c.pairId)
-    );
+    const inScope = catalog.filter((c) => scope === "all" || gymSet.has(c.pairId));
     const list: GridItem[] = [];
     for (const rec of inScope) {
       if (!matchesPairFilters(rec, deferredFilters, q)) continue;
@@ -942,8 +945,9 @@ function PairsPanel({
           ) : null,
       });
     }
-    // 圖鑑對不到的舊匯入資料 (只有名字) 也要看得到
-    for (const p of pairs) {
+    // 圖鑑對不到的舊匯入資料 (只有名字) 也要看得到 —— 同樣只在「所有遊戲拍組」,
+    // 它們也不是道館拍組 (與上面那條同一個理由)
+    for (const p of scope === "all" ? pairs : []) {
       if (p.pair_id && pairById.has(p.pair_id)) continue;
       if (q && !p.pair_label.toLowerCase().includes(q)) continue;
       list.push({
