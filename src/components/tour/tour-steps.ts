@@ -4,8 +4,8 @@
 //   「讓使用者點一下試試看, 不用幫他切頁面, 讓他自己點、自己點開側板、自己加寶數,
 //     教學完以後再還給使用者自行控制」
 // 所以每一步不再是「看我示範」而是「換你做一次」——
-//   - **教學不會替使用者換頁**。要去別頁的那幾步是框住導覽列上的入口, 等他自己點。
-//     (卡住的人可以按卡片上的「幫我開」, 那是他自己選的, 不是教學自作主張。)
+//   - **教學不會替使用者換頁**。要去別頁的那幾步是框住導覽列上的入口, 等他自己點;
+//     人不在那一頁時整張卡改成「指路」(見檔尾 wayTo), 走到了才換回這一步本身。
 //   - 真的會動到資料的那幾步標 `practice: true` —— 那段期間 Supabase 的寫入會被吞掉
 //     (lib/supabase/practice-mode.ts), 畫面照變但不進資料庫。
 //   - 每一步自己說「什麼時候算做完」(advance), 做完了框會閃一下綠色再往下走。
@@ -207,4 +207,79 @@ export function resolveAt(at: string | undefined, gymId: string | null): string 
   if (!at) return null;
   if (!at.startsWith("gym:")) return at;
   return gymId ? `/gyms/${gymId}${at.slice(4)}` : null;
+}
+
+// ── 不在那一頁的時候: 指路, 不是幫他開 ──
+//
+// 2026-09-07 使用者:「你應該要指引使用者點哪裡可以連到那頁, 不是『幫我開』跟加一行廢話。
+// 如果他不在那一頁, 那就從 header 點進那一頁開始, 之後使用者才知道去哪裡開。手機也是。」
+//
+// 所以: 步驟要框的東西不在畫面上時, **改成框「進去那一頁的入口」**, 等他自己點。
+// 教學的價值就是讓人記得路怎麼走 —— 幫他開等於把那一段學習拿掉。
+//
+// wayTo 回的是一串**由內而外**的候選 (最靠近目的地的排前面), 由 runner 挑
+// 第一個「現在真的看得見」的來框:
+//   - 道館分頁只有進到某個道館之後才存在 → 人在 /pairs 時自動落到「道館」那一格;
+//   - 「加入 / 建立道館」藏在道館切換器的選單裡 → 選單沒開就先框切換器本身。
+// 同一個 data-tour 在桌機 (header) 與手機 (底部導覽列) 各有一份, findTarget 只挑
+// 看得見的那個, 所以手機自動框到底部那排, 不必為手機另寫一套。
+
+export type TourHop = { target: string; title: string; body: string };
+
+const HOP = {
+  pairs: {
+    target: "nav-pairs",
+    title: "先進「拍組」",
+    body: "框起來的就是入口 —— 桌機在最上面那排、手機在螢幕最下面那排。點它。",
+  },
+  gyms: {
+    target: "nav-gyms",
+    title: "先進「道館」",
+    body: "框起來的就是入口 —— 桌機在最上面那排、手機在螢幕最下面那排。點它。",
+  },
+  resources: {
+    target: "nav-resources",
+    title: "先進「我的資源」",
+    body: "框起來的就是入口 —— 桌機在最上面那排、手機在螢幕最下面那排。點它。",
+  },
+  tabMembers: {
+    target: "gym-tab-members",
+    title: "切到「成員與拍組」",
+    body: "道館裡面有三個分頁，這是第一個。",
+  },
+  tabBattles: {
+    target: "gym-tab-battles",
+    title: "切到「道館戰」",
+    body: "道館裡面有三個分頁，道館戰在中間那個。",
+  },
+  switcher: {
+    target: "gym-switcher",
+    title: "點道館名稱打開切換器",
+    body: "「加入 / 建立道館」藏在這個選單裡 —— 已經有道館的人要從這裡再開一個。",
+  },
+  switcherAdd: {
+    target: "gym-switcher-add",
+    title: "選「加入 / 建立道館」",
+    body: "選單最下面那一項。",
+  },
+} as const satisfies Record<string, TourHop>;
+
+/** 目的地在哪一頁 → 進去的路 (由內而外)。呼叫端挑第一個看得見的。 */
+export function wayTo(at: string): TourHop[] {
+  if (at.startsWith("/pairs")) return [HOP.pairs];
+  if (at.startsWith("/resources")) return [HOP.resources];
+  if (at.startsWith("/gyms")) {
+    const chain: TourHop[] = [];
+    if (at.includes("list=1")) chain.push(HOP.switcherAdd, HOP.switcher);
+    else if (at.endsWith("/battles")) chain.push(HOP.tabBattles);
+    else if (at.endsWith("/members")) chain.push(HOP.tabMembers);
+    chain.push(HOP.gyms);
+    return chain;
+  }
+  return [];
+}
+
+/** 現在就在那一頁嗎 (只比路徑, 不比查詢字串; 一律精確比對 —— 進到某個道館不算「在道館列表」) */
+export function onPage(pathname: string, at: string): boolean {
+  return pathname === at.split("?")[0];
 }

@@ -22,7 +22,15 @@ import {
   placeCallout,
   EDGE,
 } from "@/components/tour/tour-place";
-import { CHOOSABLE, TRACKS, resolveAt, stepsFor, trackDef } from "@/components/tour/tour-steps";
+import {
+  CHOOSABLE,
+  TRACKS,
+  onPage,
+  resolveAt,
+  stepsFor,
+  trackDef,
+  wayTo,
+} from "@/components/tour/tour-steps";
 import { setWritesBlocked, shouldSwallow, writesBlocked } from "@/lib/supabase/practice-mode";
 
 // ── 1. 步驟指的目標都真的存在 ──
@@ -161,6 +169,60 @@ describe("練習模式吞寫入 — 絕對不能碰 auth", () => {
     expect(shouldSwallow(AUTH, "POST")).toBe(false);
     expect(shouldSwallow("https://x.supabase.co/auth/v1/logout", "POST")).toBe(false);
     setWritesBlocked(false);
+  });
+});
+
+describe("不在那一頁時的指路 (wayTo)", () => {
+  const declared = declaredTourTargets();
+
+  it("每一步的 at 都指得出一條路, 而且路上的每個入口都真的存在", () => {
+    for (const t of TRACKS) {
+      for (const step of t.steps) {
+        if (!step.at) continue;
+        const at = resolveAt(step.at, "abc")!;
+        const chain = wayTo(at);
+        expect(chain.length, `${t.id}: ${step.title} 沒有路可指`).toBeGreaterThan(0);
+        for (const hop of chain) {
+          expect(declared, `${t.id}: hop ${hop.target}`).toContain(hop.target);
+          expect(hop.title.length).toBeGreaterThan(0);
+          expect(hop.body.length).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it("候選由內而外 —— 最後一個一定是導覽列那一格 (最外層的保底)", () => {
+    for (const at of ["/pairs", "/resources", "/gyms/abc/members", "/gyms/abc/battles", "/gyms?list=1"]) {
+      const chain = wayTo(at);
+      expect(chain.at(-1)!.target.startsWith("nav-"), at).toBe(true);
+    }
+  });
+
+  it("道館子頁先指分頁, 指不到才退回「道館」那一格", () => {
+    expect(wayTo("/gyms/abc/battles").map((h) => h.target)).toEqual([
+      "gym-tab-battles",
+      "nav-gyms",
+    ]);
+    expect(wayTo("/gyms/abc/members").map((h) => h.target)).toEqual([
+      "gym-tab-members",
+      "nav-gyms",
+    ]);
+  });
+
+  it("「加入 / 建立道館」藏在切換器選單裡 → 選單沒開就先指切換器本身", () => {
+    expect(wayTo("/gyms?list=1").map((h) => h.target)).toEqual([
+      "gym-switcher-add",
+      "gym-switcher",
+      "nav-gyms",
+    ]);
+  });
+
+  it("onPage 一律精確比對 —— 進到某個道館不算「在道館列表」", () => {
+    expect(onPage("/gyms", "/gyms?list=1")).toBe(true);
+    expect(onPage("/gyms/abc/members", "/gyms?list=1")).toBe(false);
+    expect(onPage("/gyms/abc/members", "/gyms/abc/members")).toBe(true);
+    expect(onPage("/pairs", "/pairs")).toBe(true);
+    expect(onPage("/resources", "/pairs")).toBe(false);
   });
 });
 

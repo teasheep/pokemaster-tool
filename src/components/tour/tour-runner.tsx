@@ -5,9 +5,11 @@
 //   教學完以後再還給使用者自行控制」
 //
 // 改之前先看這幾條:
-//  1. **教學不替使用者換頁**。要去別頁的步驟是框住導覽列的入口, 等他自己點到那一頁
-//     (advance: path)。卡住的人可以按卡片上的「幫我開」—— 那是他自己選的。
-//     (先前版本會 router.push 過去, 使用者說「不用幫他切頁面」。)
+//  1. **教學不替使用者換頁, 也不提供「幫我開」——它會指路**。這一步要框的東西不在
+//     這一頁時, 改成框住「進去那一頁的入口」(導覽列 / 道館分頁 / 道館切換器),
+//     等他自己點。教學的價值就是讓人記得路怎麼走, 幫他開等於把那段學習拿掉
+//     (使用者:「應該指引使用者點哪裡可以連到那頁, 不是幫我開跟加一行廢話」)。
+//     路怎麼走寫在 tour-steps.ts 的 wayTo() —— 由內而外的候選, 挑第一個看得見的。
 //  2. **整層不吃點擊**。overlay 一律 pointer-events:none, 壓暗只是視覺 ——
 //     使用者要點什麼都點得到, 教學只是在旁邊看著。這也是「還給使用者自行控制」
 //     最省事的實作: 沒有東西需要「還」。
@@ -30,7 +32,17 @@ import { createClient } from "@/lib/supabase/client";
 import { setWritesBlocked, swallowedWrites } from "@/lib/supabase/practice-mode";
 import { cn } from "@/lib/utils";
 import { centerPlacement, cornerRect, placeCallout, type Rect } from "./tour-place";
-import { CHOOSABLE, resolveAt, stepsFor, trackDef, TRACKS, type TourTrack } from "./tour-steps";
+import {
+  CHOOSABLE,
+  onPage,
+  resolveAt,
+  stepsFor,
+  trackDef,
+  TRACKS,
+  wayTo,
+  type TourHop,
+  type TourTrack,
+} from "./tour-steps";
 import {
   backToChooser,
   closeTour,
@@ -54,10 +66,10 @@ const CHEER_MS = 620;
 /** 找目標找超過這麼久才顯示「還在找」的掃光 */
 const SLOW_MS = 300;
 /**
- * 找超過這麼久還沒找到 → 當作「使用者現在不在那一頁」, 把卡片切成可操作的狀態
- * (顯示提示 + 「幫我開」)。**但輪詢不停** —— 他自己走過去的那一刻還是要接得上。
+ * 找超過這麼久還沒找到, 而且**也沒有路可指**時 (例如已經在那一頁, 但那一館還沒有賽事),
+ * 把卡片切成可操作的狀態。**輪詢不停** —— 他走過去的那一刻還是要接得上。
  * 前科 (2026-09-07): 改成「找不到就一直找」時忘了關 locating, 於是卡片永遠停在
- * 載入中、「幫我開」永遠不出現 —— 使用者回報「道館戰在這個分頁的教學就卡住了」。
+ * 載入中 —— 使用者回報「道館戰在這個分頁的教學就卡住了」。
  */
 const LOCATE_GRACE_MS = 700;
 
@@ -123,6 +135,9 @@ export function TourRunner({ userId }: { userId: string }) {
   const spotRectRef = useRef<Rect | null>(null);
   const checkRef = useRef<HTMLSpanElement | null>(null);
 
+  /** 目標不在畫面上時要先指的入口 (由內而外挑第一個看得見的) */
+  const [hop, setHop] = useState<TourHop | null>(null);
+
   const steps = s.track ? stepsFor(s.track) : [];
   const step = s.phase === "run" ? steps[s.step] : undefined;
   const running = s.open && s.phase === "run" && Boolean(step);
@@ -147,7 +162,7 @@ export function TourRunner({ userId }: { userId: string }) {
     openTour(true);
   }, [pathname, userId]);
 
-  // ── 找出使用者的道館 (「幫我開」要用它拼網址) ──
+  // ── 找出使用者的道館 (指路要用它判斷「那一頁」是哪一個網址) ──
   useEffect(() => {
     if (!s.open || s.gymId) return;
     const parts = pathname.split("/");
@@ -197,6 +212,8 @@ export function TourRunner({ userId }: { userId: string }) {
   // ── 找目標 (rAF 輪詢: 元素一掛上去下一幀就框得到) ──
   useEffect(() => {
     const name = running ? step?.target : undefined;
+    const need = running ? resolveAt(step?.at, s.gymId) : null;
+    const chain = need ? wayTo(need) : [];
     let raf = 0;
     let slowTimer = 0;
     let cancelled = false;
@@ -207,6 +224,7 @@ export function TourRunner({ userId }: { userId: string }) {
       if (!start) start = performance.now();
       if (!name) {
         setTargetEl(null);
+        setHop(null);
         setLocating(false);
         return;
       }
@@ -220,13 +238,31 @@ export function TourRunner({ userId }: { userId: string }) {
           el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
         }
         setTargetEl(el);
+        setHop(null);
         setLocating(false);
         return;
       }
-      // 找不到就一直找 —— 使用者可能還在別頁, 等他自己走過來 (不再自動導航)。
-      // 但超過寬限時間就先把卡片切成「可操作」, 不要讓他對著一張載入中的卡發呆。
-      setTargetEl(null);
-      if (performance.now() - start > LOCATE_GRACE_MS) setLocating(false);
+      // 目標不在畫面上 → **改成指路**: 框住「進去那一頁的入口」, 等他自己點
+      // (使用者:「應該指引使用者點哪裡可以連到那頁, 不是幫我開跟加一行廢話」)。
+      // 已經在那一頁了就沒有路可指 (例如那一館還沒有賽事), 那才降級成置中說明卡。
+      const wayHop =
+        need && !onPage(pathname, need) ? chain.find((h) => findTarget(h.target)) : undefined;
+      const wayEl = wayHop ? findTarget(wayHop.target) : null;
+      setHop(wayHop ?? null);
+      // 同一顆 DOM 節點 / 同一個 HOP 常數 → React 自己 bail out, 每幀呼叫不會重繪
+      setTargetEl(wayEl);
+      if (wayEl) {
+        const r = toRect(wayEl);
+        if (!fullyVisible(r, bottomInset())) {
+          const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          wayEl.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+        }
+        setLocating(false);
+      } else if (performance.now() - start > LOCATE_GRACE_MS) {
+        setLocating(false);
+      }
+      // **繼續輪詢**: 他點進去之後要接上真正的目標, 而且選單一開
+      // 「加入 / 建立道館」才會出現 (指路的下一跳)。
       raf = requestAnimationFrame(tick);
     };
 
@@ -243,7 +279,7 @@ export function TourRunner({ userId }: { userId: string }) {
       cancelAnimationFrame(raf);
       window.clearTimeout(slowTimer);
     };
-  }, [running, step, pathname]);
+  }, [running, step, pathname, s.gymId]);
 
   // ── 補充說明: 那個控制項現在在畫面上嗎 (例如「設為道館拍組」只有管理員看得到) ──
   useEffect(() => {
@@ -276,7 +312,7 @@ export function TourRunner({ userId }: { userId: string }) {
 
   // ── 完成條件 2: 某個東西出現了 (側板) ──
   useEffect(() => {
-    if (!running || step?.advance.on !== "appear") return;
+    if (!running || hop || step?.advance.on !== "appear") return;
     const want = step.advance.target;
     let raf = 0;
     let cancelled = false;
@@ -293,13 +329,14 @@ export function TourRunner({ userId }: { userId: string }) {
       cancelled = true;
       cancelAnimationFrame(raf);
     };
-  }, [running, step, advance]);
+  }, [running, hop, step, advance]);
 
   // ── 完成條件 3: 點在框裡 ──
   // 用 capture 的 pointerdown: 就算目標自己 stopPropagation 也聽得到, 而且不干涉那個點擊
   // (overlay 本來就 pointer-events:none, 事件照樣送到真正的按鈕上)。
   useEffect(() => {
-    if (!running || step?.advance.on !== "click") return;
+    // 指路中框的是「入口」不是這一步的目標 —— 點入口不算把這一步做完
+    if (!running || hop || step?.advance.on !== "click") return;
     const onDown = (e: PointerEvent) => {
       const r = spotRectRef.current;
       if (!r) return;
@@ -312,10 +349,11 @@ export function TourRunner({ userId }: { userId: string }) {
     };
     document.addEventListener("pointerdown", onDown, true);
     return () => document.removeEventListener("pointerdown", onDown, true);
-  }, [running, step, advance]);
+  }, [running, hop, step, advance]);
 
   // ── 幾何: 每一幀直接寫進 DOM ──
-  const region = step?.region;
+  // 指路時框的是入口, 不是這一步的目標 → 不套用 region (例如「只框卡片左下角」)
+  const region = hop ? undefined : step?.region;
   useIsoLayoutEffect(() => {
     if (!s.open) return;
     let raf = 0;
@@ -399,8 +437,6 @@ export function TourRunner({ userId }: { userId: string }) {
   if (!s.open) return null;
 
   const onTarget = Boolean(targetEl);
-  const goHere = resolveAt(step?.at, s.gymId);
-  const offTrack = running && !onTarget && !locating;
   const def = s.track ? trackDef(s.track) : null;
   const nextTrack = def?.next;
 
@@ -482,20 +518,16 @@ export function TourRunner({ userId }: { userId: string }) {
               </span>
             </div>
 
+            {/* 目標不在這一頁 → 先講「怎麼走過去」, 走到了才換回這一步本身 */}
             <h2 id="tour-title" className="mt-2 text-base font-semibold leading-snug">
-              {step.title}
+              {hop ? hop.title : step.title}
             </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-            {step.extra && extraOn ? (
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+              {hop ? hop.body : step.body}
+            </p>
+            {!hop && step.extra && extraOn ? (
               <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-300">
                 {step.extra.body}
-              </p>
-            ) : null}
-
-            {offTrack ? (
-              <p className="mt-2 rounded-lg bg-muted/60 px-2.5 py-2 text-xs text-muted-foreground">
-                這一步要指的東西不在這一頁
-                {goHere ? " — 按下面的「幫我開」我就帶你過去。" : "。"}
               </p>
             ) : null}
 
@@ -504,11 +536,6 @@ export function TourRunner({ userId }: { userId: string }) {
                 結束教學
               </Button>
               <div className="ml-auto flex items-center gap-2">
-                {offTrack && goHere ? (
-                  <Button variant="outline" size="sm" onClick={() => router.push(goHere)}>
-                    幫我開
-                  </Button>
-                ) : null}
                 <Button
                   variant="outline"
                   size="sm"

@@ -53,6 +53,7 @@ export function GymSwitcher({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          data-tour="gym-switcher"
           className={cn(
             "flex items-center gap-1.5 rounded-md py-2 pr-1.5 text-sm font-medium",
             "transition-colors hover:bg-accent",
@@ -85,7 +86,7 @@ export function GymSwitcher({
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="pointer-coarse:min-h-11">
-          <Link href="/gyms?list=1">
+          <Link href="/gyms?list=1" data-tour="gym-switcher-add">
             <Plus className="mr-2 h-4 w-4" />
             加入 / 建立道館
           </Link>
