@@ -724,6 +724,8 @@ export type Database = {
           p_pair_label: string;
           p_potential: number;
           p_super_awakening: number;
+          /** null = 不要動等級 (0058) */
+          p_level?: number | null;
         };
         Returns: undefined;
       };

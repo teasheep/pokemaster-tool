@@ -263,7 +263,14 @@ export function MembersClient({
    * 失敗時不手動回滾, 直接重抓 —— 伺服器才是真相, 手寫回滾會有第二套推導。
    */
   const patchPairGrade = useCallback(
-    (pairId: string, label: string, grade: number, superAwakening: number) => {
+    (
+      pairId: string,
+      label: string,
+      grade: number,
+      superAwakening: number,
+      /** 沒傳 = 這次沒動等級 (左下角循環), 保留原值 —— 與 RPC 的 p_level 同一個約定 */
+      level?: number
+    ) => {
       setPairs((prev) => {
         const i = prev.findIndex((p) => p.pair_id === pairId);
         // 寶0 = 沒有這隻 → RPC 會刪列, 這裡也刪 (不留幽靈列, 與 syncMemberPair 同一條規矩)
@@ -278,13 +285,19 @@ export function MembersClient({
               pair_id: pairId,
               grade,
               super_awakening: superAwakening,
-              // 代改不會動到等級 (set_member_pair 不收), 新列就是 1 = 還沒設定
-              level: 1,
+              // 新列沒傳等級時 RPC 寫的是 1 = 還沒設定, 這裡跟著
+              level: level ?? 1,
             },
           ];
         }
         const next = [...prev];
-        next[i] = { ...next[i]!, grade, super_awakening: superAwakening };
+        next[i] = {
+          ...next[i]!,
+          grade,
+          super_awakening: superAwakening,
+          // 沒傳 = 這次沒動等級, 保留原值 (與 RPC 的 coalesce 同一個語意)
+          level: level ?? next[i]!.level,
+        };
         return next;
       });
     },
@@ -914,7 +927,13 @@ function PairsPanel({
   loading: boolean;
   onChanged: () => void;
   /** 送出前先把畫面改掉 (見上層的 patchPairGrade) — 受控的側板下拉不能等兩趟往返 */
-  onOptimistic: (pairId: string, label: string, grade: number, superAwakening: number) => void;
+  onOptimistic: (
+    pairId: string,
+    label: string,
+    grade: number,
+    superAwakening: number,
+    level?: number
+  ) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   /** 範圍: 道館拍組 (預設) / 所有遊戲拍組 — 與全館視角同一種分頁 */
@@ -1057,10 +1076,19 @@ function PairsPanel({
    * 否則他下次自己一改就會把這裡填的值蓋回去 (舊版就是這樣默默丟資料的)。
    */
   const saveGrade = useCallback(
-    async (rec: ClientPairRecord, next: { potential: number; superAwakening: number }) => {
+    async (
+      rec: ClientPairRecord,
+      next: { potential: number; superAwakening: number },
+      /**
+       * 等級。**沒傳 = 不要動** —— RPC 的 p_level 是 null 就保留原值 (0058)。
+       * 左下角的寶數循環不知道 (也不該知道) 這位成員的等級, 一律不傳;
+       * 傳了 defaultEntry 的 1 就會把人家設好的 Lv200 洗掉。
+       */
+      level?: number
+    ) => {
       // 這條軸的編碼與全站一致: 0=未持有, 1-5=寶, 6-10=超覺醒 (RPC 自己會照 sa 算 grade)
       const grade = next.superAwakening > 0 ? 5 + next.superAwakening : next.potential;
-      onOptimistic(rec.pairId, pairLabel(rec), grade, next.superAwakening);
+      onOptimistic(rec.pairId, pairLabel(rec), grade, next.superAwakening, level);
       const { error } = await supabase.rpc("set_member_pair", {
         p_member: memberId,
         p_pair_id: rec.pairId,
@@ -1069,6 +1097,8 @@ function PairsPanel({
         // 直接把 0-10 的 grade 塞進去的話「超覺醒3」會靜靜變成「寶5」(0038:41-42)
         p_potential: next.potential,
         p_super_awakening: next.superAwakening,
+        // null = 不要動等級 (見上面的 level 參數)
+        p_level: level ?? null,
       });
       if (error) {
         toast.error("更新失敗", { description: error.message });
@@ -1220,7 +1250,9 @@ function PairsPanel({
               entry={entryOf(panelPair)}
               gymView
               editable={canEdit}
-              onChange={(next) => void saveGrade(panelPair, next)}
+              // 側板的 entry 帶著真實等級 (entryOf 從 member_pairs 讀), 所以連同送出 ——
+            // 改寶數時等於原值寫回, 改等級時就是新值
+            onChange={(next) => void saveGrade(panelPair, next, next.level)}
               // 左下角循環: 與卡牆同一個手勢、同一條寫入路徑
               onCountClick={() => onCountCard(panelPair.pairId)}
               gymPair={{

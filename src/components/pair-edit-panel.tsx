@@ -60,14 +60,14 @@ export function PairEditPanel({
   /** 道館拍組狀態與切換 (管理員才可切) */
   gymPair?: { isGymPair: boolean; canEdit: boolean; onToggle: () => void };
   /**
-   * **道館視角** (看某位成員的這張卡), 與 `/pairs` 的「我的拍組」兩個差別:
+   * **道館視角** (看某位成員的這張卡)。與 `/pairs` 的「我的拍組」**只差星數那一格**:
+   * `member_pairs` 沒有 promotion 欄位, 而 `user_collection` 的 RLS 是只能讀自己的 ——
+   * 別人的星數全站讀不到, 畫出來只會是 `defaultEntry` 的預設值 = 對使用者說謊。
+   * (這也與 AGENTS「圖鑑星級一律 basePotential, 個人升星只在『我的拍組』呈現」一致,
+   *  道館頁的卡牆同樣一律用原始星級。)
    *
-   *   - **星數不顯示**: `member_pairs` 沒有 promotion 欄位, 而 `user_collection` 的 RLS
-   *     是只能讀自己的 —— 別人的星數全站讀不到。畫出來只會是 `defaultEntry` 的預設值,
-   *     那是對使用者說謊。(道館頁的卡牆同樣一律用原始星級, 兩邊一致。)
-   *   - **等級唯讀**: 0057 之後 `member_pairs` 有 level 了, 所以看得到 (使用者:「道館看得到,
-   *     只是要點進去才看得到, 這樣就可以了」); 但**改不動** —— 代改走的
-   *     `set_member_pair` 不收 level, 畫成可點的下拉就是「改了不會存」。
+   * 等級**看得到也改得動** (0057 補了 member_pairs.level 鏡像, 0058 讓 set_member_pair
+   * 收 p_level) —— 使用者:「把道館變成管理員也可以設就好, 盡可能統一」。
    */
   gymView?: boolean;
   /** false = 唯讀 (例如一般成員看別人的練度) —— 版面一樣, 只是動不了 */
@@ -182,8 +182,7 @@ export function PairEditPanel({
             // 一律先 normalize —— 不在 LEVEL_OPTIONS 裡的值 (舊資料) 當成 Lv1,
             // 否則 Radix 找不到對應的 SelectItem, trigger 會渲染成一片空白
             value={String(normalizeLevel(entry.level))}
-            // 道館視角唯讀: 代改走的 set_member_pair 不收 level, 可點的下拉 = 改了不會存
-            disabled={!editable || gymView}
+            disabled={!editable}
             onValueChange={(v) => set({ level: Number(v) })}
           >
             <SelectTrigger className="w-full">
@@ -234,7 +233,7 @@ export function PairEditPanel({
         {!editable
           ? "唯讀 — 只有本人與管理員能改這位成員的練度。"
           : gymView
-            ? "改動會即時儲存 — 點其他拍組卡可直接切換 ・ 不持有請選「未持有」。等級由本人在「拍組」頁自己設定。"
+            ? "改動會即時儲存 — 點其他拍組卡可直接切換 ・ 不持有請選「未持有」。星數是個人資料，只有本人在「拍組」頁看得到。"
             : "改動會即時儲存 — 點其他拍組卡可直接切換 ・ 不持有請選「未持有」"}
       </p>
     </div>

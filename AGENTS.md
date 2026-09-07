@@ -313,14 +313,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   前科: 道館那邊本來是手刻的唯讀面板 + 一句「寶數請點卡片左下角調整」, 於是**同一張卡
   在同一個側板裡, 左下角改得動、下拉卻不存在** (使用者:「道館點進去不能下拉寶數,
   但點左下角又可以? 統一一下」)。
-  道館側板傳 `gymView`, 與 `/pairs` **只有兩個差別, 兩個都是資料決定的**:
-  1. **星數不畫**: `member_pairs` 沒有 promotion 欄位, 而 `user_collection` 的 RLS 是
-     `auth.uid() = user_id` —— 別人的星數全站讀不到。畫出來就是拿 `defaultEntry` 的預設值
-     冒充別人的練度。(道館頁的卡牆同樣一律用原始星級, 兩邊一致。)
-  2. **等級唯讀**: 0057 給 `member_pairs` 補了 level 鏡像, 所以**看得到**
-     (使用者:「道館看得到, 只是要點進去才看得到, 這樣就可以了 —— 因為其實自己也是要
-     點進去才看得到」); 但代改走的 `set_member_pair` 不收 level, 畫成可點的下拉就是
-     「改了、沒錯誤、重整後變回去」, 比不能改更糟。等級由本人在 `/pairs` 設。
+  道館側板傳 `gymView`, 與 `/pairs` **只差星數那一格**: `member_pairs` 沒有 promotion 欄位,
+  而 `user_collection` 的 RLS 是 `auth.uid() = user_id` —— 別人的星數全站讀不到, 畫出來就是拿
+  `defaultEntry` 的預設值冒充別人的練度。這也與「圖鑑星級一律 basePotential, 個人升星只在
+  『我的拍組』呈現」一致 (道館頁的卡牆同樣用原始星級)。
+  **等級看得到也改得動** (0057 補鏡像 + 0058 讓 RPC 收 `p_level`) —— 使用者兩次指定:
+  「道館看得到, 只是要點進去才看得到」「把道館變成管理員也可以設就好, 盡可能統一」。
   另外兩件事: `editable={canEdit}` 讓顧問與「看別人的一般成員」看得到但動不了
   (不是換一套唯讀版面); 寫入照舊只有一條路 —— 左下角循環與側板下拉都走同一支 `saveGrade`
   (內部是 `set_member_pair`), **不要**在道館頁直接寫 `user_collection` (RLS 會擋) 或
@@ -343,13 +341,20 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   那是校正結果不是設定練度)。
   `tests/collection-entry.test.ts` 釘住這條 (含 SQL 與程式碼清單必須一致) ——
   這個壞法只有那幾個人看得到。
-- **`member_pairs.level` 是鏡像, 只有 `syncMemberPair` 會寫** (0057): 道館端要看得到成員的
-  等級, 而 `user_collection` 是 own-rows only, 所以照 0023 (super_awakening) 的老路
-  補一欄鏡像 + 從 `user_collection` 回填。
-  **代改的 `set_member_pair` 刻意不收 level** —— 改簽章會產生一個全新的函式物件、舊的那支
-  還留著 (0040 的前科), revoke 也要重套; 而等級是個人資料, 讓本人在 `/pairs` 設就好。
-  所以道館側板的等級是**唯讀**的。哪天真的要開放代改, `tests/member-pair-axis.test.ts`
-  會在 RPC 簽章加上 `p_level` 的那一刻變紅提醒你回頭放寬 UI。
+- **`member_pairs.level` 是鏡像** (0057): 道館端要看得到成員的等級, 而 `user_collection` 是
+  own-rows only, 所以照 0023 (super_awakening) 的老路補一欄鏡像 + 從 `user_collection` 回填。
+  兩條寫入路徑都要維持它: 本人自己改走 `syncMemberPair`, 管理員代改走 `set_member_pair`。
+- ⚠ **`set_member_pair` 的 `p_level` 是 null 就「不要動等級」** (0058, 這是那支函式最重要的性質):
+  卡片左下角的寶數循環不知道 (也不該知道) 那位成員的等級, 一律不傳這個參數 ——
+  如果 null 被當成「設成 1」, 管理員每點一次左下角就把人家設好的 Lv200 洗成 Lv1。
+  兩張表的 upsert 都是 `coalesce(v_level, 既有值)`, `tests/member-pair-axis.test.ts` 釘住。
+  前端同一個約定: `saveGrade(rec, next, level?)` 沒傳就是不動, 只有側板的 onChange 會傳。
+- ⚠ **改 RPC 簽章一定要先 `drop function` 舊簽章, 建完再重收一次權限** (0058 照這條做的,
+  前科是 0040): 多一個參數 = 全新的函式物件, 舊的那支**會留著** (PostgREST 挑得到舊的 =
+  新參數靜靜不生效), 而且新那支會重新套用 Supabase 的 default privileges → anon 又拿得到
+  EXECUTE。revoke 一律寫 `from public, anon` (只 revoke public 是無效的, 見 0050)。
+  **套用前先在交易裡乾跑** (BEGIN → 套函式 → 用自己的成員列試各種呼叫 → ROLLBACK):
+  0058 就是這樣抓到「假的 pair_label 不會命中 `on conflict (member_id, pair_label)`, 會多長一列」的。
 - ⚠ **`set_member_pair` 替沒有收藏列的成員新增 `user_collection` 時, promotion 吃的是
   DB 預設 5** (`0002_user_collection.sql:11`) 而不是那隻拍組的 `basePotential` ——
   3★ 拍組會被標成 5★。(level 沒有這個問題: 兩邊都是 1。) 要修是**改 RPC 的 insert**

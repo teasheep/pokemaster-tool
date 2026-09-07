@@ -3,9 +3,9 @@
 // 差別不是 UI 偏好, 是資料決定的, 兩件事各有各的原因:
 //   - **星數不顯示**: member_pairs 沒有 promotion 欄位, 而 user_collection 的 RLS 是
 //     own-rows only → 別人的星數全站讀不到。畫出來只會是 defaultEntry 的預設值。
-//   - **等級唯讀**: 0057 之後 member_pairs 有 level 鏡像了 (所以看得到), 但代改走的
-//     `set_member_pair` 不收 level → 畫成可點的下拉就是「改了不會存」。
-// 任何一條變了 (例如有人替 RPC 加了 p_level), 這支測試會變紅提醒你回頭放寬 gymView。
+//   - **等級看得到也改得動**: 0057 補了 member_pairs.level 鏡像, 0058 讓 set_member_pair
+//     收 p_level (**null = 不要動** —— 左下角的寶數循環不傳它, 才不會把人家設好的等級洗掉)。
+// 哪天 RPC 也收了 p_promotion, 這支測試會變紅提醒你回頭把星數那格打開。
 //
 // 讀 migration SQL 再與程式碼對照 —— 與 tests/type-focus.test.ts 同一套做法。
 
@@ -62,22 +62,46 @@ describe("道館視角的側板與資料層必須對得起來 (PairEditPanel 的
     expect(cols).toContain("level");
   });
 
-  it("等級的鏡像由 syncMemberPair 寫入 (代改那條不會動它)", () => {
+  it("等級的鏡像由 syncMemberPair 寫入 (本人自己改那條)", () => {
     const sync = read("src/lib/collection-sync.ts");
     expect(sync, "syncMemberPair 沒有把 level 寫進 member_pairs").toMatch(/level/);
   });
 
-  it("set_member_pair 只收 (member, pair_id, pair_label, potential, super_awakening)", () => {
-    const sql = read("supabase/migrations/0038_grade_axis_awakening_levels.sql");
+  it("set_member_pair 收得了 p_level (0058) —— 但仍然沒有 p_promotion", () => {
+    const sql = read("supabase/migrations/0058_set_member_pair_level.sql");
     const start = sql.indexOf("create or replace function public.set_member_pair");
     expect(start).toBeGreaterThan(-1);
     const sig = sql.slice(start, sql.indexOf(")", start));
     for (const p of ["p_member", "p_pair_id", "p_pair_label", "p_potential", "p_super_awakening"]) {
       expect(sig, `少了參數 ${p}`).toContain(p);
     }
-    // 收得了就代表代改能寫等級了 → 回頭讓道館側板的等級變成可編輯
-    expect(sig, "RPC 現在收得了等級 — 道館側板的等級可以開放編輯了").not.toContain("p_level");
+    expect(sig, "代改要能寫等級").toContain("p_level");
+    // 收得了就代表資料層支援星數了 → 回頭把 gymView 的星數那格打開
     expect(sig, "RPC 現在收得了星數 — gymView 該放寬了").not.toContain("p_promotion");
+  });
+
+  it("**p_level 一定要有 default, 而且 null = 不要動** (左下角循環不傳它)", () => {
+    const sql = read("supabase/migrations/0058_set_member_pair_level.sql");
+    // 沒有 default 的話, 舊的五參數呼叫 (寶數循環) 會直接叫不到這支函式
+    expect(sql).toMatch(/p_level\s+int\s+default\s+null/i);
+    // coalesce(v_level, 既有值) = 沒傳就保留 —— 少了這個, 管理員每點一次左下角
+    // 就把那位成員設好的等級洗成 1
+    expect(sql).toContain("coalesce(v_level, public.member_pairs.level)");
+    expect(sql).toContain("coalesce(v_level, public.user_collection.level)");
+  });
+
+  it("**簽章換掉要先 drop 舊的** (0040 的前科: 舊那支會留著, 而且權限會重新放寬)", () => {
+    const sql = read("supabase/migrations/0058_set_member_pair_level.sql");
+    expect(sql).toContain("drop function if exists public.set_member_pair(uuid, text, text, int, int)");
+    // 新簽章要照 0051 重收一次權限 (只 revoke public 是無效的, 一定要含 anon)
+    expect(sql).toMatch(/revoke all on function public\.set_member_pair\([^)]*\) from public, anon/);
+    expect(sql).toMatch(/grant execute on function public\.set_member_pair\([^)]*\) to authenticated/);
+  });
+
+  it("RPC 認可的等級與程式碼的 LEVEL_OPTIONS 是同一組", async () => {
+    const { LEVEL_OPTIONS } = await import("@/lib/collection-entry");
+    const sql = read("supabase/migrations/0058_set_member_pair_level.sql");
+    expect(sql).toContain(`p_level in (${LEVEL_OPTIONS.join(", ")})`);
   });
 
   it("道館成員頁的側板一定要開 gymView (不然會拿預設值冒充別人的星數)", () => {
