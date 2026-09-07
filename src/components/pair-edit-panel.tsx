@@ -49,7 +49,6 @@ export function PairEditPanel({
   onChange,
   onCountClick,
   gymPair,
-  gymView = false,
   editable = true,
 }: {
   pair: ClientPairRecord;
@@ -59,17 +58,6 @@ export function PairEditPanel({
   onCountClick?: () => void;
   /** 道館拍組狀態與切換 (管理員才可切) */
   gymPair?: { isGymPair: boolean; canEdit: boolean; onToggle: () => void };
-  /**
-   * **道館視角** (看某位成員的這張卡)。與 `/pairs` 的「我的拍組」**只差星數那一格**:
-   * `member_pairs` 沒有 promotion 欄位, 而 `user_collection` 的 RLS 是只能讀自己的 ——
-   * 別人的星數全站讀不到, 畫出來只會是 `defaultEntry` 的預設值 = 對使用者說謊。
-   * (這也與 AGENTS「圖鑑星級一律 basePotential, 個人升星只在『我的拍組』呈現」一致,
-   *  道館頁的卡牆同樣一律用原始星級。)
-   *
-   * 等級**看得到也改得動** (0057 補了 member_pairs.level 鏡像, 0058 讓 set_member_pair
-   * 收 p_level) —— 使用者:「把道館變成管理員也可以設就好, 盡可能統一」。
-   */
-  gymView?: boolean;
   /** false = 唯讀 (例如一般成員看別人的練度) —— 版面一樣, 只是動不了 */
   editable?: boolean;
 }) {
@@ -125,7 +113,6 @@ export function PairEditPanel({
         )}
       </div>
 
-      {/* 道館視角沒有星數那一格, 剩下的兩格照樣排成兩欄 */}
       <div className="grid grid-cols-2 gap-3">
         {/* 寶數 + 超覺醒 = 同一個下拉 */}
         <div className="space-y-1">
@@ -148,33 +135,34 @@ export function PairEditPanel({
           </Select>
         </div>
 
-        {/* 星數: 原始星級 → 6★EX。道館視角整格不渲染 (別人的星數全站讀不到, 見 gymView) */}
-        {gymView ? null : (
-          <div className="space-y-1">
-            <Label className="text-xs">星數</Label>
-            <Select
-              value={String(Math.max(baseStar, Math.min(6, entry.promotion)))}
-              disabled={!editable}
-              onValueChange={(v) => {
-                const n = Number(v);
-                // 6★EX 就是星數 6 — 不再另外用一個 checkbox 表示同一件事。
-                // exStyleWorn 不動 (換裝立繪 UI 先拔掉, 但已存的資料不要被順手清掉)
-                set({ promotion: n, exUnlocked: n >= 6 });
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {starOptions.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n === 6 ? "6★ EX" : `${n}★`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        {/* 星數: 原始星級 → 6★EX。
+            **這是「內頁」才顯示的數值** (2026-09-07 使用者:「規則指的是長相, 但跟數值可以
+            先分開 —— 可以記錄每個人幾星, 但只顯示在內頁, 不影響拍組的圖鑑畫面」)。
+            所以側板照實顯示這個人的星數, 而卡牆那邊 (道館頁) 仍然一律畫原始星級。 */}
+        <div className="space-y-1">
+          <Label className="text-xs">星數</Label>
+          <Select
+            value={String(Math.max(baseStar, Math.min(6, entry.promotion)))}
+            disabled={!editable}
+            onValueChange={(v) => {
+              const n = Number(v);
+              // 6★EX 就是星數 6 — 不再另外用一個 checkbox 表示同一件事。
+              // exStyleWorn 不動 (換裝立繪 UI 先拔掉, 但已存的資料不要被順手清掉)
+              set({ promotion: n, exUnlocked: n >= 6 });
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {starOptions.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n === 6 ? "6★ EX" : `${n}★`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="space-y-1">
           <Label className="text-xs">等級</Label>
@@ -230,11 +218,9 @@ export function PairEditPanel({
       ) : null}
 
       <p className="text-xs text-muted-foreground">
-        {!editable
-          ? "唯讀 — 只有本人與管理員能改這位成員的練度。"
-          : gymView
-            ? "改動會即時儲存 — 點其他拍組卡可直接切換 ・ 不持有請選「未持有」。星數是個人資料，只有本人在「拍組」頁看得到。"
-            : "改動會即時儲存 — 點其他拍組卡可直接切換 ・ 不持有請選「未持有」"}
+        {editable
+          ? "改動會即時儲存 — 點其他拍組卡可直接切換 ・ 不持有請選「未持有」"
+          : "唯讀 — 只有本人與管理員能改這位成員的練度。"}
       </p>
     </div>
   );

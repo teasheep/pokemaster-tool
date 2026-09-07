@@ -211,6 +211,7 @@ export type Database = {
           grade: number;
           super_awakening: number;
           level: number;
+          promotion: number | null;
           ex_style_worn: boolean;
           created_at: string;
           updated_at: string;
@@ -224,6 +225,7 @@ export type Database = {
           grade?: number;
           super_awakening?: number;
           level?: number;
+          promotion?: number | null;
           ex_style_worn?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -237,6 +239,7 @@ export type Database = {
           grade?: number;
           super_awakening?: number;
           level?: number;
+          promotion?: number | null;
           ex_style_worn?: boolean;
           created_at?: string;
           updated_at?: string;

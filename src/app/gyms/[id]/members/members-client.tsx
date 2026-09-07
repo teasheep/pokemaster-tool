@@ -80,8 +80,10 @@ type PairRow = {
   pair_id: string | null;
   grade: number;
   super_awakening: number;
-  /** 個人設的等級鏡像 (0057) — 道館端唯讀, 本人在 /pairs 設 */
+  /** 個人練度的鏡像 (0057 level / 0059 promotion) — 只顯示在側板, 卡牆一律用原始星級 */
   level: number;
+  /** null = 沒設定過 → 畫面退回這隻拍組的原始星級 */
+  promotion: number | null;
 };
 
 type Props = {
@@ -222,7 +224,7 @@ export function MembersClient({
       const [pairsRes] = await Promise.all([
         supabase
           .from("member_pairs")
-          .select("id, pair_label, pair_id, grade, super_awakening, level")
+          .select("id, pair_label, pair_id, grade, super_awakening, level, promotion")
           .eq("member_id", memberId)
           .order("grade", { ascending: false })
           .order("pair_label"),
@@ -268,8 +270,8 @@ export function MembersClient({
       label: string,
       grade: number,
       superAwakening: number,
-      /** 沒傳 = 這次沒動等級 (左下角循環), 保留原值 —— 與 RPC 的 p_level 同一個約定 */
-      level?: number
+      /** 沒傳 = 這次沒動 (左下角循環), 保留原值 —— 與 RPC 的 p_level / p_promotion 同一個約定 */
+      extra?: { level?: number; promotion?: number }
     ) => {
       setPairs((prev) => {
         const i = prev.findIndex((p) => p.pair_id === pairId);
@@ -285,8 +287,9 @@ export function MembersClient({
               pair_id: pairId,
               grade,
               super_awakening: superAwakening,
-              // 新列沒傳等級時 RPC 寫的是 1 = 還沒設定, 這裡跟著
-              level: level ?? 1,
+              // 新列沒傳時 RPC 寫的是 1 / null, 這裡跟著
+              level: extra?.level ?? 1,
+              promotion: extra?.promotion ?? null,
             },
           ];
         }
@@ -295,8 +298,9 @@ export function MembersClient({
           ...next[i]!,
           grade,
           super_awakening: superAwakening,
-          // 沒傳 = 這次沒動等級, 保留原值 (與 RPC 的 coalesce 同一個語意)
-          level: level ?? next[i]!.level,
+          // 沒傳 = 這次沒動, 保留原值 (與 RPC 的 coalesce 同一個語意)
+          level: extra?.level ?? next[i]!.level,
+          promotion: extra?.promotion ?? next[i]!.promotion,
         };
         return next;
       });
@@ -932,7 +936,7 @@ function PairsPanel({
     label: string,
     grade: number,
     superAwakening: number,
-    level?: number
+    extra?: { level?: number; promotion?: number }
   ) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -1065,6 +1069,8 @@ function PairsPanel({
         superAwakening: sa,
         // 等級是 0057 補的鏡像 —— 沒有那一列 (灰卡) 就是 1 = 還沒設定
         level: row?.level ?? 1,
+        // 星數是 0059 補的鏡像; null = 沒設定過 → 退回這隻拍組的原始星級 (defaultEntry 給的)
+        ...(row?.promotion != null ? { promotion: row.promotion } : {}),
       };
     },
     [rowByPairId]
@@ -1080,15 +1086,15 @@ function PairsPanel({
       rec: ClientPairRecord,
       next: { potential: number; superAwakening: number },
       /**
-       * 等級。**沒傳 = 不要動** —— RPC 的 p_level 是 null 就保留原值 (0058)。
-       * 左下角的寶數循環不知道 (也不該知道) 這位成員的等級, 一律不傳;
-       * 傳了 defaultEntry 的 1 就會把人家設好的 Lv200 洗掉。
+       * 等級與星數。**沒傳 = 不要動** —— RPC 的 p_level / p_promotion 是 null 就保留原值
+       * (0058 / 0059)。左下角的寶數循環不知道 (也不該知道) 這兩個值, 一律不傳;
+       * 傳了 defaultEntry 的預設值就會把人家設好的 Lv200 / 6★EX 洗掉。
        */
-      level?: number
+      extra?: { level?: number; promotion?: number }
     ) => {
       // 這條軸的編碼與全站一致: 0=未持有, 1-5=寶, 6-10=超覺醒 (RPC 自己會照 sa 算 grade)
       const grade = next.superAwakening > 0 ? 5 + next.superAwakening : next.potential;
-      onOptimistic(rec.pairId, pairLabel(rec), grade, next.superAwakening, level);
+      onOptimistic(rec.pairId, pairLabel(rec), grade, next.superAwakening, extra);
       const { error } = await supabase.rpc("set_member_pair", {
         p_member: memberId,
         p_pair_id: rec.pairId,
@@ -1097,8 +1103,9 @@ function PairsPanel({
         // 直接把 0-10 的 grade 塞進去的話「超覺醒3」會靜靜變成「寶5」(0038:41-42)
         p_potential: next.potential,
         p_super_awakening: next.superAwakening,
-        // null = 不要動等級 (見上面的 level 參數)
-        p_level: level ?? null,
+        // null = 不要動 (見上面的 extra 參數)
+        p_level: extra?.level ?? null,
+        p_promotion: extra?.promotion ?? null,
       });
       if (error) {
         toast.error("更新失敗", { description: error.message });
@@ -1248,11 +1255,12 @@ function PairsPanel({
             <PairEditPanel
               pair={panelPair}
               entry={entryOf(panelPair)}
-              gymView
-              editable={canEdit}
-              // 側板的 entry 帶著真實等級 (entryOf 從 member_pairs 讀), 所以連同送出 ——
-            // 改寶數時等於原值寫回, 改等級時就是新值
-            onChange={(next) => void saveGrade(panelPair, next, next.level)}
+                editable={canEdit}
+              // 側板的 entry 帶著真實的等級與星數 (entryOf 從 member_pairs 讀), 所以連同送出 ——
+            // 改寶數時等於原值寫回, 改等級/星數時就是新值
+            onChange={(next) =>
+              void saveGrade(panelPair, next, { level: next.level, promotion: next.promotion })
+            }
               // 左下角循環: 與卡牆同一個手勢、同一條寫入路徑
               onCountClick={() => onCountCard(panelPair.pairId)}
               gymPair={{
