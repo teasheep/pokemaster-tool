@@ -13,10 +13,12 @@
 import type { SyncPairType } from "@/lib/supabase/types";
 
 export type BattleTemplate = {
-  /** 穩定的識別碼 (存進網址/狀態用, 不要改) */
+  /** 識別碼。目前只活在建立賽事對話框的 state 裡 (沒有存進資料庫或網址) */
   id: string;
-  /** 挑選時顯示的名字, 同時當賽事名稱的預設值 */
+  /** 第幾次 —— 三個模板對齊成同一個格式, 挑的時候一眼看得出順序 */
   name: string;
+  /** 那一回的副標 (官方的活動名) */
+  subtitle: string;
   /** 第 1 關到第 8 關的弱點屬性 */
   types: SyncPairType[];
 };
@@ -24,20 +26,28 @@ export type BattleTemplate = {
 export const BATTLE_TEMPLATES: BattleTemplate[] = [
   {
     id: "r1-kanto",
-    name: "第一次道館戰（集結關都館主）",
+    name: "第一次道館戰",
+    subtitle: "集結關都館主",
     types: ["ice", "electric", "ground", "fire", "psychic", "dark", "water", "rock"],
   },
   {
     id: "r2-galar",
-    name: "第二次道館戰（集結伽勒爾館主）",
+    name: "第二次道館戰",
+    subtitle: "集結伽勒爾館主",
     types: ["bug", "grass", "flying", "psychic", "ghost", "water", "poison", "fighting"],
   },
   {
-    id: "r3",
+    id: "r3-johto",
     name: "第三次道館戰",
+    subtitle: "城都館主大集合",
     types: ["ice", "electric", "fighting", "dark", "fairy", "fire", "steel", "dragon"],
   },
 ];
+
+/** 賽事名稱的預設值 = 「第幾次道館戰（副標）」 */
+export function templateBattleName(t: BattleTemplate): string {
+  return `${t.name}（${t.subtitle}）`;
+}
 
 /** 一場固定 8 關 (建立賽事時由 DB trigger 開好, 屬性預設 normal) */
 export const BATTLE_STAGE_COUNT = 8;

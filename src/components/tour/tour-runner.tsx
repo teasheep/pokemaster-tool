@@ -25,7 +25,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, Hand, X } from "lucide-react";
+import { Check, FlaskConical, GraduationCap, Hand, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -130,6 +130,7 @@ export function TourRunner({ userId }: { userId: string }) {
   const primaryRef = useRef<HTMLButtonElement | null>(null);
   const autoOpened = useRef(false);
   const cardHRef = useRef(180);
+  const barRef = useRef<HTMLDivElement | null>(null);
   const animateUntil = useRef(0);
   /** 目標的目前矩形 (含 corner 換算) — 判斷點擊有沒有點在框裡要用 */
   const spotRectRef = useRef<Rect | null>(null);
@@ -186,10 +187,16 @@ export function TourRunner({ userId }: { userId: string }) {
     };
   }, [s.open, s.gymId, pathname, userId]);
 
-  // ── 練習模式: 只在標了 practice 的步驟開著 ──
+  /**
+   * 練習模式 —— **綁在「那一步該在的那一頁」上, 不是只綁步驟** (2026-09-07 修)。
+   * 只看步驟的話, 使用者在「側板」那一步跑去 /resources 改糖果, 寫入也會被吞掉,
+   * 而且完全沒有徵兆 (畫面照變、沒有錯誤)。那是很難察覺的資料遺失。
+   */
+  const needAt = resolveAt(step?.at, s.gymId);
+  const practicing = Boolean(running && step?.practice && needAt && onPage(pathname, needAt));
   useEffect(() => {
-    setWritesBlocked(Boolean(running && step?.practice));
-  }, [running, step]);
+    setWritesBlocked(practicing);
+  }, [practicing]);
 
   // ── 下一步大概會去哪, 先抓起來 (使用者自己點過去時就不用等) ──
   useEffect(() => {
@@ -366,6 +373,7 @@ export function TourRunner({ userId }: { userId: string }) {
 
       cardHRef.current = card.offsetHeight || cardHRef.current;
       const inset = bottomInset();
+      const topInset = barRef.current?.getBoundingClientRect().height ?? 0;
       const vp = { width: window.innerWidth, height: window.innerHeight };
       const raw = targetEl ? toRect(targetEl) : null;
       const box = raw ? (region === "corner" ? cornerRect(raw) : raw) : null;
@@ -376,8 +384,9 @@ export function TourRunner({ userId }: { userId: string }) {
             viewport: vp,
             cardHeight: cardHRef.current,
             bottomInset: inset,
+            topInset,
           })
-        : centerPlacement(vp, cardHRef.current);
+        : centerPlacement(vp, cardHRef.current, topInset);
       const ms = performance.now() < animateUntil.current ? `${MOVE_MS}ms` : "0ms";
 
       if (spot) {
@@ -443,6 +452,37 @@ export function TourRunner({ userId }: { userId: string }) {
   return (
     // pointer-events-none: 整層只負責「看」, 使用者要點什麼都點得到 (見檔頭 2)
     <div className="pointer-events-none fixed inset-0 z-[60]" role="presentation">
+      {/* 狀態膠囊 —— 使用者問「要不要加一條 bar 說這是教學頁面」。
+          做成頂端置中的膠囊而不是整條橫貫的 bar: 整條會蓋住 header, 而教學正需要那排
+          導覽列看得見也點得到 (指路就是框它)。
+          **文案分兩種**: 只有真的在練習 (寫入被吞掉) 時才說「不會存檔」——
+          其他步驟是真的會寫進資料庫的 (例如按下建立賽事), 一路寫死等於騙人。 */}
+      {running ? (
+        <div
+          ref={barRef}
+          className="pointer-events-none absolute inset-x-0 top-0 flex justify-center px-2 pt-[max(0.5rem,env(safe-area-inset-top))]"
+        >
+          <span
+            role="status"
+            className={cn(
+              "flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm backdrop-blur",
+              practicing
+                ? "border-amber-500/50 bg-amber-500/20 text-amber-800 dark:text-amber-200"
+                : "border-border bg-card/90 text-muted-foreground"
+            )}
+          >
+            {practicing ? (
+              <FlaskConical className="h-3.5 w-3.5 shrink-0" />
+            ) : (
+              <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+            )}
+            <span className="truncate">
+              {practicing ? "練習模式 · 這裡的調整不會存進資料庫" : "使用教學進行中"}
+            </span>
+          </span>
+        </div>
+      ) : null}
+
       <div
         ref={spotRef}
         aria-hidden

@@ -25,13 +25,14 @@ export function calloutWidth(viewportWidth: number): number {
  */
 export function centerPlacement(
   viewport: { width: number; height: number },
-  cardHeight: number
+  cardHeight: number,
+  topInset = 0
 ): Placement {
   const width = calloutWidth(viewport.width);
   return {
     width,
     left: Math.round((viewport.width - width) / 2),
-    top: Math.max(EDGE, Math.round((viewport.height - cardHeight) / 2)),
+    top: Math.max(topInset + EDGE, Math.round((viewport.height - cardHeight) / 2)),
   };
 }
 
@@ -40,31 +41,35 @@ export function placeCallout({
   viewport,
   cardHeight,
   bottomInset = 0,
+  topInset = 0,
 }: {
   target: Rect | null;
   viewport: { width: number; height: number };
   cardHeight: number;
   /** 底部被固定元素佔掉的高度 (手機的底部導覽列 + 安全區) */
   bottomInset?: number;
+  /** 頂部被固定元素佔掉的高度 (教學自己那顆狀態膠囊) */
+  topInset?: number;
 }): Placement {
-  if (!target) return centerPlacement(viewport, cardHeight);
+  if (!target) return centerPlacement(viewport, cardHeight, topInset);
 
   const width = calloutWidth(viewport.width);
   const bottomLimit = viewport.height - bottomInset - EDGE;
+  const topLimit = topInset + EDGE;
 
   const below = target.top + target.height + GAP;
   const aboveTop = target.top - GAP - cardHeight;
 
   let top: number;
   if (below + cardHeight <= bottomLimit) {
-    top = below;
-  } else if (aboveTop >= EDGE) {
+    top = Math.max(topLimit, below);
+  } else if (aboveTop >= topLimit) {
     top = aboveTop;
   } else {
     // 上下都塞不下 (目標很大或視窗很矮): 挑空間多的那一邊貼著邊放
-    const roomAbove = target.top - EDGE;
+    const roomAbove = target.top - topLimit;
     const roomBelow = bottomLimit - (target.top + target.height);
-    top = roomAbove > roomBelow ? EDGE : Math.max(EDGE, bottomLimit - cardHeight);
+    top = roomAbove > roomBelow ? topLimit : Math.max(topLimit, bottomLimit - cardHeight);
   }
 
   // 水平: 對齊目標中心, 再夾回視窗內 (手機因為卡片幾乎滿寬, 夾完一定是 EDGE)

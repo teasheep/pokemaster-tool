@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TypeIcon } from "@/components/sync-pair-badges";
 import { TYPE_LABELS } from "@/data/sync-pairs";
-import { BATTLE_TEMPLATES, battleTemplate } from "@/lib/gym/battle-templates";
+import { BATTLE_TEMPLATES, battleTemplate, templateBattleName } from "@/lib/gym/battle-templates";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +45,7 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
     setTemplateId(id);
     // 模板名稱直接當賽事名稱的預設值 —— 使用者自己打過就不動
     const t = battleTemplate(id);
-    if (t && !nameTouched) setName(t.name);
+    if (t && !nameTouched) setName(templateBattleName(t));
   }
 
   async function create() {
@@ -118,6 +118,8 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
         <div className="space-y-2">
           <Label>套用模板</Label>
           <div className="grid gap-1.5" data-tour="battle-template">
+            {/* 四個選項的結構完全一樣 (第一行標題 + 第二行細節), 所以三個模板的
+                屬性列一定對得齊 —— 名字長短不同也不會把 icon 推到不同的位置。 */}
             {BATTLE_TEMPLATES.map((t) => (
               <button
                 key={t.id}
@@ -125,17 +127,24 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
                 onClick={() => pickTemplate(templateId === t.id ? null : t.id)}
                 aria-pressed={templateId === t.id}
                 className={cn(
-                  "flex min-h-11 w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border px-3 py-2 text-left transition-colors",
-                  templateId === t.id
-                    ? "border-primary bg-accent"
-                    : "hover:bg-accent/50"
+                  "flex min-h-11 w-full flex-col gap-1.5 rounded-lg border px-3 py-2 text-left transition-colors",
+                  templateId === t.id ? "border-primary bg-accent" : "hover:bg-accent/50"
                 )}
               >
-                <span className="text-sm font-medium">{t.name}</span>
-                {/* 8 顆屬性 icon = 這個模板到底會填什麼, 選之前就看得到 */}
-                <span className="flex flex-wrap items-center gap-0.5">
+                <span className="flex items-baseline gap-2">
+                  <span className="text-sm font-medium">{t.name}</span>
+                  <span className="min-w-0 truncate text-xs text-muted-foreground">
+                    {t.subtitle}
+                  </span>
+                </span>
+                {/* 8 顆屬性 icon = 這個模板到底會填什麼, 選之前就看得到。
+                    自己一列 → 三個模板的屬性列上下對齊, 一眼能比較。 */}
+                <span className="flex items-center gap-1">
                   {t.types.map((ty, i) => (
-                    <TypeIcon key={i} type={ty} className="h-4 w-4" />
+                    // TypeIcon 只吃 type/className, 提示字掛在外層 (第 N 關是哪一屬性)
+                    <span key={i} title={`第 ${i + 1} 關 · ${TYPE_LABELS[ty]}`} className="flex">
+                      <TypeIcon type={ty} className="h-5 w-5" />
+                    </span>
                   ))}
                 </span>
               </button>
@@ -145,13 +154,13 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
               onClick={() => pickTemplate(null)}
               aria-pressed={templateId === null}
               className={cn(
-                "min-h-11 w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                "flex min-h-11 w-full flex-col gap-1.5 rounded-lg border px-3 py-2 text-left transition-colors",
                 templateId === null ? "border-primary bg-accent" : "hover:bg-accent/50"
               )}
             >
-              先不套用
-              <span className="ml-2 text-xs text-muted-foreground">
-                8 關都是「{TYPE_LABELS.normal}」, 建立後自己選
+              <span className="text-sm font-medium">先不套用</span>
+              <span className="text-xs text-muted-foreground">
+                8 關都是「{TYPE_LABELS.normal}」, 建立後在賽事頁自己選
               </span>
             </button>
           </div>

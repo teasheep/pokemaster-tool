@@ -273,6 +273,15 @@ describe("placeCallout", () => {
     expect(p.left).toBe(600 + 60 - 190);
   });
 
+it("頂端的狀態膠囊佔掉的高度也要讓開 (不然卡片會被它蓋住)", () => {
+    const target = { top: 4, left: 600, width: 120, height: 8 };
+    const p = placeCallout({ target, viewport: VP, cardHeight: 160, topInset: 40 });
+    expect(p.top).toBeGreaterThanOrEqual(40 + EDGE);
+    // 沒有目標時的置中也要讓
+    const c = centerPlacement({ width: 390, height: 200 }, 300, 40);
+    expect(c.top).toBeGreaterThanOrEqual(40 + EDGE);
+  });
+
   it("沒有目標就置中", () => {
     const p = placeCallout({ target: null, viewport: VP, cardHeight: 200 });
     expect(p).toEqual(centerPlacement(VP, 200));
