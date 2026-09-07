@@ -179,7 +179,7 @@ describe("教學期間吞寫入 — 絕對不能碰 auth", () => {
 
   it("一般寫入回「成功但沒有列」—— 樂觀更新留在畫面上, 不跳錯誤 toast", async () => {
     setTourWritesBlocked(true);
-    const res = swallowResponse({ method: "POST" });
+    const res = swallowResponse(REST, { method: "POST" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual([]);
     setTourWritesBlocked(false);
@@ -187,7 +187,7 @@ describe("教學期間吞寫入 — 絕對不能碰 auth", () => {
 
   it("**.single() 的寫入必須回錯誤**: 呼叫端會拿裡面的 id 去導頁 (建立賽事), 假成功會導到不存在的頁", async () => {
     setTourWritesBlocked(true);
-    const res = swallowResponse({
+    const res = swallowResponse(REST, {
       method: "POST",
       headers: { Accept: "application/vnd.pgrst.object+json" },
     });
@@ -195,8 +195,30 @@ describe("教學期間吞寫入 — 絕對不能碰 auth", () => {
     expect((await res.json()).message).toBe(TOUR_WRITE_MESSAGE);
     // Headers 物件與陣列形式也要認得 (supabase-js 內部可能兩種都用)
     expect(
-      swallowResponse({ headers: new Headers({ Accept: "application/vnd.pgrst.object+json" }) }).ok
+      swallowResponse(REST, {
+        headers: new Headers({ Accept: "application/vnd.pgrst.object+json" }),
+      }).ok
     ).toBe(false);
+    setTourWritesBlocked(false);
+  });
+
+  it("**RPC 必須回錯誤**: create_gym / join_gym 拿回傳的 id 導頁, 假成功會導去 /gyms/", async () => {
+    setTourWritesBlocked(true);
+    const res = swallowResponse("https://x.supabase.co/rest/v1/rpc/create_gym", {
+      method: "POST",
+    });
+    expect(res.ok).toBe(false);
+    expect((await res.json()).message).toBe(TOUR_WRITE_MESSAGE);
+    setTourWritesBlocked(false);
+  });
+
+  it("**storage 必須回錯誤**: 假成功會讓 uploadAvatar 回傳指向不存在檔案的網址 (頭貼破圖)", async () => {
+    setTourWritesBlocked(true);
+    const res = swallowResponse("https://x.supabase.co/storage/v1/object/avatars/u.webp", {
+      method: "POST",
+    });
+    expect(res.ok).toBe(false);
+    expect((await res.json()).message).toBe(TOUR_WRITE_MESSAGE);
     setTourWritesBlocked(false);
   });
 });

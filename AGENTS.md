@@ -250,10 +250,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
       1. **絕對不吞 `/auth/v1/`** —— token 刷新是 POST, 吞掉就是把人登出。只吞
          `/rest/v1/` 與 `/storage/v1/` 的非 GET。
       2. 判斷寫在 request 當下, 不是建 client 的時候 (呼叫端普遍 `useMemo` 記住 client)。
-      3. **假回應有兩種形狀, 差別很重要**: 一般寫入回 `[]` + 200 (= 成功, 樂觀更新留在
-         畫面上、不跳錯誤 toast); **要求剛好一列的 (`.single()`) 必須回錯誤** ——
-         那種呼叫端會拿列裡的 id 繼續做事 (「建立賽事」會 `router.push(.../battles/<id>)`),
-         回假成功等於把人導到一個不存在的賽事, 比失敗還糟。錯誤訊息就是給使用者看的說明。
+      3. **只有「一般的表寫入」可以假成功 (`[]` + 200), 其他一律回錯誤** —— 分界線是
+         「呼叫端會不會拿回應繼續做事」: `.single()` 拿列裡的 id 導頁 (「建立賽事」會
+         `router.push(.../battles/<id>)`); **RPC 也一樣** (`create_gym` / `join_gym` 拿回傳
+         id 導頁, `rotate_my_export_token` 把回傳值當金鑰顯示); **storage 也一樣**
+         (假成功會讓 `uploadAvatar` 回傳指向不存在檔案的網址, 頭貼破圖)。
+         這三類假成功都比失敗更糟, 錯誤訊息 (`TOUR_WRITE_MESSAGE`) 就是給使用者看的說明。
       4. **解除與清場都在 `closeTour()`** —— 全站唯一的離開出口 (完成 / 結束教學 / Esc /
          關閉鈕都走它)。吞過寫入就 `location.reload()`, 把畫面上那些「看起來改了但沒存」
          的樂觀更新清掉; 不清的話使用者會以為存下來了。

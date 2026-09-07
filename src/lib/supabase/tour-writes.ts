@@ -71,23 +71,34 @@ function wantsSingleRow(headers: HeadersInit | undefined): boolean {
 export const TOUR_WRITE_MESSAGE = "使用教學進行中 — 這個操作不會存進資料庫";
 
 /**
- * 假的回應。**兩種形狀, 差別很重要**:
+ * 假的回應。**只有「一般的表寫入」可以假成功, 其他一律回錯誤** ——
+ * 分界線是「呼叫端會不會拿回應繼續做事」:
  *
- * - 一般寫入 (沒有 `.single()`): 回空陣列 = 成功。樂觀更新留在畫面上、不跳錯誤 toast,
- *   使用者點卡片左下角調寶數的手感與平常一模一樣。
- * - 要求剛好一列的寫入 (`.single()`): **必須回錯誤**。這種呼叫端拿到列之後會用裡面的
- *   id 繼續做事 —— 例如「建立賽事」會 `router.push(.../battles/<id>)`。
- *   回假的成功會把人導到一個不存在的賽事 (比失敗還糟), 回空陣列則會變成看不懂的
- *   「建立失敗」。所以直接給一句說得清楚的錯誤, 呼叫端原樣 toast 出來就是正確的說明。
+ * - 一般 PostgREST 表寫入 (insert/update/delete, 沒要求回列): 回空陣列 = 成功。
+ *   樂觀更新留在畫面上、不跳錯誤 toast, 點卡片左下角調寶數的手感與平常一模一樣。
+ * - 要求剛好一列的 (`.single()`, Accept 帶 pgrst.object): **回錯誤**。呼叫端會拿列裡的
+ *   id 繼續做事 —— 「建立賽事」會 `router.push(.../battles/<id>)`, 假成功等於把人
+ *   導到一個不存在的賽事 (比失敗還糟), 回空陣列則變成看不懂的「建立失敗」。
+ * - RPC (`/rest/v1/rpc/`): **回錯誤**。RPC 是指令不是樂觀更新 —— `create_gym` / `join_gym`
+ *   拿回傳的 id 導頁 (假成功會導去 `/gyms/`), `rotate_my_export_token` 把回傳值當金鑰
+ *   顯示給人抄。全部都是「假成功比失敗更糟」的那一類。
+ * - Storage (`/storage/v1/`): **回錯誤**。假成功會讓 `uploadAvatar` 回傳一個
+ *   指向「沒有真的傳上去的檔案」的公開網址, 頭貼直接變破圖。
+ *
+ * 回錯誤的三類, 訊息就是 TOUR_WRITE_MESSAGE —— 呼叫端原樣 toast 出來就是正確的說明。
  */
-export function swallowResponse(init?: RequestInit): Response {
+export function swallowResponse(url: string, init?: RequestInit): Response {
   swallowed += 1;
   const json = (body: unknown, status: number) =>
     new Response(JSON.stringify(body), {
       status,
       headers: { "Content-Type": "application/json; charset=utf-8" },
     });
-  if (wantsSingleRow(init?.headers)) {
+  const mustError =
+    wantsSingleRow(init?.headers) ||
+    url.includes("/rest/v1/rpc/") ||
+    url.includes("/storage/v1/");
+  if (mustError) {
     return json({ message: TOUR_WRITE_MESSAGE, code: "TOUR_MODE" }, 400);
   }
   return json([], 200);

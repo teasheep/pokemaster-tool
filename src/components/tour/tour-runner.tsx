@@ -224,6 +224,8 @@ export function TourRunner({ userId }: { userId: string }) {
     let slowTimer = 0;
     let cancelled = false;
     let start = 0;
+    /** 上一幀框到的元素 — 捲動/補間只在「換了元素」的那一刻做一次 */
+    let lastEl: HTMLElement | null = null;
 
     const tick = () => {
       if (cancelled) return;
@@ -236,18 +238,26 @@ export function TourRunner({ userId }: { userId: string }) {
       }
       const el = findTarget(name);
       if (el) {
-        const r = toRect(el);
-        const inView = fullyVisible(r, bottomInset());
-        animateUntil.current = inView ? performance.now() + MOVE_MS : 0;
-        if (!inView) {
-          const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-          el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+        if (el !== lastEl) {
+          lastEl = el;
+          const r = toRect(el);
+          const inView = fullyVisible(r, bottomInset());
+          animateUntil.current = inView ? performance.now() + MOVE_MS : 0;
+          if (!inView) {
+            const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+          }
+          setTargetEl(el);
+          setHop(null);
+          setLocating(false);
         }
-        setTargetEl(el);
-        setHop(null);
-        setLocating(false);
+        // 找到了**也不停** —— 目標可能中途消失 (例如這一步框的是側板, 使用者把它關了):
+        // 消失就走下面的指路/置中降級, 再出現就接回來。之後每幀只是確認它還在,
+        // 不重複 scrollIntoView (使用者自己捲走時不要跟他搶)。
+        raf = requestAnimationFrame(tick);
         return;
       }
+      lastEl = null;
       // 目標不在畫面上 → **改成指路**: 框住「進去那一頁的入口」, 等他自己點
       // (使用者:「應該指引使用者點哪裡可以連到那頁, 不是幫我開跟加一行廢話」)。
       // 已經在那一頁了就沒有路可指 (例如那一館還沒有賽事), 那才降級成置中說明卡。
@@ -308,9 +318,9 @@ export function TourRunner({ userId }: { userId: string }) {
   // ── 完成條件 1: 走到某一頁 ──
   useEffect(() => {
     if (!running || step?.advance.on !== "path") return;
-    const hit =
-      pathname.startsWith(step.advance.path) || pathname.includes(step.advance.path);
-    if (!hit) return;
+    // 前綴比對就夠 (「/gyms」也涵蓋走進某一館) — 不要用 includes, 那會把
+    // 任何剛好含這段字的網址都當成走到了
+    if (!pathname.startsWith(step.advance.path)) return;
     // 一律排到下一幀才動 state (effect 內同步 setState 會被 react-hooks 判成 cascading render)
     const raf = requestAnimationFrame(advance);
     return () => cancelAnimationFrame(raf);
@@ -374,7 +384,9 @@ export function TourRunner({ userId }: { userId: string }) {
       const inset = bottomInset();
       const topInset = barRef.current?.getBoundingClientRect().height ?? 0;
       const vp = { width: window.innerWidth, height: window.innerHeight };
-      const raw = targetEl ? toRect(targetEl) : null;
+      const raw0 = targetEl ? toRect(targetEl) : null;
+      // 目標剛被藏起來的那一幀 (輪詢下一幀才接手) — 0 尺寸當成沒有, 不要把框塌到左上角
+      const raw = raw0 && raw0.width > 0 && raw0.height > 0 ? raw0 : null;
       const box = raw ? (region === "corner" ? cornerRect(raw) : raw) : null;
       spotRectRef.current = box;
       const place = box

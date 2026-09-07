@@ -29,7 +29,7 @@ function tourAwareFetch(input: RequestInfo | URL, init?: RequestInit): Promise<R
   const url =
     typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const method = init?.method ?? (input instanceof Request ? input.method : "GET");
-  if (shouldSwallow(url, method)) return Promise.resolve(swallowResponse(init));
+  if (shouldSwallow(url, method)) return Promise.resolve(swallowResponse(url, init));
   return fetch(input, init);
 }
 
