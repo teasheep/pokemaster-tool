@@ -908,6 +908,17 @@ function PairsPanel({
 
   // 道館名單做成 state — 側板按 ★ 即時反映 (管理員可在這裡把拍組加進道館名單)
   const [gymSet, setGymSet] = useState<Set<string>>(() => new Set(gymPairIds));
+  /**
+   * 只看這位成員持有的 —— 與 /pairs 的「顯示全部 / 只看我持有的」是同一顆藥丸、同一個心智模型
+   * (2026-09-07 補: 道館拍組分頁收嚴之後, 「他還有什麼」只剩全圖鑑可看, 645 張太難找)。
+   * **預設關 (顯示全部)**, 與 /pairs 一致 —— 道館名單裡他沒有的那些灰卡才是這頁的重點。
+   */
+  const [ownedOnly, setOwnedOnly] = useState(false);
+  /**
+   * 這一輪操作過的卡 —— 開著「只看持有的」時把寶數循環回 0, 卡片會當場消失,
+   * 手就懸在半空 (/pairs 踩過同一個坑, 解法一樣: 操作過的留著顯示灰卡)。
+   */
+  const [stickyIds, setStickyIds] = useState<Set<string>>(() => new Set());
   const [panelPair, setPanelPair] = useState<ClientPairRecord | null>(null);
 
   /**
@@ -960,8 +971,9 @@ function PairsPanel({
         superAwakening: p.super_awakening,
       });
     }
-    return list;
-  }, [catalog, scope, gymSet, rowByPairId, deferredFilters, pairs, pairById]);
+    if (!ownedOnly) return list;
+    return list.filter((it) => it.owned || stickyIds.has(it.key));
+  }, [catalog, scope, gymSet, rowByPairId, deferredFilters, pairs, pairById, ownedOnly, stickyIds]);
 
   /** 清單還是舊的 (重篩/切範圍還在算) → 卡牆淡一下 */
   const stale = deferredFilters !== filters || scopePending;
@@ -1003,6 +1015,8 @@ function PairsPanel({
     (key: string) => {
       const rec = pairById.get(key);
       if (!rec) return;
+      // 開著「只看持有的」時循環回寶0 也要留在畫面上 (見 stickyIds)
+      setStickyIds((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
       const row = rowsRef.current.get(key);
       const grade = row?.grade ?? 0;
       const sa = row ? (row.super_awakening > 0 ? row.super_awakening : grade >= 6 ? 5 : 0) : 0;
@@ -1030,8 +1044,10 @@ function PairsPanel({
   return (
     <div className="space-y-3">
       {/* 與「全館拍組」同一種結構: 分頁決定看哪一批, 工具列只有 搜尋/排序/篩選。
-          手機兩個分頁等寬填滿一列 (44px 高), 桌機維持左靠的底線分頁 */}
-      <nav className="flex gap-1 border-b">
+          手機: 分頁與持有開關各自佔滿一列 (44px 高); 桌機: 底線分頁 + 靠右藥丸同一列。
+          排法與 /pairs 的 pairs-hub 一模一樣 —— 同一件事不要長出第二種版面。 */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:border-b">
+      <nav className="flex gap-1 border-b sm:border-b-0">
         {(["gym", "all"] as const).map((v) => (
           <button
             key={v}
@@ -1053,6 +1069,30 @@ function PairsPanel({
           </button>
         ))}
       </nav>
+      {/* 「看哪一批」(分頁) 與「看多少」(這顆) 是兩件事 —— 所以不進篩選列 */}
+      <div className="flex rounded-full border p-0.5 text-sm sm:mb-1 sm:ml-auto sm:text-xs">
+        {(
+          [
+            [false, "顯示全部"],
+            [true, "只看持有的"],
+          ] as const
+        ).map(([v, label]) => (
+          <button
+            key={label}
+            onClick={() => setOwnedOnly(v)}
+            className={cn(
+              // 44px 是這顆藥丸自己的高度 (外框的 p-0.5 + border 不算觸控目標)
+              "min-h-11 flex-1 rounded-full px-2.5 py-1 transition-colors sm:min-h-0 sm:flex-none",
+              ownedOnly === v
+                ? "bg-accent font-medium text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      </div>
 
       <PairFilterBar
         filters={filters}
