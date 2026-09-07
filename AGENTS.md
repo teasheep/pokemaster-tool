@@ -522,8 +522,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **PostgREST `onConflict` 不能引用 expression unique index** (如 `coalesce(round,-1)`) → 用 delete-then-insert
   並以 `.select()` 回傳筆數做誠實 toast。
 - **Workers 部署有傳播延遲**: 部署後立刻 probe 可能打到舊版, 等幾秒重試再判定。
-- **`redirect()` + `app/loading.tsx` = streaming**: 純 fetch 只會拿到「載入中」shell (200);
-  驗證導向要帶 `RSC: '1'` header 看 307。SSR 文字比對要先去掉 React 的 `<!-- -->`。
+- **`redirect()` + `app/loading.tsx` = streaming**: 純 fetch 只會拿到「載入中」shell (200)。
+  **不要只看 `RSC: '1'` 的狀態碼** (見安全紅線那節的更正) —— 判導向要看實際渲染出什麼。
+  SSR 文字比對要先去掉 React 的 `<!-- -->`。
 - **wrangler OAuth token 會過期**: deploy 失敗時請使用者重跑 `npx wrangler login` (互動式), 不要自己重試。
 - migrations 是 `setup-supabase.mjs` 對雲端 DATABASE_URL 直跑; 新 migration 記得跑一次並確認 `✓ committed`。
 - E2E 驗證登入頁: scratchpad 的 render-probe 模式 (service key `generateLink(magiclink)` + `verifyOtp` 合成 cookie)。
@@ -532,6 +533,39 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   不要拿其他成員試寫入 (曾把某成員的寶5 洗成寶1 再刪列, 事後才發現並手動還原)。
 
 ## 安全紅線
+
+- **middleware 對「還沒到期的 cookie」是樂觀放行, 不打網路** (2026-09-07, 決定與量測見下)。
+  判斷在 `lib/supabase/session-cookie.ts` 的 `proxyMode()` (純函式, `tests/session-cookie.test.ts` 釘住):
+  | 情況 | 做什麼 |
+  | --- | --- |
+  | 完全沒有 auth cookie | 訪客 —— 非公開路由直接導去 `/login` |
+  | token 還很新 (> 120 秒才到期) | **樂觀放行, 不問 Supabase** |
+  | 快到期 / 已過期 / cookie 讀不出來 / `/login`、`/register` | 走原本的完整流程 (`getUser()` 驗簽 + 輪替 cookie) |
+  **為什麼**: 已登入的每一次導覽原本要付兩趟跨太平洋的 auth 往返 (middleware 一趟 +
+  頁面 `getSessionUser()` 一趟)。實測 middleware 那趟 77-973ms, 而頁面自己的工作常常只有
+  63ms —— 整頁時間九成花在一個「要不要導去登入頁」的決定上。改完後那一趟是 **3-4ms**。
+  ⚠ **成立的三個前提, 動任何一個之前先回來看**:
+  1. **每個受保護的頁面/路由都自己 `getSessionUser()` 後 redirect / 401**
+     (2026-09-07 重新全數確認過)。**新增受保護頁面時一定要自己擋, 不可以只靠 middleware。**
+     當時唯一的例外是 `/api/catalog` (它的註解本來就寫「授權靠 middleware」), 已補上自己的 401。
+  2. token 快到期時仍走完整流程 (`REFRESH_MARGIN_S`), 輪替後的 cookie 才寫得回 response。
+  3. `/login` 與 `/register` 仍然權威判斷, 否則壞掉的 cookie 會在兩頁之間彈跳。
+  **`session-cookie.ts` 讀出來的東西一律不可信** (不驗簽章), 它只回答「要不要打網路」。
+  偽造 cookie 的人最多讓自己多渲染一次馬上被導走的頁面 —— 資料仍由 RLS 擋著。
+  讀不出來一律回 `authoritative`, 失效方向是「慢但正確」(哪天 @supabase/ssr 換 cookie 格式,
+  最壞就是回到今天的效能)。
+  **唯一的行為差異**: session 被撤銷但 access token 還沒到期時, 導向從 middleware (立刻 307)
+  搬到頁面 (先串流一格骨架再跳走)。人一樣會被登出, 只是多閃一下。
+  E2E 驗過的六條: 登入進得去 / 偽造 cookie 被頁面擋下 + `/api/catalog` 401 /
+  已登入開 `/login` 導去 `/gyms` / 過期 cookie 會**換到新的 token** /
+  session 撤銷後被導去 `/login` 且 cookie 被清掉 / 訪客導去 `/login`。
+- **驗證「導向」不要只看 `RSC: '1'` 的狀態碼** (2026-09-07 被坑過, 修正上面那條舊寫法):
+  沒帶 `?_rsc` 參數時 Next **自己**會 307 到帶參數的網址 —— 於是「有效 session」與
+  「偽造 cookie」看起來一模一樣 (兩者都是 `307 → /resources?_rsc`), 什麼都證明不了。
+  而 `app/loading.tsx` 蓋住全站, 所以純 fetch 一律拿到 200 的骨架。
+  **可靠的判法是看實際渲染出什麼**: 抓 body, 找頁面上獨有的字串 (有 = 真的進去了),
+  或找 `/login` (有 = 被擋下)。狀態碼在這個站上分不出來。
+
 
 - **`ref/` 永不進 git** (LINE 記錄、成員 email; .gitignore 已擋, 不要解除)。
 - `.env.local`、`.cloudflare-token` 不 commit; token 不貼進對話或文件。

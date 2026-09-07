@@ -19,6 +19,7 @@
 //  而 /pairs 本來就是公開頁且對訪客直送同一份投影。)
 
 import { CATALOG_VERSION, loadPairsForClient } from "@/lib/pairs/loader";
+import { getSessionUser } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,17 @@ export const dynamic = "force-dynamic";
 const CACHE_CONTROL = "private, max-age=31536000, immutable";
 
 export async function GET(req: Request) {
+  // **自己擋, 不要只靠 middleware** (2026-09-07): middleware 對「還沒到期的 cookie」
+  // 改成樂觀放行 (不打網路) 了, 所以它不再是這條路由的授權關卡。
+  // 這裡曾經是全站唯一「授權完全靠 middleware」的地方 —— 內容雖然只有圖鑑 (沒有個人資料,
+  // 而且靜態資產那條路徑本來就對外公開), 但每打一次要 45-65ms CPU, 不該對匿名開放。
+  if (!(await getSessionUser())) {
+    return new Response(JSON.stringify({ error: "需要登入" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
+
   const records = await loadPairsForClient();
   const etag = `"catalog-${CATALOG_VERSION}"`;
 

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 import type { Database } from "@/lib/supabase/types";
+import { hasSupabaseAuthCookie, proxyMode } from "@/lib/supabase/session-cookie";
 
 // /api/export 自己用個人金鑰授權 (給外部 AI 讀), 不能被導去登入頁
 const PUBLIC_ROUTES = [
@@ -18,20 +19,9 @@ const PUBLIC_ROUTES = [
   "/api/export",
 ];
 
-/**
- * 有沒有 Supabase 的 session cookie。
- *
- * @supabase/ssr 的 cookie 名 = storageKey = `sb-<project-ref>-auth-token`,
- * 內容太長時會切成 `.0` `.1` 分塊。這裡只看「在不在」, 不解析也不信任內容 —
- * 真正的驗證仍然是 `supabase.auth.getUser()` (下面) 與各頁自己的 `getSessionUser()`。
- *
- * 判定刻意放寬 (sb- 開頭且含 auth-token): 漏判 = 當成訪客 → 非公開路由導去登入頁
- * (fail-closed, 不會放行任何東西); 誤判 = 只是多走一次原本就會走的完整流程。
- * 之後若自訂 `cookieOptions.name`, 這裡要跟著改。
- */
-export function hasSupabaseAuthCookie(cookies: { name: string }[]): boolean {
-  return cookies.some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
-}
+// cookie 的判讀與「這一趟要不要打網路」的決定都在 session-cookie.ts (純函式, 有測試)。
+// hasSupabaseAuthCookie 從這裡再匯出一次 —— server.ts 一直是從 proxy 匯入它的。
+export { hasSupabaseAuthCookie };
 
 let warnedMissingEnv = false;
 
@@ -69,16 +59,36 @@ export async function proxySupabase(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  // 完全沒有 session cookie = 訪客: 不必建 Supabase client, 也不必問 Supabase。
+  // 這一趟要不要問 Supabase (session-cookie.ts, 純函式):
+  //   guest         完全沒有 cookie
+  //   optimistic    cookie 在、access token 還很新 → **不打網路**
+  //   authoritative 快到期 / 已過期 / 讀不出來 / 在登入註冊頁 → 走完整流程
+  const mode = proxyMode(request.cookies.getAll(), pathname, Date.now());
+
+  // 訪客: 不必建 Supabase client, 也不必問 Supabase。
   // (Worker 在 SJC、Supabase 在新加坡, 每一趟都是跨太平洋; 訪客本來就沒東西可刷新。)
-  // 已登入的人 (帶著 cookie) 仍然走下面的完整流程 —— getUser() 會刷新並輪替 session cookie,
-  // 少了它就是官方 SSR guide 點名的登出迴圈。
-  if (!hasSupabaseAuthCookie(request.cookies.getAll())) {
+  if (mode === "guest") {
     if (isPublic) return NextResponse.next({ request });
     // 沒有 cookie 就沒有「剛輪替的 session」要保留, 直接導向即可
     return NextResponse.redirect(loginUrl(request, pathname));
   }
 
+  // 樂觀通過 —— 這是整個改動的重點: 已登入者的每一次導覽原本都要付一趟跨太平洋的
+  // auth 往返 (實測 77-973ms, 常常比頁面自己的工作還久), 而那一趟只是為了做「要不要
+  // 導去登入頁」這個決定。真正的權威判斷在頁面的 getSessionUser() —— 它仍然是 getUser(),
+  // 仍然向 Supabase 驗簽。偽造 cookie 的人最多讓自己多渲染一次馬上被導走的頁面。
+  //
+  // ⚠ 成立的三個前提 (改動任何一個之前先回來看這裡):
+  //   1. **每個受保護的頁面/路由都自己 getSessionUser() 後 redirect / 401**
+  //      (2026-09-07 重新全數確認過; /api/catalog 當時是唯一的例外, 已補上自己的檢查)。
+  //      新增受保護的頁面時**一定要自己擋**, 不可以只靠 middleware。
+  //   2. token 快到期時仍然走完整流程 (REFRESH_MARGIN_S), 輪替後的 cookie 才寫得回去。
+  //   3. /login 與 /register 仍然權威判斷, 否則壞掉的 cookie 會在兩頁之間彈跳。
+  if (mode === "optimistic") {
+    return NextResponse.next({ request });
+  }
+
+  // 以下是權威流程: getUser() 會向 Supabase 驗簽, 並在需要時刷新 + 輪替 session cookie。
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {

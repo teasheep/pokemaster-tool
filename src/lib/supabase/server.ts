@@ -107,8 +107,11 @@ export const getSessionUser = cache(async () => {
 // 任何東西), 但只要哪天有人寫一個「用 service role + getSessionUser().id 判權限」的
 // server action, 就會從「多打一趟」升級成越權。省 250ms 不值得押這個。
 //
-// 想省那一趟的話, 該做的是另一件事: 讓 middleware 改成樂觀檢查 (只看 cookie 在不在與
-// 快不快過期, 不打網路), 由頁面那一次 getSessionUser() 當唯一權威。前提是
+// **這件事 2026-09-07 做掉了** (見 lib/supabase/session-cookie.ts 與 AGENTS 的那條):
+// middleware 改成樂觀檢查 (只看 cookie 在不在與快不快過期, 不打網路), 由頁面這一次
+// getSessionUser() 當唯一權威 —— 也就是說**下面這支函式現在是全站唯一的權威判斷**,
+// 每個受保護的頁面都必須呼叫它並自己 redirect。實測 middleware 那趟從 77-973ms 變成 3-4ms。
+// 當時確認過的三個前提是
 // (1) 每個受保護頁面都已經自己 redirect —— 這點目前成立 (2026-08 全數確認過),
 // (2) token 接近到期時仍然要走 getUser(), 讓輪替後的 cookie 寫得回 response,
 // (3) /login 與 /register 仍要權威判斷, 否則壞掉的 cookie 會在 /login ↔ /pairs 之間彈跳。
