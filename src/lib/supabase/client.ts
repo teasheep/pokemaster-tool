@@ -1,6 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 import type { Database } from "@/lib/supabase/types";
+import { shouldSwallow, swallowResponse } from "@/lib/supabase/practice-mode";
 
 /**
  * 取得 browser-side Supabase client。
@@ -15,7 +16,21 @@ export function createClient() {
   if (!url || !anonKey) {
     return createStubClient();
   }
-  return createBrowserClient<Database>(url, anonKey);
+  return createBrowserClient<Database>(url, anonKey, { global: { fetch: practiceAwareFetch } });
+}
+
+/**
+ * 使用教學的「練習模式」在這裡把寫入吞掉 (見 practice-mode.ts)。
+ * 判斷寫在**每一次 request 當下**, 不是建 client 的時候 —— 呼叫端普遍
+ * `useMemo(() => createClient(), [])`, 教學開始前就建好的 client 也必須攔得到。
+ * 平常 (沒在教學) 這裡就是原生 fetch, 一個判斷的成本。
+ */
+function practiceAwareFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url =
+    typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+  if (shouldSwallow(url, method)) return Promise.resolve(swallowResponse());
+  return fetch(input, init);
 }
 
 function createStubClient() {

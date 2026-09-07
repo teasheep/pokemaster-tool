@@ -481,9 +481,10 @@ function Roster({
       </button>
       {members
         .filter((m) => m.role !== "advisor")
-        .map((m) => (
+        .map((m, mi) => (
           <MemberRow
             key={m.id}
+            first={mi === 0}
             member={m}
             isMe={m.id === viewerMemberId}
             selected={m.id === selectedId}
@@ -523,6 +524,7 @@ function MemberRow({
   canManage,
   onSelect,
   onEdit,
+  first = false,
 }: {
   member: MemberItem;
   isMe: boolean;
@@ -530,9 +532,11 @@ function MemberRow({
   canManage: boolean;
   onSelect: () => void;
   onEdit: () => void;
+  /** 名冊第一位 — 使用教學要框的目標 (只標一位) */
+  first?: boolean;
 }) {
   return (
-    <div className="group relative">
+    <div className="group relative" data-tour={first ? "member-row" : undefined}>
       <MemberCard
         member={{
           id: member.id,

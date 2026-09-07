@@ -1,45 +1,40 @@
 "use client";
 
-// 使用教學的整片 overlay —— 一般產品導覽那一套: 把畫面壓暗、只留目標那一塊亮著,
-// 旁邊放一張卡說明, 下一步/上一步/略過。
+// 使用教學的整片 overlay —— 2026-09-07 起是**互動式**的:
+// 「讓使用者點一下試試看, 不用幫他切頁面, 自己點開側板、自己加寶數,
+//   教學完以後再還給使用者自行控制」
 //
-// 幾個刻意的選擇 (改之前先看):
-//  1. **遮罩就是 spotlight 自己的一圈超大 box-shadow**, 不是四塊拼出來的洞。
-//     一個元素、圓角與外框直接吃 Tailwind, 換步驟時也只有一個東西在動。
-//     沒有目標時把它縮成 0x0 —— 陰影照樣蓋滿整個畫面, 所以不需要第二個遮罩元素。
-//  2. **整層吃掉所有點擊** (連亮著的那塊也是)。教學是唯讀的 —— 讓人真的按下去就得
-//     處理「按錯了」「按了會換頁」兩種分岔, 教學步驟會跟畫面對不起來。要操作就按略過。
-//  3. **目標找不到就降級成置中的說明卡**, 不是卡住也不是跳過。
-//     「我要建立道館」這條路的讀者通常還沒有道館, 後面幾步要框的東西根本不存在。
-//  4. **手機不另寫一套版面**: 卡片寬度吃滿螢幕、底部自動讓開底部導覽列 (量它真實的高度,
-//     桌機那顆是 display:none 所以量到 0)。方向的挑法兩邊共用 (tour-place.ts)。
-//  5. 同一個 data-tour 在桌機 (header) 與手機 (底部導覽列) 各有一份 —— findTarget
-//     只挑**看得見的**那一個, 所以兩邊都會框到對的東西。
-//
-// ── 順不順的四條 (2026-09-07 使用者:「動效不夠絲滑」「按了下一步整個都要等一段時間」) ──
-//  A. **下一步要去的那一頁先 prefetch**。使用者在讀這一步的那幾秒就是預抓的時間窗,
-//     按下去時多半已經在快取裡 = 純 client 換頁。實測 dev 的 /pairs 一趟 0.5-1.0 秒,
-//     不預抓就是乾等。
-//  B. **每一幀的幾何直接寫進 DOM, 不走 React state**。框要跟著捲動走 = 每幀更新一次,
-//     用 setState 等於每幀把整張卡 (文字/按鈕) 重新 diff 一遍。這與首頁氛圍層是同一條
-//     教訓 (AGENTS「滑鼠視差: 逐張直接寫 style.transform」)。位移一律 translate3d。
-//  C. **位移補間只在「同一個畫面內換目標」時開**。要捲動才看得到的目標改成「框黏著元素走」,
-//     不做補間 —— 補間與捲動同時進行就是互相追, 那正是卡頓感的來源。
-//  D. **換步驟的當下先把上一步的框收掉**。留著它會在換頁後停在一個完全不相干的位置
-//     (元素已經卸載, 量不到新位置), 那是「按了下一步整個卡住」看起來最嚴重的地方。
+// 改之前先看這幾條:
+//  1. **教學不替使用者換頁**。要去別頁的步驟是框住導覽列的入口, 等他自己點到那一頁
+//     (advance: path)。卡住的人可以按卡片上的「幫我開」—— 那是他自己選的。
+//     (先前版本會 router.push 過去, 使用者說「不用幫他切頁面」。)
+//  2. **整層不吃點擊**。overlay 一律 pointer-events:none, 壓暗只是視覺 ——
+//     使用者要點什麼都點得到, 教學只是在旁邊看著。這也是「還給使用者自行控制」
+//     最省事的實作: 沒有東西需要「還」。
+//  3. **會動到資料的步驟標 practice** → 那段期間 Supabase 的寫入被吞掉
+//     (lib/supabase/practice-mode.ts), 畫面照變但不進資料庫。離開教學一定要關掉它,
+//     所有離開路徑都經過 tour-store 的 closeTour/finishTrack/backToChooser。
+//  4. **幾何每一幀直接寫進 DOM**, 不走 React state (框要跟著捲動走 = 每幀更新一次,
+//     用 setState 等於每幀重繪整張卡)。與首頁氛圍層同一條教訓。位移一律 translate3d。
+//  5. **位移補間只在「同一畫面內換目標」時開**; 要捲動的改成框黏著元素走
+//     (補間與捲動同時進行就是互相追, 那是卡頓感的來源)。
+//  6. 同一個 data-tour 在桌機 (header) 與手機 (底部導覽列) 各有一份 —— findTarget
+//     只挑**看得見的**那一個。
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { Check, Hand, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { setWritesBlocked, swallowedWrites } from "@/lib/supabase/practice-mode";
 import { cn } from "@/lib/utils";
 import { centerPlacement, cornerRect, placeCallout, type Rect } from "./tour-place";
-import { TRACKS, stepsFor } from "./tour-steps";
+import { CHOOSABLE, resolveAt, stepsFor, trackDef, TRACKS, type TourTrack } from "./tour-steps";
 import {
   backToChooser,
   closeTour,
+  finishTrack,
   goToStep,
   hasSeenTour,
   markTourSeen,
@@ -49,21 +44,16 @@ import {
   useTourState,
 } from "./tour-store";
 
-/**
- * 幾何要在**繪製前**就位, 不然開啟的第一幀會看到卡片停在左上角。
- * SSR 沒有版面可量, 退回 useEffect 只是為了不噴 React 的警告 ——
- * 這層 overlay 本來就只在 client 開啟後才渲染, server 不會走到。
- */
+/** 幾何要在繪製前就位, 不然開啟的第一幀會看到卡片停在左上角 */
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /** 同一個畫面內換目標時的位移補間長度 */
 const MOVE_MS = 220;
-/** 找目標找超過這麼久才顯示「還在載入」的掃光 (快的時候完全不出現, 才不會閃一下) */
-const SLOW_MS = 250;
-/** 找不到就放棄, 降級成置中說明卡 */
-const GIVE_UP_MS = 6000;
+/** 做對之後框閃綠的時間, 然後才進下一步 */
+const CHEER_MS = 620;
+/** 找目標找超過這麼久才顯示「還在找」的掃光 */
+const SLOW_MS = 300;
 
-/** 同名的 data-tour 可能有兩份 (桌機/手機各一) — 只要看得見的那一個 */
 function findTarget(name: string): HTMLElement | null {
   const els = Array.from(document.querySelectorAll<HTMLElement>(`[data-tour="${name}"]`));
   return (
@@ -79,9 +69,8 @@ function toRect(el: HTMLElement): Rect {
   return { top: r.top, left: r.left, width: r.width, height: r.height };
 }
 
-/** 底部被固定元素吃掉的高度 — 量手機底部導覽列本人 (桌機 sm:hidden → 0) */
+/** 底部被固定元素吃掉的高度 — 認位置不認名字: 貼著視窗底緣的那個 nav */
 function bottomInset(): number {
-  // 不認名字認位置: 貼著視窗底緣的那個 nav 才是底部導覽列
   for (const nav of document.querySelectorAll("nav")) {
     const r = nav.getBoundingClientRect();
     if (r.height > 0 && r.bottom >= window.innerHeight - 1) return r.height;
@@ -89,7 +78,6 @@ function bottomInset(): number {
   return 0;
 }
 
-/** 整個看得到 = 不用捲動 = 這一步可以做位移補間 (見檔頭 C) */
 function fullyVisible(r: Rect, inset: number): boolean {
   return (
     r.top >= 0 &&
@@ -99,11 +87,6 @@ function fullyVisible(r: Rect, inset: number): boolean {
   );
 }
 
-/**
- * 第一次自動跳出來的地方 = 登入後的落地頁。
- * /gyms 在只有一個道館時會轉導成 /gyms/<id>/members, 所以兩個都要算。
- * 深連結 (分享頁、單場看板) 刻意不跳 —— 那是有目的地開進來的人。
- */
 function isLandingPath(p: string): boolean {
   if (p === "/gyms") return true;
   const parts = p.split("/");
@@ -116,35 +99,46 @@ export function TourRunner({ userId }: { userId: string }) {
   const pathname = usePathname();
 
   const [targetEl, setTargetEl] = useState<HTMLElement | null>(null);
-  /** 還在等目標出現 (換頁中 / 這一頁沒有) — 一個步驟只變兩次, 不是每幀 */
   const [locating, setLocating] = useState(true);
-  /** 等超過 SLOW_MS 才顯示掃光 */
   const [slow, setSlow] = useState(false);
+  /** 剛做對 —— 框閃綠 + 打勾 */
+  const [cheer, setCheer] = useState(false);
 
   const spotRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const primaryRef = useRef<HTMLButtonElement | null>(null);
   const autoOpened = useRef(false);
-  /** 卡片高度 — 放 ref 不放 state: 它只是擺放的輸入, 不需要為它重繪 */
   const cardHRef = useRef(180);
-  /** 這個時間點之前的幾何更新要做補間 (見檔頭 C) */
   const animateUntil = useRef(0);
+  /** 目標的目前矩形 (含 corner 換算) — 判斷點擊有沒有點在框裡要用 */
+  const spotRectRef = useRef<Rect | null>(null);
+  const checkRef = useRef<HTMLSpanElement | null>(null);
 
   const steps = s.track ? stepsFor(s.track) : [];
   const step = s.phase === "run" ? steps[s.step] : undefined;
   const running = s.open && s.phase === "run" && Boolean(step);
+  const last = running && s.step === steps.length - 1;
+  const interactive = step ? step.advance.on !== "next" : false;
 
-  // ── 1. 第一次自己跳出來 ──
+  const advance = useCallback(() => {
+    setCheer(true);
+    window.setTimeout(() => {
+      setCheer(false);
+      if (last) finishTrack();
+      else goToStep(s.step + 1);
+    }, CHEER_MS);
+  }, [last, s.step]);
+
+  // ── 第一次自己跳出來 ──
   useEffect(() => {
     if (autoOpened.current || !isLandingPath(pathname) || hasSeenTour(userId)) return;
     autoOpened.current = true;
-    // 開的當下就記「看過了」——「預設第一次會跳」= 就跳這麼一次,
-    // 不管他是走完、略過還是按 Esc, 都不該在下一次換頁再彈一次。
+    // 開的當下就記「看過了」= 就跳這麼一次, 不管他走完、略過還是按 Esc
     markTourSeen(userId);
     openTour(true);
   }, [pathname, userId]);
 
-  // ── 2. 找出使用者的道館 (後面幾步要用它拼網址) ──
+  // ── 找出使用者的道館 (「幫我開」要用它拼網址) ──
   useEffect(() => {
     if (!s.open || s.gymId) return;
     const parts = pathname.split("/");
@@ -168,46 +162,39 @@ export function TourRunner({ userId }: { userId: string }) {
     };
   }, [s.open, s.gymId, pathname, userId]);
 
-  // ── 3. 這一步在別頁就先換過去 ──
+  // ── 練習模式: 只在標了 practice 的步驟開著 ──
   useEffect(() => {
-    if (!running || !step) return;
-    const want = step.path({ gymId: s.gymId });
-    if (!want) return;
-    const here = window.location.pathname + window.location.search;
-    if (here !== want) router.push(want);
-  }, [running, step, s.gymId, pathname, router]);
+    setWritesBlocked(Boolean(running && step?.practice));
+  }, [running, step]);
 
-  // ── 3b. 下一步要去的那一頁先抓起來 (見檔頭 A) ──
-  // 選擇卡階段就把兩條路的第一頁都抓了 —— 那時他正在挑, 兩條都可能被挑中。
+  // ── 下一步大概會去哪, 先抓起來 (使用者自己點過去時就不用等) ──
   useEffect(() => {
     if (!s.open) return;
-    const ctx = { gymId: s.gymId };
-    const want = new Set<string>();
+    const paths = new Set<string>();
     if (s.phase === "choose") {
-      for (const t of TRACKS) {
-        const p = stepsFor(t.id)[0]?.path(ctx);
-        if (p) want.add(p);
+      for (const id of CHOOSABLE) {
+        const p = resolveAt(stepsFor(id)[0]?.at, s.gymId);
+        if (p) paths.add(p);
       }
     } else if (s.track) {
-      const next = stepsFor(s.track)[s.step + 1]?.path(ctx);
-      if (next) want.add(next);
+      for (const n of [s.step, s.step + 1]) {
+        const p = resolveAt(stepsFor(s.track)[n]?.at, s.gymId);
+        if (p) paths.add(p);
+      }
     }
-    for (const p of want) router.prefetch(p);
+    for (const p of paths) router.prefetch(p);
   }, [s.open, s.phase, s.track, s.step, s.gymId, router]);
 
-  // ── 4. 等目標出現 (換頁 + 骨架 + 645 張卡都要時間) ──
-  // rAF 輪詢而不是 setTimeout(100): 元素一掛上去下一幀就框得到, 不會多等 100ms。
+  // ── 找目標 (rAF 輪詢: 元素一掛上去下一幀就框得到) ──
   useEffect(() => {
     const name = running ? step?.target : undefined;
     let raf = 0;
     let slowTimer = 0;
     let cancelled = false;
-    const start = performance.now();
 
     const tick = () => {
       if (cancelled) return;
       if (!name) {
-        // 這一步不框東西 → 直接進置中說明卡
         setTargetEl(null);
         setLocating(false);
         return;
@@ -216,7 +203,6 @@ export function TourRunner({ userId }: { userId: string }) {
       if (el) {
         const r = toRect(el);
         const inView = fullyVisible(r, bottomInset());
-        // 同一個畫面內就補間過去; 要捲動的話讓框黏著元素走 (見檔頭 C)
         animateUntil.current = inView ? performance.now() + MOVE_MS : 0;
         if (!inView) {
           const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -226,16 +212,11 @@ export function TourRunner({ userId }: { userId: string }) {
         setLocating(false);
         return;
       }
-      if (performance.now() - start > GIVE_UP_MS) {
-        setTargetEl(null);
-        setLocating(false);
-        return;
-      }
+      // 找不到就一直找 —— 使用者可能還在別頁, 等他自己走過來 (不再自動導航)
+      setTargetEl(null);
       raf = requestAnimationFrame(tick);
     };
 
-    // 先收掉上一步的框 (見檔頭 D)。setState 一律在 rAF/timeout 裡 ——
-    // effect 內同步 setState 會被 react-hooks 判成 cascading render。
     slowTimer = window.setTimeout(() => setSlow(true), SLOW_MS);
     raf = requestAnimationFrame(() => {
       if (cancelled) return;
@@ -251,7 +232,58 @@ export function TourRunner({ userId }: { userId: string }) {
     };
   }, [running, step, pathname]);
 
-  // ── 5. 幾何: 每一幀直接寫進 DOM (見檔頭 B) ──
+  // ── 完成條件 1: 走到某一頁 ──
+  useEffect(() => {
+    if (!running || step?.advance.on !== "path") return;
+    const hit =
+      pathname.startsWith(step.advance.path) || pathname.includes(step.advance.path);
+    if (!hit) return;
+    // 一律排到下一幀才動 state (effect 內同步 setState 會被 react-hooks 判成 cascading render)
+    const raf = requestAnimationFrame(advance);
+    return () => cancelAnimationFrame(raf);
+  }, [running, step, pathname, advance]);
+
+  // ── 完成條件 2: 某個東西出現了 (側板) ──
+  useEffect(() => {
+    if (!running || step?.advance.on !== "appear") return;
+    const want = step.advance.target;
+    let raf = 0;
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      if (findTarget(want)) {
+        advance();
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [running, step, advance]);
+
+  // ── 完成條件 3: 點在框裡 ──
+  // 用 capture 的 pointerdown: 就算目標自己 stopPropagation 也聽得到, 而且不干涉那個點擊
+  // (overlay 本來就 pointer-events:none, 事件照樣送到真正的按鈕上)。
+  useEffect(() => {
+    if (!running || step?.advance.on !== "click") return;
+    const onDown = (e: PointerEvent) => {
+      const r = spotRectRef.current;
+      if (!r) return;
+      const inside =
+        e.clientX >= r.left &&
+        e.clientX <= r.left + r.width &&
+        e.clientY >= r.top &&
+        e.clientY <= r.top + r.height;
+      if (inside) advance();
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    return () => document.removeEventListener("pointerdown", onDown, true);
+  }, [running, step, advance]);
+
+  // ── 幾何: 每一幀直接寫進 DOM ──
   const region = step?.region;
   useIsoLayoutEffect(() => {
     if (!s.open) return;
@@ -268,6 +300,7 @@ export function TourRunner({ userId }: { userId: string }) {
       const vp = { width: window.innerWidth, height: window.innerHeight };
       const raw = targetEl ? toRect(targetEl) : null;
       const box = raw ? (region === "corner" ? cornerRect(raw) : raw) : null;
+      spotRectRef.current = box;
       const place = box
         ? placeCallout({
             target: box,
@@ -280,12 +313,16 @@ export function TourRunner({ userId }: { userId: string }) {
 
       if (spot) {
         spot.style.transitionDuration = ms;
-        // 沒有目標 = 縮成 0x0 擺在畫面中央: 那圈超大陰影照樣蓋滿整片
         spot.style.transform = box
           ? `translate3d(${Math.round(box.left)}px, ${Math.round(box.top)}px, 0)`
           : `translate3d(${Math.round(vp.width / 2)}px, ${Math.round(vp.height / 2)}px, 0)`;
         spot.style.width = `${box ? Math.round(box.width) : 0}px`;
         spot.style.height = `${box ? Math.round(box.height) : 0}px`;
+      }
+      // 打勾跟著框的右上角走 (位置也在這裡寫, render 期間不可以讀 ref)
+      const check = checkRef.current;
+      if (check && box) {
+        check.style.transform = `translate3d(${Math.round(box.left + box.width - 12)}px, ${Math.round(box.top - 12)}px, 0)`;
       }
       card.style.transitionDuration = ms;
       card.style.transform = `translate3d(${place.left}px, ${place.top}px, 0)`;
@@ -297,7 +334,6 @@ export function TourRunner({ userId }: { userId: string }) {
     };
 
     apply();
-    // capture: true — 目標可能在自己會捲的框裡 (PairPicker 那種)
     window.addEventListener("scroll", schedule, true);
     window.addEventListener("resize", schedule);
     const ro = new ResizeObserver(schedule);
@@ -316,94 +352,128 @@ export function TourRunner({ userId }: { userId: string }) {
     if (el) cardHRef.current = el.offsetHeight || cardHRef.current;
   }, []);
 
-  // 焦點: 每換一步就落在主要按鈕上 (鍵盤操作才走得下去)
-  useEffect(() => {
-    if (s.open) primaryRef.current?.focus();
-  }, [s.open, s.phase, s.step]);
-
-  // Esc 關閉 + 焦點留在卡片裡 (整層是 modal)
+  // Esc 關閉。**不做焦點鎖** —— 這一版的教學不搶控制權, 使用者要操作畫面就讓他操作。
   useEffect(() => {
     if (!s.open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeTour();
-      }
-    };
-    const onFocusIn = (e: FocusEvent) => {
-      const card = cardRef.current;
-      if (card && e.target instanceof Node && !card.contains(e.target)) {
-        primaryRef.current?.focus();
-      }
+      if (e.key === "Escape") closeTour();
     };
     window.addEventListener("keydown", onKey);
-    document.addEventListener("focusin", onFocusIn);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.removeEventListener("focusin", onFocusIn);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [s.open]);
+
+  // 離開頁面 / 元件卸載時一定要把練習模式關掉 (寫入被吞掉是很難察覺的失敗)
+  useEffect(() => () => setWritesBlocked(false), []);
 
   if (!s.open) return null;
 
-  const last = running && s.step === steps.length - 1;
   const onTarget = Boolean(targetEl);
+  const goHere = resolveAt(step?.at, s.gymId);
+  const offTrack = running && !onTarget && !locating;
+  const def = s.track ? trackDef(s.track) : null;
+  const nextTrack = def?.next;
 
   return (
-    // z-[60]: 壓過 sticky header 與底部導覽列 (z-40) 以及 Radix 的 dialog/dropdown (z-50)
-    <div className="fixed inset-0 z-[60]" role="presentation">
+    // pointer-events-none: 整層只負責「看」, 使用者要點什麼都點得到 (見檔頭 2)
+    <div className="pointer-events-none fixed inset-0 z-[60]" role="presentation">
       <div
         ref={spotRef}
         aria-hidden
-        className={cn(
-          // left/top 固定 0, 位置一律走 transform (合成器處理, 不會每幀重算版面)
-          "pointer-events-none absolute left-0 top-0 rounded-lg",
-          "transition-[transform,width,height] ease-out motion-reduce:transition-none",
-          onTarget ? "ring-2 ring-primary" : "ring-0"
-        )}
         style={{
-          // 洞以外整片壓暗 — 深淺色共用同一個值 (壓的是畫面, 不是主題色)
-          boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.55)",
+          // 洞以外整片壓暗。0.45 比原本的 0.55 淡 —— 畫面還能操作, 不要壓得像不能碰
+          boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.45)",
+          ...(interactive && onTarget && !cheer
+            ? ({ "--tour-pulse-color": "var(--color-primary)" } as React.CSSProperties)
+            : {}),
         }}
+        className={cn(
+          "absolute left-0 top-0 rounded-lg outline-2 outline-offset-2",
+          "transition-[transform,width,height] ease-out motion-reduce:transition-none",
+          cheer
+            ? "outline-emerald-500"
+            : onTarget
+              ? "outline-primary"
+              : "outline-transparent",
+          // 「換你點」的目標外圈脈動一下 (做對之後就停)
+          interactive && onTarget && !cheer
+            ? "animate-tour-pulse motion-reduce:animate-none"
+            : null
+        )}
       />
+
+      {/* 做對了的打勾 —— 位置在 apply() 裡跟著框寫, 這裡只切換看得見/看不見 */}
+      <span
+        ref={checkRef}
+        aria-hidden
+        className={cn(
+          "absolute left-0 top-0 flex h-6 w-6 origin-center items-center justify-center rounded-full",
+          "bg-emerald-500 text-white shadow-lg transition-[opacity,scale] duration-200 motion-reduce:transition-none",
+          cheer && onTarget ? "scale-100 opacity-100" : "scale-50 opacity-0"
+        )}
+      >
+        <Check className="h-4 w-4" strokeWidth={3} />
+      </span>
 
       <div
         ref={setCardRef}
         role="dialog"
-        aria-modal="true"
+        aria-modal="false"
         aria-labelledby="tour-title"
         className={cn(
-          "absolute left-0 top-0 overflow-hidden rounded-xl border bg-card p-4 shadow-xl",
-          "transition-[transform,width] ease-out motion-reduce:transition-none"
+          // 卡片自己要可以點 (整層是 pointer-events-none)
+          "pointer-events-auto absolute left-0 top-0 overflow-hidden rounded-2xl border bg-card p-4 shadow-2xl",
+          "transition-[transform,width] ease-out motion-reduce:transition-none",
+          "animate-fade-in"
         )}
       >
-        {/* 還在等下一頁 → 頂邊一條掃光 (全站的骨架 utility, 不是轉圈圈)。
-            250ms 內找到目標就完全不會出現。 */}
         {running && locating && slow ? (
           <span aria-hidden className="skeleton absolute inset-x-0 top-0 h-0.5" />
         ) : null}
 
         {running && step ? (
           <>
-            <div className="flex items-start justify-between gap-3">
-              <h2 id="tour-title" className="text-base font-semibold leading-tight">
-                {step.title}
-              </h2>
-              <span className="mt-0.5 shrink-0 tabular-nums text-xs text-muted-foreground">
-                {s.step + 1} / {steps.length}
+            <div className="flex items-center gap-2">
+              {interactive ? (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                  <Hand className="h-3 w-3" />
+                  換你試試
+                </span>
+              ) : null}
+              <span className="ml-auto flex items-center gap-1" aria-label={`第 ${s.step + 1} 步, 共 ${steps.length} 步`}>
+                {steps.map((_, i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all duration-200 motion-reduce:transition-none",
+                      i === s.step ? "w-4 bg-primary" : i < s.step ? "w-1.5 bg-primary/40" : "w-1.5 bg-muted"
+                    )}
+                  />
+                ))}
               </span>
             </div>
+
+            <h2 id="tour-title" className="mt-2 text-base font-semibold leading-snug">
+              {step.title}
+            </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-            {!locating && !onTarget ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                (這一步要指的東西現在不在畫面上 —— 內容一樣看得完)
+
+            {offTrack ? (
+              <p className="mt-2 rounded-lg bg-muted/60 px-2.5 py-2 text-xs text-muted-foreground">
+                這一步要指的東西不在這一頁
+                {goHere ? " — 按下面的「幫我開」我就帶你過去。" : "。"}
               </p>
             ) : null}
+
             <div className="mt-4 flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={closeTour}>
-                略過
+                結束教學
               </Button>
               <div className="ml-auto flex items-center gap-2">
+                {offTrack && goHere ? (
+                  <Button variant="outline" size="sm" onClick={() => router.push(goHere)}>
+                    幫我開
+                  </Button>
+                ) : null}
                 <Button
                   variant="outline"
                   size="sm"
@@ -411,16 +481,20 @@ export function TourRunner({ userId }: { userId: string }) {
                 >
                   {s.step === 0 ? "回上頁" : "上一步"}
                 </Button>
+                {/* 互動步驟也留一顆「跳過這步」—— 做不到的人不能被卡住 */}
                 <Button
                   ref={primaryRef}
                   size="sm"
-                  onClick={() => (last ? closeTour() : goToStep(s.step + 1))}
+                  variant={interactive ? "outline" : "default"}
+                  onClick={() => (last ? finishTrack() : goToStep(s.step + 1))}
                 >
-                  {last ? "完成" : "下一步"}
+                  {interactive ? "跳過這步" : last ? "看完了" : "下一步"}
                 </Button>
               </div>
             </div>
           </>
+        ) : s.phase === "done" ? (
+          <DoneCard trackTitle={def?.title ?? ""} nextTrack={nextTrack ?? null} />
         ) : (
           <>
             <div className="flex items-start justify-between gap-3">
@@ -438,20 +512,25 @@ export function TourRunner({ userId }: { userId: string }) {
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
               {s.auto
-                ? "第一次來 — 挑一段看, 之後在右上角頭像選單裡隨時能再叫出來。"
-                : "挑一段看。"}
+                ? "第一次來 — 挑一段跟著點一次，比讀說明快。之後在右上角頭像選單裡隨時能再叫出來。"
+                : "挑一段跟著點一次。"}
             </p>
             <div className="mt-3 grid gap-2">
-              {TRACKS.map((t, i) => (
+              {TRACKS.filter((t) => CHOOSABLE.includes(t.id)).map((t, i) => (
                 <button
                   key={t.id}
                   ref={i === 0 ? primaryRef : undefined}
                   type="button"
                   onClick={() => startTrack(t.id)}
-                  className="flex min-h-14 w-full flex-col items-start justify-center gap-0.5 rounded-lg border px-3 py-2 text-left transition-colors hover:bg-accent"
+                  className="group/track flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition-all hover:border-primary hover:bg-accent active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100"
                 >
-                  <span className="text-sm font-medium">{t.title}</span>
-                  <span className="text-xs text-muted-foreground">{t.hint}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">{t.title}</span>
+                    <span className="block text-xs text-muted-foreground">{t.hint}</span>
+                  </span>
+                  <span className="shrink-0 text-muted-foreground transition-transform group-hover/track:translate-x-0.5 motion-reduce:transition-none">
+                    →
+                  </span>
                 </button>
               ))}
             </div>
@@ -464,5 +543,59 @@ export function TourRunner({ userId }: { userId: string }) {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * 收尾卡。有下一段就順口問一句 (使用者:「道館戰教學接在成員教學的後面, 但不強迫看」),
+ * 所以「不用了」與「好啊」是同樣大小的兩顆, 不是一顆主鈕加一行小字。
+ */
+function DoneCard({ trackTitle, nextTrack }: { trackTitle: string; nextTrack: TourTrack | null }) {
+  const next = nextTrack ? trackDef(nextTrack) : null;
+  // 練習模式吞掉過寫入 → 老實告訴使用者, 並讓「完成」重新整理回真實資料
+  const dirty = swallowedWrites() > 0;
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
+          <Check className="h-4 w-4" strokeWidth={3} />
+        </span>
+        <h2 id="tour-title" className="text-base font-semibold">
+          {trackTitle} — 看完了
+        </h2>
+      </div>
+      {dirty ? (
+        <p className="mt-2 rounded-lg bg-muted/60 px-2.5 py-2 text-xs text-muted-foreground">
+          剛剛練習時調的練度<strong className="font-semibold">沒有</strong>存進資料庫（那是練習用的）。
+          按「完成」會重新載入，畫面就回到你真正的資料。
+        </p>
+      ) : null}
+      {next ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          還有「{next.title}」這一段（{next.hint}）—— 現在看，還是之後從頭像選單再叫？
+        </p>
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground">
+          之後想再看一次，右上角頭像選單裡的「使用教學」隨時叫得出來。
+        </p>
+      )}
+      <div className="mt-4 flex items-center justify-end gap-2">
+        <Button
+          variant={next ? "outline" : "default"}
+          size="sm"
+          onClick={() => {
+            closeTour();
+            if (dirty) window.location.reload();
+          }}
+        >
+          {next ? "不用了" : "完成"}
+        </Button>
+        {next ? (
+          <Button size="sm" onClick={() => startTrack(next.id)}>
+            繼續看
+          </Button>
+        ) : null}
+      </div>
+    </>
   );
 }

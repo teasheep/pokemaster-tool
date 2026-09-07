@@ -41,8 +41,8 @@ export function GymTabs({ gymId }: { gymId: string }) {
   //  next.config 也把 /guides /activity 轉導回 members, 直接輸入網址也進不去)
   // (AI 串接改成個人的「資料連線」, 在頭像選單底下 — 金鑰跟人走不跟道館走)
   const tabs = [
-    { href: `${base}/members`, label: "成員與拍組", match: [`${base}/pairs`] },
-    { href: `${base}/battles`, label: "道館戰" },
+    { href: `${base}/members`, label: "成員與拍組", match: [`${base}/pairs`], tour: "gym-tab-members" },
+    { href: `${base}/battles`, label: "道館戰", tour: "gym-tab-battles" },
     { href: `${base}/teams`, label: "隊伍庫" },
   ];
 
@@ -58,6 +58,7 @@ export function GymTabs({ gymId }: { gymId: string }) {
         <Link
           key={t.href}
           href={t.href}
+          data-tour={t.tour}
           className={cn(
             // 等寬之後文字置中; 觸控裝置把每格撐到 44px (pointer-coarse, 與寬度無關)
             "relative flex items-center justify-center whitespace-nowrap border-b-2 px-2 py-2 text-sm transition-colors",

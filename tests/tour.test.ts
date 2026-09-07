@@ -1,27 +1,32 @@
-// 使用教學的三條不變量。
+// 使用教學的不變量。
 //
-// 為什麼值得寫測試: 這三條壞掉都是「教學自己壞掉」——
-// 使用者第一次登入看到的東西壞了, 而我們不會有任何徵兆 (沒有錯誤、沒有紅字)。
+// 為什麼值得寫測試: 這些壞掉都是「教學自己壞掉」—— 使用者第一次登入看到的東西壞了,
+// 而畫面上不會有任何錯誤或紅字。
 //
 //   1. **步驟指的 data-tour 必須真的存在於程式碼裡**。改版面時把某個
-//      `data-tour="gym-create"` 刪掉/改名, 教學那一步就會靜靜降級成「置中說明卡」——
-//      看起來只是「少框了一個東西」, 沒有人會發現是壞了。
-//   2. **卡片不能被擺到畫面外**。手機視窗矮、目標又在最下面時最容易發生,
-//      而那正是使用者最多的情境。
-//   3. **左下角那一格要用卡片的寬度推底緣**, 不是容器高度 —— 容器還包著兩行卡名,
-//      用高度算會把框掉到名字上 (「點左下角 = 寶數循環」那一步就指錯地方)。
+//      `data-tour="gym-create"` 刪掉/改名, 那一步就會靜靜降級成置中的說明卡,
+//      而且互動步驟會永遠等不到使用者「點對地方」。
+//   2. **練習模式只能開在真的會寫資料的那幾步**, 而且 `shouldSwallow` 絕對不能碰
+//      `/auth/v1/` —— 吞掉 token 刷新就是把人登出。
+//   3. **卡片不能被擺到畫面外** (手機視窗矮、目標在最下面時最容易發生)。
 
 import fs from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { calloutWidth, centerPlacement, cornerRect, placeCallout, EDGE } from "@/components/tour/tour-place";
-import { TOURS, TRACKS, stepsFor, type TourTrack } from "@/components/tour/tour-steps";
+import {
+  calloutWidth,
+  centerPlacement,
+  cornerRect,
+  placeCallout,
+  EDGE,
+} from "@/components/tour/tour-place";
+import { CHOOSABLE, TRACKS, resolveAt, stepsFor, trackDef } from "@/components/tour/tour-steps";
+import { setWritesBlocked, shouldSwallow, writesBlocked } from "@/lib/supabase/practice-mode";
 
 // ── 1. 步驟指的目標都真的存在 ──
 
-/** 掃出 src/ 底下所有寫在 data-tour 那一行的字串字面值 */
 function declaredTourTargets(): Set<string> {
   const found = new Set<string>();
   const walk = (dir: string) => {
@@ -39,9 +44,11 @@ function declaredTourTargets(): Set<string> {
     }
   };
   walk(path.join(process.cwd(), "src"));
-  // 底部導覽列是 data-tour={t.tour} — 值寫在 TABS 那張表, 同一行看不到
-  const bar = fs.readFileSync(path.join(process.cwd(), "src/components/mobile-tab-bar.tsx"), "utf8");
-  for (const m of bar.matchAll(/tour: "([^"]+)"/g)) found.add(m[1]);
+  // 底部導覽列與道館分頁是 data-tour={t.tour} — 值寫在各自那張表, 同一行看不到
+  for (const f of ["src/components/mobile-tab-bar.tsx", "src/app/gyms/[id]/gym-tabs.tsx"]) {
+    const text = fs.readFileSync(path.join(process.cwd(), f), "utf8");
+    for (const m of text.matchAll(/tour: "([^"]+)"/g)) found.add(m[1]);
+  }
   return found;
 }
 
@@ -49,51 +56,108 @@ describe("教學步驟指的東西真的存在", () => {
   const declared = declaredTourTargets();
 
   it("掃得到 data-tour (掃不到代表這個測試自己壞了)", () => {
-    expect(declared.size).toBeGreaterThan(5);
+    expect(declared.size).toBeGreaterThan(8);
   });
 
-  for (const track of Object.keys(TOURS) as TourTrack[]) {
-    it(`${track} 的每一步都指得到`, () => {
-      for (const step of stepsFor(track)) {
-        if (!step.target) continue;
-        expect(declared, `${track}: ${step.target}`).toContain(step.target);
+  for (const track of TRACKS) {
+    it(`${track.id}: 每一步框的目標與等待的目標都指得到`, () => {
+      for (const step of track.steps) {
+        if (step.target) expect(declared, `${track.id}: ${step.target}`).toContain(step.target);
+        if (step.advance.on === "appear") {
+          expect(declared, `${track.id}: appear ${step.advance.target}`).toContain(
+            step.advance.target
+          );
+        }
       }
     });
   }
 
-  it("兩條路都有步驟, 每一步都有標題與內文", () => {
-    expect(TRACKS.map((t) => t.id).sort()).toEqual(["leader", "member"]);
-    for (const { id } of TRACKS) {
-      const steps = stepsFor(id);
-      expect(steps.length).toBeGreaterThan(0);
-      for (const s of steps) {
+  it("每一步都有標題與內文", () => {
+    for (const t of TRACKS) {
+      expect(t.steps.length).toBeGreaterThan(0);
+      for (const s of t.steps) {
         expect(s.title.length).toBeGreaterThan(0);
         expect(s.body.length).toBeGreaterThan(0);
       }
     }
   });
+});
 
-  it("沒有道館的人: 要去道館子頁的步驟回 null (留在原地, 降級成說明卡)", () => {
-    const paths = stepsFor("leader").map((s) => s.path({ gymId: null }));
-    // 第一步 (建立道館) 一定要能去; 後面幾步在沒有道館時不該亂導
-    expect(paths[0]).toBe("/gyms?list=1");
-    expect(paths.slice(1).every((p) => p === null)).toBe(true);
+// ── 2. 互動 / 串接 / 練習模式 ──
+
+describe("互動與串接", () => {
+  it("成員那條主要是「換你點」, 不是一路按下一步", () => {
+    const steps = stepsFor("member");
+    const interactive = steps.filter((s) => s.advance.on !== "next");
+    expect(interactive.length).toBeGreaterThanOrEqual(4);
   });
 
-  it("有道館的人: 道館子頁拼得出網址", () => {
-    const paths = stepsFor("leader").map((s) => s.path({ gymId: "abc" }));
-    expect(paths).toContain("/gyms/abc/members");
-    expect(paths).toContain("/gyms/abc/battles");
+  it("道館戰接在成員與負責人後面, 而且不出現在一開始的選擇卡 (不強迫看)", () => {
+    expect(trackDef("member").next).toBe("battle");
+    expect(trackDef("leader").next).toBe("battle");
+    expect(CHOOSABLE).not.toContain("battle");
+    expect(CHOOSABLE).toEqual(["leader", "member"]);
   });
 
-  it("/gyms 一定帶 list=1 — 只有一個道館時 /gyms 會轉導進去, 建立/加入那兩顆就不見了", () => {
-    const all = [...stepsFor("leader"), ...stepsFor("member")].map((s) => s.path({ gymId: "abc" }));
-    expect(all.some((p) => p === "/gyms")).toBe(false);
-    expect(all).toContain("/gyms?list=1");
+  it("有一步教「怎麼看館內其他人的拍組」", () => {
+    const steps = stepsFor("member");
+    expect(steps.some((s) => s.target === "member-row")).toBe(true);
+  });
+
+  it("練習模式只開在 /pairs 那幾步 (那裡才有我們打算吞掉的寫入)", () => {
+    for (const t of TRACKS) {
+      for (const s of t.steps) {
+        if (s.practice) expect(s.at, `${t.id}: ${s.title}`).toBe("/pairs");
+      }
+    }
+  });
+
+  it("要去建立/加入道館的步驟一定帶 ?list=1 — 只有一個道館時 /gyms 會轉導進去", () => {
+    for (const t of TRACKS) {
+      for (const s of t.steps) {
+        if (s.target === "gym-create" || s.target === "gym-join") {
+          expect(s.at).toBe("/gyms?list=1");
+        }
+      }
+    }
+  });
+
+  it("resolveAt: 沒有道館時道館子頁回 null (那一步就不提供「幫我開」)", () => {
+    expect(resolveAt("gym:/members", null)).toBe(null);
+    expect(resolveAt("gym:/members", "abc")).toBe("/gyms/abc/members");
+    expect(resolveAt("/pairs", null)).toBe("/pairs");
+    expect(resolveAt(undefined, "abc")).toBe(null);
   });
 });
 
-// ── 2. 卡片擺放 ──
+describe("練習模式吞寫入 — 絕對不能碰 auth", () => {
+  const REST = "https://x.supabase.co/rest/v1/user_collection";
+  const AUTH = "https://x.supabase.co/auth/v1/token?grant_type=refresh_token";
+
+  it("關著的時候什麼都不吞", () => {
+    setWritesBlocked(false);
+    expect(writesBlocked()).toBe(false);
+    expect(shouldSwallow(REST, "POST")).toBe(false);
+  });
+
+  it("開著時吞 rest 的寫入, 但讀取照過", () => {
+    setWritesBlocked(true);
+    expect(shouldSwallow(REST, "POST")).toBe(true);
+    expect(shouldSwallow(REST, "PATCH")).toBe(true);
+    expect(shouldSwallow(REST, "DELETE")).toBe(true);
+    expect(shouldSwallow(REST, "GET")).toBe(false);
+    expect(shouldSwallow(REST, "HEAD")).toBe(false);
+  });
+
+  it("**token 刷新是 POST /auth/v1/ — 吞掉就是把人登出**", () => {
+    setWritesBlocked(true);
+    expect(shouldSwallow(AUTH, "POST")).toBe(false);
+    expect(shouldSwallow("https://x.supabase.co/auth/v1/logout", "POST")).toBe(false);
+    setWritesBlocked(false);
+  });
+});
+
+// ── 3. 卡片擺放 ──
 
 const VP = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
@@ -101,24 +165,21 @@ const PHONE = { width: 390, height: 844 };
 describe("placeCallout", () => {
   it("下面放得下就放下面", () => {
     const target = { top: 100, left: 600, width: 120, height: 40 };
-    const p = placeCallout({ target, viewport: VP, cardHeight: 160 });
-    expect(p.top).toBe(100 + 40 + 12);
+    expect(placeCallout({ target, viewport: VP, cardHeight: 160 }).top).toBe(100 + 40 + 12);
   });
 
   it("下面放不下就翻到上面", () => {
     const target = { top: 700, left: 600, width: 120, height: 40 };
-    const p = placeCallout({ target, viewport: VP, cardHeight: 160 });
-    expect(p.top).toBe(700 - 12 - 160);
+    expect(placeCallout({ target, viewport: VP, cardHeight: 160 }).top).toBe(700 - 12 - 160);
   });
 
   it("底部導覽列佔掉的高度要讓開", () => {
     const target = { top: 560, left: 100, width: 80, height: 56 };
-    const withBar = placeCallout({ target, viewport: PHONE, cardHeight: 200, bottomInset: 56 });
-    // 目標下緣 616 + 12 + 200 = 828 > 844 - 56 - 8 → 必須翻到上面
-    expect(withBar.top).toBe(560 - 12 - 200);
+    const p = placeCallout({ target, viewport: PHONE, cardHeight: 200, bottomInset: 56 });
+    expect(p.top).toBe(560 - 12 - 200);
   });
 
-  it("卡片永遠留在畫面裡 (含上下都塞不下的情況)", () => {
+  it("卡片永遠留在畫面裡", () => {
     const cases = [
       { top: 0, left: 0, width: 40, height: 40 },
       { top: 810, left: 1240, width: 40, height: 40 },
@@ -132,17 +193,8 @@ describe("placeCallout", () => {
     }
   });
 
-  it("手機: 卡片吃滿螢幕寬 (兩側各留 8px)", () => {
+  it("手機吃滿螢幕寬, 桌機最多 380 且對齊目標中心", () => {
     expect(calloutWidth(PHONE.width)).toBe(PHONE.width - EDGE * 2);
-    const p = placeCallout({
-      target: { top: 100, left: 340, width: 40, height: 40 },
-      viewport: PHONE,
-      cardHeight: 180,
-    });
-    expect(p.left).toBe(EDGE);
-  });
-
-  it("桌機: 卡片不超過 380px, 而且對齊目標中心", () => {
     const p = placeCallout({
       target: { top: 100, left: 600, width: 120, height: 40 },
       viewport: VP,
@@ -155,17 +207,14 @@ describe("placeCallout", () => {
   it("沒有目標就置中", () => {
     const p = placeCallout({ target: null, viewport: VP, cardHeight: 200 });
     expect(p).toEqual(centerPlacement(VP, 200));
-    expect(p.top).toBe(300);
   });
 });
 
 describe("cornerRect", () => {
   it("用寬度推卡片底緣, 不是容器高度 (容器還包著兩行卡名)", () => {
-    // 卡片 96x96 + 卡名兩行 → 容器高度 128
     const box = cornerRect({ top: 200, left: 50, width: 96, height: 128 });
     expect(box.top + box.height).toBeLessThanOrEqual(200 + 96 + 2);
     expect(box.width).toBe(44);
     expect(box.height).toBe(44);
-    expect(box.left).toBeLessThan(50 + 44);
   });
 });

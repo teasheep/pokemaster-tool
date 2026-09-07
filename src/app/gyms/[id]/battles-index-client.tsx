@@ -102,12 +102,13 @@ export function BattlesIndexClient({
 
   return (
     <div className="space-y-3">
-      {battles.map((b) => {
+      {battles.map((b, bi) => {
         const open = expanded.has(b.id);
         const range = fmtRange(b.startsOn, b.endsOn);
         return (
           <div
             key={b.id}
+            data-tour={bi === 0 ? "battle-card" : undefined}
             className={cn(
               "overflow-hidden rounded-xl border bg-card transition-shadow",
               b.status === "active" && "border-amber-500/50 shadow-md"

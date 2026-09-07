@@ -13,9 +13,16 @@
 
 import { useSyncExternalStore } from "react";
 
+import { setWritesBlocked } from "@/lib/supabase/practice-mode";
 import type { TourTrack } from "./tour-steps";
 
-export type TourPhase = "choose" | "run";
+export type TourPhase =
+  /** 你是哪一種? */
+  | "choose"
+  /** 一步一步走 */
+  | "run"
+  /** 走完了 — 收尾卡 (可能順便問要不要接著看下一段) */
+  | "done";
 
 export type TourState = {
   open: boolean;
@@ -65,7 +72,12 @@ export function openTour(auto = false) {
   set({ open: true, phase: "choose", track: null, step: 0, auto });
 }
 
+/**
+ * 關閉 —— 一定要把練習模式也關掉。
+ * 「教學完以後再還給使用者自行控制」: 這裡是那句話的實作點, 任何離開的路徑都會經過它。
+ */
 export function closeTour() {
+  setWritesBlocked(false);
   set(CLOSED);
 }
 
@@ -77,12 +89,19 @@ export function goToStep(step: number) {
   set({ step });
 }
 
+/** 最後一步做完 → 收尾卡 */
+export function finishTrack() {
+  setWritesBlocked(false);
+  set({ phase: "done" });
+}
+
 export function setTourGymId(gymId: string | null) {
   set({ gymId });
 }
 
 /** 回到「你是哪一種」(教學中途想換一條路) */
 export function backToChooser() {
+  setWritesBlocked(false);
   set({ phase: "choose", track: null, step: 0 });
 }
 

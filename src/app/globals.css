@@ -44,6 +44,14 @@
 /* 開了「減少動態」時 rise-in 的替身 —— 只淡入, 不位移。
    整個不做 (animate-none) 也安全, 但畫面會變成硬生生地跳出來;
    純不透明度的變化不會造成前庭不適, 是這個偏好下公認可以留的那一種。 */
+/* 使用教學: 框住「換你點」的目標時, 外圈脈動一下當作「這裡可以按」的提示。
+   動的是 box-shadow 的擴散 (不是 transform) —— 框本身的位置每一幀由 JS 直接寫入,
+   拿 transform 做脈動兩邊會打架。 */
+@keyframes tour-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--tour-pulse-color); }
+  50% { box-shadow: 0 0 0 7px transparent; }
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -55,6 +63,7 @@
   --animate-rise-in: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-in: fade-in 0.55s ease both;
   --animate-tap-ripple: tap-ripple 0.6s ease-out both;
+  --animate-tour-pulse: tour-pulse 1.6s ease-out infinite;
   --animate-float-y: float-y 9s ease-in-out infinite;
 
   --color-background: var(--background);

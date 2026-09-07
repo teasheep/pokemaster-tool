@@ -74,6 +74,7 @@ function SidePanelBody({ onClose, title, children, className }: Omit<SidePanelPr
         className
       )}
       style={drag && drag.y > 0 ? { transform: `translateY(${drag.y}px)` } : undefined}
+      data-tour="side-panel"
     >
       {/* 手機 bottom sheet 的拖曳把手 — 整條 44px 高、跨滿面板寬度都可以拖,
           視覺上仍然只是那條小灰棒 (負 margin 抵掉高度, 位置與舊版幾乎一致) */}
