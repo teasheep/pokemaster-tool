@@ -45,6 +45,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { setGymPair } from "@/lib/gym/gym-pairs-client";
 import { GymPairsClient, type PackedGrades, type GymPairRow } from "../pairs/pairs-client";
 import { PairTypeGrid, type GridItem } from "@/components/gym/pair-type-grid";
+import { PairEditPanel } from "@/components/pair-edit-panel";
 import { PairFilterBar } from "@/components/pair-filter-bar";
 import { REGION_ORDER } from "@/data/sync-pairs";
 import {
@@ -55,6 +56,7 @@ import {
 import { type PairSortKey } from "@/lib/pairs/name";
 import { cn } from "@/lib/utils";
 import { buildMembersCsv, downloadCsv } from "@/lib/gym/export-csv";
+import type { CollectionEntry } from "@/lib/collection";
 import { cycleEntry, defaultEntry } from "@/lib/collection-entry";
 import { createClient } from "@/lib/supabase/client";
 import type { ClientPairRecord } from "@/lib/pairs/types";
@@ -245,6 +247,46 @@ export function MembersClient({
     if (selectedId && selectedId !== ALL_GYM) void loadMember(selectedId);
   }, [selectedId, loadMember]);
 
+  /**
+   * 樂觀更新: 送出 RPC **之前**先把這一列改掉, 伺服器回來再對帳 (reloadSelected)。
+   *
+   * 側板的下拉是受控元件 —— 值來自 `pairs`。沒有這一步的話, 選了「超覺醒 3」畫面會先
+   * **彈回舊值**, 等 RPC + 重抓整份 member_pairs 兩趟往返之後才變; 而 `/pairs` 那顆是即時的。
+   * 同一顆側板兩種手感就等於白統一 (使用者這次抱怨的就是兩邊不一樣)。
+   *
+   * 一定要 patch **既有的 `pairs` state** 而不是另外開一份草稿 map ——
+   * 草稿 map 會進到卡牆 handler 的 deps, 每改一次寶數整牆 SyncPairCard 的 memo 就全失效
+   * (AGENTS「卡牆的 memo 要真的有效」點名過的前科)。走這條的話 rowByPairId / rowsRef /
+   * items 全部沿原路更新, handler 身分不變。
+   * 失敗時不手動回滾, 直接重抓 —— 伺服器才是真相, 手寫回滾會有第二套推導。
+   */
+  const patchPairGrade = useCallback(
+    (pairId: string, label: string, grade: number, superAwakening: number) => {
+      setPairs((prev) => {
+        const i = prev.findIndex((p) => p.pair_id === pairId);
+        // 寶0 = 沒有這隻 → RPC 會刪列, 這裡也刪 (不留幽靈列, 與 syncMemberPair 同一條規矩)
+        if (grade === 0) return i < 0 ? prev : prev.filter((_, k) => k !== i);
+        if (i < 0) {
+          return [
+            ...prev,
+            {
+              // 這一列還沒有伺服器給的 id; 卡牆用 pairId 當 key, 這個 id 只有孤兒列才會用到
+              id: `pending:${pairId}`,
+              pair_label: label,
+              pair_id: pairId,
+              grade,
+              super_awakening: superAwakening,
+            },
+          ];
+        }
+        const next = [...prev];
+        next[i] = { ...next[i]!, grade, super_awakening: superAwakening };
+        return next;
+      });
+    },
+    []
+  );
+
   /** 全館視角要的成員清單 (不含顧問) — memo 掉, 否則 GymPairsClient 每次都收到新陣列 */
   const gymViewMembers = useMemo(
     () =>
@@ -400,6 +442,7 @@ export function MembersClient({
                 gymPairIds={gymPairIds}
                 loading={loading}
                 onChanged={reloadSelected}
+                onOptimistic={patchPairGrade}
               />
             </TabsContent>
             <TabsContent value="resources">
@@ -848,6 +891,7 @@ function PairsPanel({
   gymPairIds,
   loading,
   onChanged,
+  onOptimistic,
 }: {
   gymId: string;
   isAdmin: boolean;
@@ -865,6 +909,8 @@ function PairsPanel({
   gymPairIds: string[];
   loading: boolean;
   onChanged: () => void;
+  /** 送出前先把畫面改掉 (見上層的 patchPairGrade) — 受控的側板下拉不能等兩趟往返 */
+  onOptimistic: (pairId: string, label: string, grade: number, superAwakening: number) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   /** 範圍: 道館拍組 (預設) / 所有遊戲拍組 — 與全館視角同一種分頁 */
@@ -979,28 +1025,53 @@ function PairsPanel({
   const stale = deferredFilters !== filters || scopePending;
 
   /**
-   * 左下角計數循環 (寶1→5→超覺1→5→歸零) — 唯一的寫入路徑。
+   * 這位成員的練度 → 側板要的 CollectionEntry。
+   * **只有寶數/超覺醒是真資料** —— member_pairs 沒有星數與等級, 其餘欄位是 defaultEntry
+   * 的預設值, 所以側板一律開 `gradeOnly` 把那兩個下拉收起來 (畫出來就是在說謊)。
+   */
+  const entryOf = useCallback(
+    (rec: ClientPairRecord): CollectionEntry => {
+      const row = rowByPairId.get(rec.pairId);
+      const grade = row?.grade ?? 0;
+      // 舊資料 grade=6 無等級 = 表單時代「超覺醒當覺5」慣例 (與卡牆那份同一條推導)
+      const sa = row ? (row.super_awakening > 0 ? row.super_awakening : grade >= 6 ? 5 : 0) : 0;
+      return {
+        ...defaultEntry(rec),
+        owned: grade > 0,
+        potential: grade >= 6 ? 5 : grade,
+        superAwakening: sa,
+      };
+    },
+    [rowByPairId]
+  );
+
+  /**
+   * 寫入這位成員的練度 — **這一頁唯一的寫入路徑** (左下角循環與側板下拉都走它)。
    * 走 set_member_pair RPC: 成員已綁定帳號時會一併更新他的個人收藏,
    * 否則他下次自己一改就會把這裡填的值蓋回去 (舊版就是這樣默默丟資料的)。
    */
-  const cyclePair = useCallback(
-    async (rec: ClientPairRecord, grade: number, sa: number) => {
-      const entry = { ...defaultEntry(rec), potential: grade >= 6 ? 5 : grade, superAwakening: sa };
-      const next = cycleEntry(entry, rec.hasAwakening === true);
+  const saveGrade = useCallback(
+    async (rec: ClientPairRecord, next: { potential: number; superAwakening: number }) => {
+      // 這條軸的編碼與全站一致: 0=未持有, 1-5=寶, 6-10=超覺醒 (RPC 自己會照 sa 算 grade)
+      const grade = next.superAwakening > 0 ? 5 + next.superAwakening : next.potential;
+      onOptimistic(rec.pairId, pairLabel(rec), grade, next.superAwakening);
       const { error } = await supabase.rpc("set_member_pair", {
         p_member: memberId,
         p_pair_id: rec.pairId,
         p_pair_label: pairLabel(rec),
+        // 一定要拆成 (potential, superAwakening) 再送 —— RPC 會把 p_potential 夾到 0..5,
+        // 直接把 0-10 的 grade 塞進去的話「超覺醒3」會靜靜變成「寶5」(0038:41-42)
         p_potential: next.potential,
         p_super_awakening: next.superAwakening,
       });
       if (error) {
         toast.error("更新失敗", { description: error.message });
+        onChanged(); // 重抓 = 回滾 (伺服器才是真相)
         return;
       }
       onChanged();
     },
-    [supabase, memberId, onChanged]
+    [supabase, memberId, onChanged, onOptimistic]
   );
 
   // 卡片互動標準: 點卡片 (含灰卡) = 開側板; 點左下角 = 寶數循環。整牆共用同兩顆 handler。
@@ -1017,12 +1088,15 @@ function PairsPanel({
       if (!rec) return;
       // 開著「只看持有的」時循環回寶0 也要留在畫面上 (見 stickyIds)
       setStickyIds((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+      // rowsRef 而不是 rowByPairId: 把 map 綁進 deps 的話, 每改一次寶數這顆 handler
+      // 就換一個身分, 整牆 SyncPairCard 的 memo 全數失效 (檔頭那條)
       const row = rowsRef.current.get(key);
       const grade = row?.grade ?? 0;
       const sa = row ? (row.super_awakening > 0 ? row.super_awakening : grade >= 6 ? 5 : 0) : 0;
-      void cyclePair(rec, grade, sa);
+      const entry = { ...defaultEntry(rec), potential: grade >= 6 ? 5 : grade, superAwakening: sa };
+      void saveGrade(rec, cycleEntry(entry, rec.hasAwakening === true));
     },
-    [pairById, cyclePair]
+    [pairById, saveGrade]
   );
 
   /** 管理員: 把這隻加進 / 移出道館拍組名單 (全站同一條寫入路徑) */
@@ -1121,7 +1195,11 @@ function PairsPanel({
         </div>
       )}
 
-      {/* 點卡片 → 這隻的道館名單狀態 (管理員可直接加進道館拍組) */}
+      {/* 點卡片 → 這位成員這一張的練度。**與 /pairs 是同一顆側板** (PairEditPanel):
+          使用者 2026-09-07 抓到「道館點進去不能下拉寶數, 但點左下角又可以」——
+          同一張卡、同一個側板卻有兩種能力, 沒有道理。
+          差別只有一個而且是資料決定的: member_pairs 只有寶數/超覺醒那一條軸,
+          星數與等級是個人收藏的欄位 (別人的讀不到) → gradeOnly 把那兩格收起來。 */}
       <SidePanel
         open={panelPair !== null}
         onClose={() => setPanelPair(null)}
@@ -1129,36 +1207,22 @@ function PairsPanel({
       >
         {panelPair ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {memberName} 的練度:{" "}
-              <span className="font-medium text-foreground">
-                {(() => {
-                  const row = rowByPairId.get(panelPair.pairId);
-                  const g = row?.grade ?? 0;
-                  if (g === 0) return "未持有";
-                  if (g >= 6) return `超覺醒 ${row?.super_awakening || 5}`;
-                  return `寶 ${g}`;
-                })()}
-              </span>
-            </p>
-            {isAdmin ? (
-              <button
-                onClick={() => void toggleGymPair(panelPair)}
-                className={cn(
-                  "w-full rounded-md border px-3 py-2 text-sm transition-all active:scale-[0.99] pointer-coarse:min-h-11",
-                  gymSet.has(panelPair.pairId)
-                    ? "border-amber-500/60 bg-amber-500/15"
-                    : "hover:bg-accent"
-                )}
-              >
-                {gymSet.has(panelPair.pairId) ? "★ 取消道館拍組" : "☆ 設為道館拍組"}
-              </button>
-            ) : gymSet.has(panelPair.pairId) ? (
-              <p className="text-sm text-amber-600 dark:text-amber-400">★ 道館拍組</p>
-            ) : null}
-            <p className="text-xs text-muted-foreground">
-              寶數請點卡片左下角調整 (寶1→5→超覺1→5→歸零)。
-            </p>
+            {/* 這是誰的練度 —— /pairs 的側板永遠是「我的」不需要講, 這裡會 */}
+            <p className="text-xs text-muted-foreground">{memberName} 的練度</p>
+            <PairEditPanel
+              pair={panelPair}
+              entry={entryOf(panelPair)}
+              gradeOnly
+              editable={canEdit}
+              onChange={(next) => void saveGrade(panelPair, next)}
+              // 左下角循環: 與卡牆同一個手勢、同一條寫入路徑
+              onCountClick={() => onCountCard(panelPair.pairId)}
+              gymPair={{
+                isGymPair: gymSet.has(panelPair.pairId),
+                canEdit: isAdmin,
+                onToggle: () => void toggleGymPair(panelPair),
+              }}
+            />
           </div>
         ) : null}
       </SidePanel>

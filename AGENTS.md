@@ -308,6 +308,37 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **道館拍組 ★ 只有一個開關**: 一律走 `setGymPair()` (`lib/gym/gym-pairs-client.ts`),
   文案固定「設為道館拍組 / 已設為道館拍組 (點擊取消)」。不要再做第二個搜尋新增面板 —
   要加名單就切到「全圖鑑」範圍點灰卡, 跟「所有拍組點灰卡點亮」同一個心智模型。
+- **拍組側板只有一顆** (`components/pair-edit-panel.tsx`, 2026-09-07 使用者抓到):
+  `/pairs`「我的拍組」與道館「成員與拍組 → 點某張卡」共用同一個 `PairEditPanel`。
+  前科: 道館那邊本來是手刻的唯讀面板 + 一句「寶數請點卡片左下角調整」, 於是**同一張卡
+  在同一個側板裡, 左下角改得動、下拉卻不存在** (使用者:「道館點進去不能下拉寶數,
+  但點左下角又可以? 統一一下」)。
+  兩邊**只有一個差別, 而且是資料決定的**: 道館代改走 `member_pairs`, 那張表只有
+  `grade` 與 `super_awakening` —— 星數與等級是 `user_collection` 的欄位, 而它的 RLS 是
+  `auth.uid() = user_id`, **管理員讀不到別人的**。所以道館側板一律傳 `gradeOnly`,
+  那兩格**整格不渲染**。畫出來就是拿 `defaultEntry` 的預設值 (5★ / Lv200) 冒充別人的練度,
+  而且改了 `set_member_pair` 收都不收 —— 「改了、沒錯誤、重整後變回去」比不能改更糟。
+  另外兩件事: `editable={canEdit}` 讓顧問與「看別人的一般成員」看得到但動不了
+  (不是換一套唯讀版面); 寫入照舊只有一條路 —— 左下角循環與側板下拉都走同一支 `saveGrade`
+  (內部是 `set_member_pair`), **不要**在道館頁直接寫 `user_collection` (RLS 會擋) 或
+  直接 UPDATE `member_pairs` (會重演 0030 那個「成員自己一改就蓋回去」的前科)。
+  **「全館拍組」那個側板 (`gyms/[id]/pairs/pairs-client.tsx`) 不要一起統一** ——
+  它回答的是「這張卡**誰**有、各是幾寶」, 不是「這個人的這張練度」, 是不同的職責。
+- **等級下拉的選項是 140 / 150 / 180 / 200** (2026-09-07 使用者指定「其他不用」),
+  常數在 `lib/collection-entry.ts`。**但那是選單不是合法值的全集** —— 呼叫端一律走
+  `levelOptions(current)`, 它會把「現在這一列的值」補進選單。
+  不補的話 Radix 的 Select 找不到對應 `SelectItem`, trigger 會渲染成**一片空白**
+  (不是 placeholder, 也不報錯), 而側板是即改即存 → 使用者看到空框隨手選一個, 舊值當場被蓋掉。
+  線上實測 (2077 列) 有 167 列 Lv1 + Lv100/Lv130 各一, 全都不在標準選單裡。
+  **不要改用 clamp 代替補值** (那是畫面說謊, 存檔還會真的改掉), 也**不要**去收緊
+  `0002` 的 `check (level between 1 and 200)` 或 `save-user-pairs` 的 `clamp(1,200)`
+  (辨識流程的等級是 OCR 讀出來的任意整數, 那是校正結果不是設定練度)。
+  `tests/collection-entry.test.ts` 釘住這條 —— 這個壞法只有那幾個人看得到。
+- ⚠ **`set_member_pair` 替沒有收藏列的成員新增 `user_collection` 時, promotion/level 吃的是
+  DB 預設 (5 / 1) 而不是 `defaultEntry` 的值** (`0002_user_collection.sql:10-11`,
+  2026-09-07 查證; 線上那 167 列 Lv1 就是這樣來的)。結果是那位成員之後自己去 `/pairs`
+  會看到 Lv1, 而 3★ 拍組被標成 5★。要修是**改 RPC 的 insert 補這兩欄** (新 migration,
+  星級要把 basePotential 傳進去), 不要在前端補 —— 前端補只會在下一次代改時又被寫回去。
 - **成員練度的寫入路徑只有一條**: 自己改走 `/pairs` (user_collection → syncMemberPair);
   管理員代改走 `set_member_pair` RPC (0030/0031) — 它會在成員已綁定帳號時**一併更新
   他的 user_collection**, 否則他下次自己一改就把代改的值蓋回去 (舊版就是這樣默默丟資料)。
