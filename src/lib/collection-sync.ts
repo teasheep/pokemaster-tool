@@ -34,7 +34,9 @@ export async function syncMemberPair(
   pair: ClientPairRecord,
   potential: number,
   superAwakening: number,
-  exStyleWorn = false
+  exStyleWorn = false,
+  /** 個人設的等級 —— 道館端只有這條路會寫 (代改的 set_member_pair 不收 level, 見 0057) */
+  level = 1
 ): Promise<void> {
   if (!gym?.memberId) return;
   const grade = gradeOf(potential, superAwakening);
@@ -64,7 +66,7 @@ export async function syncMemberPair(
   const { error } = existing && existing.length > 0
     ? await supabase
         .from("member_pairs")
-        .update({ grade, super_awakening: sa, ex_style_worn: exStyleWorn })
+        .update({ grade, super_awakening: sa, ex_style_worn: exStyleWorn, level })
         .eq("id", existing[0].id)
     : await supabase.from("member_pairs").insert({
         gym_id: gym.gymId,
@@ -74,6 +76,7 @@ export async function syncMemberPair(
         grade,
         super_awakening: sa,
         ex_style_worn: exStyleWorn,
+        level,
       });
   if (error) console.warn("member_pairs 同步失敗:", error.message);
 }

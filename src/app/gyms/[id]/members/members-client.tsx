@@ -80,6 +80,8 @@ type PairRow = {
   pair_id: string | null;
   grade: number;
   super_awakening: number;
+  /** 個人設的等級鏡像 (0057) — 道館端唯讀, 本人在 /pairs 設 */
+  level: number;
 };
 
 type Props = {
@@ -220,7 +222,7 @@ export function MembersClient({
       const [pairsRes] = await Promise.all([
         supabase
           .from("member_pairs")
-          .select("id, pair_label, pair_id, grade, super_awakening")
+          .select("id, pair_label, pair_id, grade, super_awakening, level")
           .eq("member_id", memberId)
           .order("grade", { ascending: false })
           .order("pair_label"),
@@ -276,6 +278,8 @@ export function MembersClient({
               pair_id: pairId,
               grade,
               super_awakening: superAwakening,
+              // 代改不會動到等級 (set_member_pair 不收), 新列就是 1 = 還沒設定
+              level: 1,
             },
           ];
         }
@@ -1040,6 +1044,8 @@ function PairsPanel({
         owned: grade > 0,
         potential: grade >= 6 ? 5 : grade,
         superAwakening: sa,
+        // 等級是 0057 補的鏡像 —— 沒有那一列 (灰卡) 就是 1 = 還沒設定
+        level: row?.level ?? 1,
       };
     },
     [rowByPairId]
@@ -1212,7 +1218,7 @@ function PairsPanel({
             <PairEditPanel
               pair={panelPair}
               entry={entryOf(panelPair)}
-              gradeOnly
+              gymView
               editable={canEdit}
               onChange={(next) => void saveGrade(panelPair, next)}
               // 左下角循環: 與卡牆同一個手勢、同一條寫入路徑

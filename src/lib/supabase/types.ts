@@ -210,6 +210,7 @@ export type Database = {
           pair_id: string | null;
           grade: number;
           super_awakening: number;
+          level: number;
           ex_style_worn: boolean;
           created_at: string;
           updated_at: string;
@@ -222,6 +223,7 @@ export type Database = {
           pair_id?: string | null;
           grade?: number;
           super_awakening?: number;
+          level?: number;
           ex_style_worn?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -234,6 +236,7 @@ export type Database = {
           pair_id?: string | null;
           grade?: number;
           super_awakening?: number;
+          level?: number;
           ex_style_worn?: boolean;
           created_at?: string;
           updated_at?: string;

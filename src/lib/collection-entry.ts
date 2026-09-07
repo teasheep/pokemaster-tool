@@ -5,32 +5,40 @@ import type { CollectionEntry } from "@/lib/collection";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 
 /**
- * 等級下拉的選項 (2026-09-07 使用者指定: 「選項就只留 140 150 180 200 就好, 其他不用」)。
+ * 等級的選項 —— 這是**合法值的全集**, 不只是選單
+ * (2026-09-07 使用者: 「多一個 LV1 的選項, 預設 LV1, 其他不是選項內的數字不留, 都改回 LV1」)。
  *
- * 這是**選單**不是合法值的全集 —— 資料庫裡本來就有別的值 (實測線上 2077 列: Lv1 有 167 列,
- * 來自辨識匯入的預設, 另有 Lv100/Lv130 各一)。所以呼叫端要把「現在這一列的值」補進選單,
- * 否則 Radix Select 找不到對應的 SelectItem, 那 169 列會顯示成**空白的下拉**
- * (看起來像資料掉了), 或被使用者不小心改掉。見 levelOptions()。
+ * **Lv1 = 還沒設定**。它同時是三件事的預設值, 三邊因此對得起來:
+ *   1. 這裡的 `defaultEntry` (在網站上新點亮一隻);
+ *   2. `user_collection.level` 的 DB 預設 (0002);
+ *   3. `set_member_pair` 替沒有收藏列的成員建列時吃到的值 (它不帶 level)。
+ * 舊版預設是 200, 於是那 167 列 Lv1 看起來像壞掉的資料 —— 其實只是「沒設定過」。
+ *
+ * 不在這份清單裡的值一律當成 Lv1 (見 `normalizeLevel`), 而且 0057 已經把線上那兩列
+ * (Lv100 / Lv130) 一起改回 1。**不要**再做「把現值補進選單」那種事: 使用者要的是
+ * 只有這五個值, 多一格就是多一種狀態。
  */
-export const LEVEL_OPTIONS = [140, 150, 180, 200] as const;
+export const LEVEL_OPTIONS = [1, 140, 150, 180, 200] as const;
 
-/** 選單 = 標準選項 ∪ {現值}, 由小到大 —— 現值不在標準選項裡時才會多一格 */
-export function levelOptions(current: number): number[] {
-  const set = new Set<number>(LEVEL_OPTIONS);
-  if (Number.isFinite(current) && current > 0) set.add(current);
-  return [...set].sort((a, b) => a - b);
+/**
+ * 落到合法值上 —— 不在清單裡的一律回 1 ("還沒設定")。
+ * 顯示與寫入都要過這一關: Radix 的 Select 找不到對應 SelectItem 時 trigger 會是**空白的**
+ * (不是 placeholder, 也不報錯), 而側板是即改即存, 使用者看到空框隨手一選就把值蓋掉了。
+ */
+export function normalizeLevel(level: number): number {
+  return (LEVEL_OPTIONS as readonly number[]).includes(level) ? level : 1;
 }
 
 /**
  * 新點亮拍組的預設值: 保留拍組「原有初始星級」(basePotential), 不自動 6★/EX —
- * 星級與 EX 是個人練度, 在側板自己調。等級給滿 (道館成員常態)。
+ * 星級與 EX 是個人練度, 在側板自己調。等級是 1 = 還沒設定 (見 LEVEL_OPTIONS)。
  * potential 預設 0 (未持有灰卡); 點亮走左下角 cycle 或呼叫端自帶 potential。
  */
 export function defaultEntry(pair: ClientPairRecord): CollectionEntry {
   return {
     pairId: pair.pairId,
     owned: false,
-    level: 200,
+    level: 1,
     promotion: pair.basePotential ?? 5,
     potential: 0,
     superAwakening: 0,

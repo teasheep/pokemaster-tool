@@ -220,7 +220,7 @@ export function PairsHub({
       if (pair)
         void syncMemberPair(
           supabase, gymSync, pair,
-          entry.potential, entry.superAwakening, entry.exStyleWorn
+          entry.potential, entry.superAwakening, entry.exStyleWorn, entry.level
         );
     });
   }, [gymSync, pairsById]);

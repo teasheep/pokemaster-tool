@@ -313,32 +313,48 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   前科: 道館那邊本來是手刻的唯讀面板 + 一句「寶數請點卡片左下角調整」, 於是**同一張卡
   在同一個側板裡, 左下角改得動、下拉卻不存在** (使用者:「道館點進去不能下拉寶數,
   但點左下角又可以? 統一一下」)。
-  兩邊**只有一個差別, 而且是資料決定的**: 道館代改走 `member_pairs`, 那張表只有
-  `grade` 與 `super_awakening` —— 星數與等級是 `user_collection` 的欄位, 而它的 RLS 是
-  `auth.uid() = user_id`, **管理員讀不到別人的**。所以道館側板一律傳 `gradeOnly`,
-  那兩格**整格不渲染**。畫出來就是拿 `defaultEntry` 的預設值 (5★ / Lv200) 冒充別人的練度,
-  而且改了 `set_member_pair` 收都不收 —— 「改了、沒錯誤、重整後變回去」比不能改更糟。
+  道館側板傳 `gymView`, 與 `/pairs` **只有兩個差別, 兩個都是資料決定的**:
+  1. **星數不畫**: `member_pairs` 沒有 promotion 欄位, 而 `user_collection` 的 RLS 是
+     `auth.uid() = user_id` —— 別人的星數全站讀不到。畫出來就是拿 `defaultEntry` 的預設值
+     冒充別人的練度。(道館頁的卡牆同樣一律用原始星級, 兩邊一致。)
+  2. **等級唯讀**: 0057 給 `member_pairs` 補了 level 鏡像, 所以**看得到**
+     (使用者:「道館看得到, 只是要點進去才看得到, 這樣就可以了 —— 因為其實自己也是要
+     點進去才看得到」); 但代改走的 `set_member_pair` 不收 level, 畫成可點的下拉就是
+     「改了、沒錯誤、重整後變回去」, 比不能改更糟。等級由本人在 `/pairs` 設。
   另外兩件事: `editable={canEdit}` 讓顧問與「看別人的一般成員」看得到但動不了
   (不是換一套唯讀版面); 寫入照舊只有一條路 —— 左下角循環與側板下拉都走同一支 `saveGrade`
   (內部是 `set_member_pair`), **不要**在道館頁直接寫 `user_collection` (RLS 會擋) 或
   直接 UPDATE `member_pairs` (會重演 0030 那個「成員自己一改就蓋回去」的前科)。
   **「全館拍組」那個側板 (`gyms/[id]/pairs/pairs-client.tsx`) 不要一起統一** ——
   它回答的是「這張卡**誰**有、各是幾寶」, 不是「這個人的這張練度」, 是不同的職責。
-- **等級下拉的選項是 140 / 150 / 180 / 200** (2026-09-07 使用者指定「其他不用」),
-  常數在 `lib/collection-entry.ts`。**但那是選單不是合法值的全集** —— 呼叫端一律走
-  `levelOptions(current)`, 它會把「現在這一列的值」補進選單。
-  不補的話 Radix 的 Select 找不到對應 `SelectItem`, trigger 會渲染成**一片空白**
-  (不是 placeholder, 也不報錯), 而側板是即改即存 → 使用者看到空框隨手選一個, 舊值當場被蓋掉。
-  線上實測 (2077 列) 有 167 列 Lv1 + Lv100/Lv130 各一, 全都不在標準選單裡。
-  **不要改用 clamp 代替補值** (那是畫面說謊, 存檔還會真的改掉), 也**不要**去收緊
-  `0002` 的 `check (level between 1 and 200)` 或 `save-user-pairs` 的 `clamp(1,200)`
-  (辨識流程的等級是 OCR 讀出來的任意整數, 那是校正結果不是設定練度)。
-  `tests/collection-entry.test.ts` 釘住這條 —— 這個壞法只有那幾個人看得到。
-- ⚠ **`set_member_pair` 替沒有收藏列的成員新增 `user_collection` 時, promotion/level 吃的是
-  DB 預設 (5 / 1) 而不是 `defaultEntry` 的值** (`0002_user_collection.sql:10-11`,
-  2026-09-07 查證; 線上那 167 列 Lv1 就是這樣來的)。結果是那位成員之後自己去 `/pairs`
-  會看到 Lv1, 而 3★ 拍組被標成 5★。要修是**改 RPC 的 insert 補這兩欄** (新 migration,
-  星級要把 basePotential 傳進去), 不要在前端補 —— 前端補只會在下一次代改時又被寫回去。
+- **等級只有 1 / 140 / 150 / 180 / 200 五個值** (`LEVEL_OPTIONS`, `lib/collection-entry.ts`,
+  2026-09-07 使用者指定「多一個 LV1 的選項, 預設 LV1, 其他不是選項內的數字不留, 都改回 LV1」)。
+  這是**合法值的全集不是選單**: 顯示與寫入都要過 `normalizeLevel()`, 不在清單裡的一律當 1。
+  **`Lv1` = 還沒設定**, 而且它是刻意的三邊對齊 —— `defaultEntry`、`user_collection.level`
+  的 DB 預設 (0002)、`set_member_pair` 建列時吃到的值全都是 1。舊版 `defaultEntry` 是 200,
+  於是線上那 167 列 Lv1 看起來像壞掉的資料, 其實只是「沒設定過」。
+  **不要再做「把現值補進選單」那種事** (使用者否決過): 多一格就是多一種狀態。
+  但也**不要用 clamp**, 一律走 normalizeLevel —— Radix 的 Select 找不到對應 `SelectItem` 時
+  trigger 會渲染成**一片空白** (不是 placeholder, 也不報錯), 而側板是即改即存,
+  使用者看到空框隨手選一個就把值蓋掉了。
+  **不要**收緊 `0002` 的 `check (level between 1 and 200)` (收緊到列舉值會讓
+  `set_member_pair` 建新列直接失敗, 而它失敗會讓管理員的代改整個 rollback), 也不要動
+  `save-user-pairs` 的 `clamp(1,200)` (辨識流程的等級是 OCR 讀出來的任意整數,
+  那是校正結果不是設定練度)。
+  `tests/collection-entry.test.ts` 釘住這條 (含 SQL 與程式碼清單必須一致) ——
+  這個壞法只有那幾個人看得到。
+- **`member_pairs.level` 是鏡像, 只有 `syncMemberPair` 會寫** (0057): 道館端要看得到成員的
+  等級, 而 `user_collection` 是 own-rows only, 所以照 0023 (super_awakening) 的老路
+  補一欄鏡像 + 從 `user_collection` 回填。
+  **代改的 `set_member_pair` 刻意不收 level** —— 改簽章會產生一個全新的函式物件、舊的那支
+  還留著 (0040 的前科), revoke 也要重套; 而等級是個人資料, 讓本人在 `/pairs` 設就好。
+  所以道館側板的等級是**唯讀**的。哪天真的要開放代改, `tests/member-pair-axis.test.ts`
+  會在 RPC 簽章加上 `p_level` 的那一刻變紅提醒你回頭放寬 UI。
+- ⚠ **`set_member_pair` 替沒有收藏列的成員新增 `user_collection` 時, promotion 吃的是
+  DB 預設 5** (`0002_user_collection.sql:11`) 而不是那隻拍組的 `basePotential` ——
+  3★ 拍組會被標成 5★。(level 沒有這個問題: 兩邊都是 1。) 要修是**改 RPC 的 insert**
+  (新 migration, 要把 basePotential 傳進去), 不要在前端補 —— 前端補只會在下一次代改時
+  又被寫回去。目前影響有限: 道館側板不畫星數, 卡牆一律用原始星級。
 - **成員練度的寫入路徑只有一條**: 自己改走 `/pairs` (user_collection → syncMemberPair);
   管理員代改走 `set_member_pair` RPC (0030/0031) — 它會在成員已綁定帳號時**一併更新
   他的 user_collection**, 否則他下次自己一改就把代改的值蓋回去 (舊版就是這樣默默丟資料)。
