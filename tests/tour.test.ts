@@ -68,6 +68,13 @@ describe("教學步驟指的東西真的存在", () => {
             step.advance.target
           );
         }
+        // 條件式補充說明依賴的那個控制項也要存在, 否則那段話永遠不會出現
+        if (step.extra) {
+          expect(declared, `${track.id}: extra ${step.extra.ifTarget}`).toContain(
+            step.extra.ifTarget
+          );
+          expect(step.extra.body.length).toBeGreaterThan(0);
+        }
       }
     });
   }

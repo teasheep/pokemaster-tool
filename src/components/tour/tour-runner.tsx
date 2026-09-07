@@ -53,6 +53,13 @@ const MOVE_MS = 220;
 const CHEER_MS = 620;
 /** 找目標找超過這麼久才顯示「還在找」的掃光 */
 const SLOW_MS = 300;
+/**
+ * 找超過這麼久還沒找到 → 當作「使用者現在不在那一頁」, 把卡片切成可操作的狀態
+ * (顯示提示 + 「幫我開」)。**但輪詢不停** —— 他自己走過去的那一刻還是要接得上。
+ * 前科 (2026-09-07): 改成「找不到就一直找」時忘了關 locating, 於是卡片永遠停在
+ * 載入中、「幫我開」永遠不出現 —— 使用者回報「道館戰在這個分頁的教學就卡住了」。
+ */
+const LOCATE_GRACE_MS = 700;
 
 function findTarget(name: string): HTMLElement | null {
   const els = Array.from(document.querySelectorAll<HTMLElement>(`[data-tour="${name}"]`));
@@ -103,6 +110,8 @@ export function TourRunner({ userId }: { userId: string }) {
   const [slow, setSlow] = useState(false);
   /** 剛做對 —— 框閃綠 + 打勾 */
   const [cheer, setCheer] = useState(false);
+  /** 這一步的補充說明要不要顯示 (那個控制項只有部分身分看得到) */
+  const [extraOn, setExtraOn] = useState(false);
 
   const spotRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -191,9 +200,11 @@ export function TourRunner({ userId }: { userId: string }) {
     let raf = 0;
     let slowTimer = 0;
     let cancelled = false;
+    let start = 0;
 
     const tick = () => {
       if (cancelled) return;
+      if (!start) start = performance.now();
       if (!name) {
         setTargetEl(null);
         setLocating(false);
@@ -212,8 +223,10 @@ export function TourRunner({ userId }: { userId: string }) {
         setLocating(false);
         return;
       }
-      // 找不到就一直找 —— 使用者可能還在別頁, 等他自己走過來 (不再自動導航)
+      // 找不到就一直找 —— 使用者可能還在別頁, 等他自己走過來 (不再自動導航)。
+      // 但超過寬限時間就先把卡片切成「可操作」, 不要讓他對著一張載入中的卡發呆。
       setTargetEl(null);
+      if (performance.now() - start > LOCATE_GRACE_MS) setLocating(false);
       raf = requestAnimationFrame(tick);
     };
 
@@ -231,6 +244,24 @@ export function TourRunner({ userId }: { userId: string }) {
       window.clearTimeout(slowTimer);
     };
   }, [running, step, pathname]);
+
+  // ── 補充說明: 那個控制項現在在畫面上嗎 (例如「設為道館拍組」只有管理員看得到) ──
+  useEffect(() => {
+    const want = running ? step?.extra?.ifTarget : undefined;
+    let raf = 0;
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      // 同值時 React 會 bail out, 所以每幀呼叫不會造成重繪
+      setExtraOn(want ? Boolean(findTarget(want)) : false);
+      if (want) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [running, step]);
 
   // ── 完成條件 1: 走到某一頁 ──
   useEffect(() => {
@@ -455,6 +486,11 @@ export function TourRunner({ userId }: { userId: string }) {
               {step.title}
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+            {step.extra && extraOn ? (
+              <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-300">
+                {step.extra.body}
+              </p>
+            ) : null}
 
             {offTrack ? (
               <p className="mt-2 rounded-lg bg-muted/60 px-2.5 py-2 text-xs text-muted-foreground">
@@ -509,11 +545,13 @@ export function TourRunner({ userId }: { userId: string }) {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {s.auto
-                ? "第一次來 — 挑一段跟著點一次，比讀說明快。之後在右上角頭像選單裡隨時能再叫出來。"
-                : "挑一段跟著點一次。"}
-            </p>
+            {/* 副標只給「第一次自己跳出來」那一次 —— 自己從選單叫出來的人已經知道
+                這是什麼了, 再寫一句「挑一段」是廢話 (使用者指名拿掉)。 */}
+            {s.auto ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                第一次來 — 挑一段跟著點一次，比讀說明快。之後在右上角頭像選單裡隨時能再叫出來。
+              </p>
+            ) : null}
             <div className="mt-3 grid gap-2">
               {TRACKS.filter((t) => CHOOSABLE.includes(t.id)).map((t, i) => (
                 <button

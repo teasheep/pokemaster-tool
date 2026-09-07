@@ -43,6 +43,12 @@ export type TourStep = {
    * 需要道館 id 的用 `gym:` 開頭, 由 runner 換掉。
    */
   at?: string;
+  /**
+   * 補充說明 —— **只有 `ifTarget` 真的出現在畫面上時才顯示**。
+   * 用途: 有些控制項只有特定身分看得到 (例如「設為道館拍組」只有管理員/編輯者有),
+   * 對看不到的人講那個按鈕只會讓他找不到東西。
+   */
+  extra?: { ifTarget: string; body: string };
 };
 
 export type TourTrackDef = {
@@ -57,7 +63,7 @@ export type TourTrackDef = {
 export const TRACKS: TourTrackDef[] = [
   {
     id: "leader",
-    title: "我是到館負責人",
+    title: "我是道館負責人",
     hint: "我要建立道館",
     next: "battle",
     steps: [
@@ -112,6 +118,10 @@ export const TRACKS: TourTrackDef[] = [
         body: "星數只能從原始星級升到 6★EX。寶數與超覺醒是同一條軸：未持有 → 寶1-5 → 超覺醒1-5。這一段是練習，改了不會存檔。",
         advance: { on: "next" },
         practice: true,
+        extra: {
+          ifTarget: "gym-pair-toggle",
+          body: "你這裡還有一顆「☆ 設為道館拍組」—— 那是給整館看的名單（★），不是你自己的練度。設進去之後，所有人的「道館重點拍組」分頁都會出現這一組，還會統計全館幾個人有。只有管理員與編輯者看得到這顆。",
+        },
       },
       {
         target: "pair-card",
