@@ -382,24 +382,23 @@ export function TourRunner({ userId }: { userId: string }) {
         style={{
           // 洞以外整片壓暗。0.45 比原本的 0.55 淡 —— 畫面還能操作, 不要壓得像不能碰
           boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.45)",
-          ...(interactive && onTarget && !cheer
-            ? ({ "--tour-pulse-color": "var(--color-primary)" } as React.CSSProperties)
-            : {}),
         }}
         className={cn(
-          "absolute left-0 top-0 rounded-lg outline-2 outline-offset-2",
+          "absolute left-0 top-0 rounded-lg outline outline-2 outline-offset-2",
           "transition-[transform,width,height] ease-out motion-reduce:transition-none",
-          cheer
-            ? "outline-emerald-500"
-            : onTarget
-              ? "outline-primary"
-              : "outline-transparent",
-          // 「換你點」的目標外圈脈動一下 (做對之後就停)
-          interactive && onTarget && !cheer
-            ? "animate-tour-pulse motion-reduce:animate-none"
-            : null
+          cheer ? "outline-emerald-500" : onTarget ? "outline-primary" : "outline-transparent"
         )}
-      />
+      >
+        {/* 脈動**一定要放在子層**: 這個動畫動的是 box-shadow, 掛在上面那層會把
+            那圈 9999px 的壓暗陰影一起蓋掉 (整片變透明再變回來 = 閃爍)。 */}
+        {interactive && onTarget && !cheer ? (
+          <span
+            aria-hidden
+            style={{ "--tour-pulse-color": "var(--color-primary)" } as React.CSSProperties}
+            className="animate-tour-pulse absolute inset-0 rounded-lg motion-reduce:animate-none"
+          />
+        ) : null}
+      </div>
 
       {/* 做對了的打勾 —— 位置在 apply() 裡跟著框寫, 這裡只切換看得見/看不見 */}
       <span
