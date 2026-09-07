@@ -13,7 +13,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import { setWritesBlocked } from "@/lib/supabase/practice-mode";
+import { setTourWritesBlocked, swallowedWrites } from "@/lib/supabase/tour-writes";
 import type { TourTrack } from "./tour-steps";
 
 export type TourPhase =
@@ -73,12 +73,17 @@ export function openTour(auto = false) {
 }
 
 /**
- * 關閉 —— 一定要把練習模式也關掉。
- * 「教學完以後再還給使用者自行控制」: 這裡是那句話的實作點, 任何離開的路徑都會經過它。
+ * 關閉 —— **全站唯一的離開出口**, 任何離開的路徑 (完成 / 結束教學 / Esc / 關閉鈕) 都走這裡。
+ * 兩件事一定要做:
+ *   1. 關掉教學模式 (「教學完以後再還給使用者自行控制」的實作點);
+ *   2. 教學期間如果吞過寫入, **重新載入** —— 畫面上那些「看起來改了但沒存」的樂觀更新
+ *      必須清掉, 否則使用者會以為那些調整存下來了 (使用者:「教學完不要留著這些資料」)。
  */
 export function closeTour() {
-  setWritesBlocked(false);
+  const dirty = swallowedWrites() > 0;
+  setTourWritesBlocked(false);
   set(CLOSED);
+  if (dirty && typeof window !== "undefined") window.location.reload();
 }
 
 export function startTrack(track: TourTrack) {
@@ -89,9 +94,8 @@ export function goToStep(step: number) {
   set({ step });
 }
 
-/** 最後一步做完 → 收尾卡 */
+/** 最後一步做完 → 收尾卡。教學還沒結束, 所以**不要**在這裡解除教學模式 */
 export function finishTrack() {
-  setWritesBlocked(false);
   set({ phase: "done" });
 }
 
@@ -101,7 +105,6 @@ export function setTourGymId(gymId: string | null) {
 
 /** 回到「你是哪一種」(教學中途想換一條路) */
 export function backToChooser() {
-  setWritesBlocked(false);
   set({ phase: "choose", track: null, step: 0 });
 }
 

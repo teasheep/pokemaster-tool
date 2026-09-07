@@ -6,8 +6,8 @@
 // 所以每一步不再是「看我示範」而是「換你做一次」——
 //   - **教學不會替使用者換頁**。要去別頁的那幾步是框住導覽列上的入口, 等他自己點;
 //     人不在那一頁時整張卡改成「指路」(見檔尾 wayTo), 走到了才換回這一步本身。
-//   - 真的會動到資料的那幾步標 `practice: true` —— 那段期間 Supabase 的寫入會被吞掉
-//     (lib/supabase/practice-mode.ts), 畫面照變但不進資料庫。
+//   - **整段教學期間, Supabase 的寫入一律被吞掉** (lib/supabase/tour-writes.ts) ——
+//     畫面照變但不進資料庫, 連「建立賽事」也一樣。教學不留任何資料。
 //   - 每一步自己說「什麼時候算做完」(advance), 做完了框會閃一下綠色再往下走。
 //
 // 內容一律講站內真的有的規則, 而且優先講「不講就沒人會發現」的事。
@@ -33,11 +33,6 @@ export type TourStep = {
   title: string;
   body: string;
   advance: TourAdvance;
-  /**
-   * 這一步使用者會動到資料 → 期間把 Supabase 的寫入吞掉。
-   * 畫面照樣即時更新 (樂觀更新在前端), 但不會存進資料庫。
-   */
-  practice?: boolean;
   /**
    * 這一步該在哪一頁。**不會自動導航** —— 只用來在使用者跑掉時提供「幫我開」。
    * 需要道館 id 的用 `gym:` 開頭, 由 runner 換掉。
@@ -109,15 +104,13 @@ export const TRACKS: TourTrackDef[] = [
         title: "點一張卡看看",
         body: "任何一張都可以，沒有的灰卡也點得開。",
         advance: { on: "appear", target: "side-panel" },
-        practice: true,
       },
       {
         target: "side-panel",
         at: "/pairs",
         title: "這裡設星數與寶數",
-        body: "星數只能從原始星級升到 6★EX。寶數與超覺醒是同一條軸：未持有 → 寶1-5 → 超覺醒1-5。這一段是練習，改了不會存檔。",
+        body: "星數只能從原始星級升到 6★EX。寶數與超覺醒是同一條軸：未持有 → 寶1-5 → 超覺醒1-5。放心改，教學期間什麼都不會存進資料庫。",
         advance: { on: "next" },
-        practice: true,
         extra: {
           ifTarget: "gym-pair-toggle",
           body: "你這裡還有一顆「☆ 設為道館拍組」—— 那是給整館看的名單（★），不是你自己的練度。設進去之後，所有人的「道館重點拍組」分頁都會出現這一組，還會統計全館幾個人有。只有管理員與編輯者看得到這顆。",
@@ -129,7 +122,6 @@ export const TRACKS: TourTrackDef[] = [
         title: "換你試試：點卡片左下角",
         body: "不用開側板也能調寶數 —— 寶1 → 寶5 → 超覺醒1 → 超覺醒5 → 歸零。一整排調練度用這個最快。",
         advance: { on: "click" },
-        practice: true,
         at: "/pairs",
       },
       {
@@ -173,7 +165,7 @@ export const TRACKS: TourTrackDef[] = [
         target: "battle-create",
         at: "gym:/battles",
         title: "開一場道館戰",
-        body: "管理員用右上角的「建立賽事」開一場。裡面可以直接套用模板 —— 遊戲每一回的 8 關弱點屬性是固定的，選「第一次／第二次／第三次」就一次填好，不用建立完再一格一格點。",
+        body: "管理員用右上角的「建立賽事」開一場。裡面可以直接套用模板 —— 遊戲每一回的 8 關弱點屬性是固定的，選「第一次／第二次／第三次」就一次填好，不用建立完再一格一格點。（教學期間按下去不會真的建立，看看裡面長怎樣就好。）",
         advance: { on: "next" },
       },
       {

@@ -13,9 +13,9 @@
 //  2. **整層不吃點擊**。overlay 一律 pointer-events:none, 壓暗只是視覺 ——
 //     使用者要點什麼都點得到, 教學只是在旁邊看著。這也是「還給使用者自行控制」
 //     最省事的實作: 沒有東西需要「還」。
-//  3. **會動到資料的步驟標 practice** → 那段期間 Supabase 的寫入被吞掉
-//     (lib/supabase/practice-mode.ts), 畫面照變但不進資料庫。離開教學一定要關掉它,
-//     所有離開路徑都經過 tour-store 的 closeTour/finishTrack/backToChooser。
+//  3. **教學開著 = 所有寫入都不進資料庫**, 沒有例外 (lib/supabase/tour-writes.ts) ——
+//     畫面照變但沒送出去, 連「建立賽事」也一樣。解除與「重新載入清掉樂觀更新」
+//     都在 tour-store 的 closeTour (全站唯一的離開出口)。
 //  4. **幾何每一幀直接寫進 DOM**, 不走 React state (框要跟著捲動走 = 每幀更新一次,
 //     用 setState 等於每幀重繪整張卡)。與首頁氛圍層同一條教訓。位移一律 translate3d。
 //  5. **位移補間只在「同一畫面內換目標」時開**; 要捲動的改成框黏著元素走
@@ -25,11 +25,11 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, FlaskConical, GraduationCap, Hand, X } from "lucide-react";
+import { Check, GraduationCap, Hand, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { setWritesBlocked, swallowedWrites } from "@/lib/supabase/practice-mode";
+import { setTourWritesBlocked } from "@/lib/supabase/tour-writes";
 import { cn } from "@/lib/utils";
 import { centerPlacement, cornerRect, placeCallout, type Rect } from "./tour-place";
 import {
@@ -188,15 +188,14 @@ export function TourRunner({ userId }: { userId: string }) {
   }, [s.open, s.gymId, pathname, userId]);
 
   /**
-   * 練習模式 —— **綁在「那一步該在的那一頁」上, 不是只綁步驟** (2026-09-07 修)。
-   * 只看步驟的話, 使用者在「側板」那一步跑去 /resources 改糖果, 寫入也會被吞掉,
-   * 而且完全沒有徵兆 (畫面照變、沒有錯誤)。那是很難察覺的資料遺失。
+   * **教學開著 = 所有寫入都不進資料庫**, 沒有例外
+   * (使用者:「連建立賽事也不要, 教學完不要留著這些資料, 這樣才一致合理」)。
+   * 只擋某幾步的話, 同一段教學裡有些動作會留下資料、有些不會 —— 畫面上看不出差別,
+   * 而且事後要自己去清。解除在 closeTour (全站唯一的離開出口, 順便重新載入清掉樂觀更新)。
    */
-  const needAt = resolveAt(step?.at, s.gymId);
-  const practicing = Boolean(running && step?.practice && needAt && onPage(pathname, needAt));
   useEffect(() => {
-    setWritesBlocked(practicing);
-  }, [practicing]);
+    setTourWritesBlocked(s.open);
+  }, [s.open]);
 
   // ── 下一步大概會去哪, 先抓起來 (使用者自己點過去時就不用等) ──
   useEffect(() => {
@@ -440,8 +439,8 @@ export function TourRunner({ userId }: { userId: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [s.open]);
 
-  // 離開頁面 / 元件卸載時一定要把練習模式關掉 (寫入被吞掉是很難察覺的失敗)
-  useEffect(() => () => setWritesBlocked(false), []);
+  // 元件卸載時一定要解除 (寫入被吞掉是很難察覺的失敗, 旗標卡住 = 之後全部靜默不存檔)
+  useEffect(() => () => setTourWritesBlocked(false), []);
 
   if (!s.open) return null;
 
@@ -455,8 +454,7 @@ export function TourRunner({ userId }: { userId: string }) {
       {/* 狀態膠囊 —— 使用者問「要不要加一條 bar 說這是教學頁面」。
           做成頂端置中的膠囊而不是整條橫貫的 bar: 整條會蓋住 header, 而教學正需要那排
           導覽列看得見也點得到 (指路就是框它)。
-          **文案分兩種**: 只有真的在練習 (寫入被吞掉) 時才說「不會存檔」——
-          其他步驟是真的會寫進資料庫的 (例如按下建立賽事), 一路寫死等於騙人。 */}
+          文案只有一種, 因為規則也只有一條: 教學開著 = 什麼都不會存進資料庫。 */}
       {running ? (
         <div
           ref={barRef}
@@ -464,21 +462,10 @@ export function TourRunner({ userId }: { userId: string }) {
         >
           <span
             role="status"
-            className={cn(
-              "flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm backdrop-blur",
-              practicing
-                ? "border-amber-500/50 bg-amber-500/20 text-amber-800 dark:text-amber-200"
-                : "border-border bg-card/90 text-muted-foreground"
-            )}
+            className="flex max-w-full items-center gap-1.5 rounded-full border border-amber-500/50 bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-800 shadow-sm backdrop-blur dark:text-amber-200"
           >
-            {practicing ? (
-              <FlaskConical className="h-3.5 w-3.5 shrink-0" />
-            ) : (
-              <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-            )}
-            <span className="truncate">
-              {practicing ? "練習模式 · 這裡的調整不會存進資料庫" : "使用教學進行中"}
-            </span>
+            <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">使用教學進行中 · 操作不會存進資料庫</span>
           </span>
         </div>
       ) : null}
@@ -656,8 +643,6 @@ export function TourRunner({ userId }: { userId: string }) {
  */
 function DoneCard({ trackTitle, nextTrack }: { trackTitle: string; nextTrack: TourTrack | null }) {
   const next = nextTrack ? trackDef(nextTrack) : null;
-  // 練習模式吞掉過寫入 → 老實告訴使用者, 並讓「完成」重新整理回真實資料
-  const dirty = swallowedWrites() > 0;
   return (
     <>
       <div className="flex items-center gap-2">
@@ -668,12 +653,12 @@ function DoneCard({ trackTitle, nextTrack }: { trackTitle: string; nextTrack: To
           {trackTitle} — 看完了
         </h2>
       </div>
-      {dirty ? (
-        <p className="mt-2 rounded-lg bg-muted/60 px-2.5 py-2 text-xs text-muted-foreground">
-          剛剛練習時調的練度<strong className="font-semibold">沒有</strong>存進資料庫（那是練習用的）。
-          按「完成」會重新載入，畫面就回到你真正的資料。
-        </p>
-      ) : null}
+      {/* 教學期間的操作一律不入庫 —— 收尾時老實講一次。真的動過東西的話,
+          closeTour 會順便重新載入把畫面拉回真實資料 (那個判斷在 store 裡)。 */}
+      <p className="mt-2 rounded-lg bg-muted/60 px-2.5 py-2 text-xs text-muted-foreground">
+        教學裡做的任何調整都<strong className="font-semibold">沒有</strong>存進資料庫。
+        離開時會重新載入，畫面就回到你真正的資料。
+      </p>
       {next ? (
         <p className="mt-2 text-sm text-muted-foreground">
           還有「{next.title}」這一段（{next.hint}）—— 現在看，還是之後從頭像選單再叫？
@@ -687,10 +672,7 @@ function DoneCard({ trackTitle, nextTrack }: { trackTitle: string; nextTrack: To
         <Button
           variant={next ? "outline" : "default"}
           size="sm"
-          onClick={() => {
-            closeTour();
-            if (dirty) window.location.reload();
-          }}
+          onClick={closeTour}
         >
           {next ? "不用了" : "完成"}
         </Button>

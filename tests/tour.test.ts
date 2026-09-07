@@ -6,8 +6,8 @@
 //   1. **步驟指的 data-tour 必須真的存在於程式碼裡**。改版面時把某個
 //      `data-tour="gym-create"` 刪掉/改名, 那一步就會靜靜降級成置中的說明卡,
 //      而且互動步驟會永遠等不到使用者「點對地方」。
-//   2. **練習模式只能開在真的會寫資料的那幾步**, 而且 `shouldSwallow` 絕對不能碰
-//      `/auth/v1/` —— 吞掉 token 刷新就是把人登出。
+//   2. **教學期間所有寫入都要被吞掉**, 而且 `shouldSwallow` 絕對不能碰 `/auth/v1/`
+//      —— 吞掉 token 刷新就是把人登出。
 //   3. **卡片不能被擺到畫面外** (手機視窗矮、目標在最下面時最容易發生)。
 
 import fs from "node:fs";
@@ -31,7 +31,13 @@ import {
   trackDef,
   wayTo,
 } from "@/components/tour/tour-steps";
-import { setWritesBlocked, shouldSwallow, writesBlocked } from "@/lib/supabase/practice-mode";
+import {
+  TOUR_WRITE_MESSAGE,
+  setTourWritesBlocked,
+  shouldSwallow,
+  swallowResponse,
+  tourWritesBlocked,
+} from "@/lib/supabase/tour-writes";
 
 // ── 1. 步驟指的目標都真的存在 ──
 
@@ -98,7 +104,7 @@ describe("教學步驟指的東西真的存在", () => {
   });
 });
 
-// ── 2. 互動 / 串接 / 練習模式 ──
+// ── 2. 互動 / 串接 / 教學期間不寫入 ──
 
 describe("互動與串接", () => {
   it("成員那條主要是「換你點」, 不是一路按下一步", () => {
@@ -119,10 +125,10 @@ describe("互動與串接", () => {
     expect(steps.some((s) => s.target === "member-row")).toBe(true);
   });
 
-  it("練習模式只開在 /pairs 那幾步 (那裡才有我們打算吞掉的寫入)", () => {
+  it("步驟上不該再有「哪幾步才擋寫入」的旗標 —— 規則是整段教學都擋", () => {
     for (const t of TRACKS) {
       for (const s of t.steps) {
-        if (s.practice) expect(s.at, `${t.id}: ${s.title}`).toBe("/pairs");
+        expect(Object.keys(s), `${t.id}: ${s.title}`).not.toContain("practice");
       }
     }
   });
@@ -145,18 +151,18 @@ describe("互動與串接", () => {
   });
 });
 
-describe("練習模式吞寫入 — 絕對不能碰 auth", () => {
+describe("教學期間吞寫入 — 絕對不能碰 auth", () => {
   const REST = "https://x.supabase.co/rest/v1/user_collection";
   const AUTH = "https://x.supabase.co/auth/v1/token?grant_type=refresh_token";
 
   it("關著的時候什麼都不吞", () => {
-    setWritesBlocked(false);
-    expect(writesBlocked()).toBe(false);
+    setTourWritesBlocked(false);
+    expect(tourWritesBlocked()).toBe(false);
     expect(shouldSwallow(REST, "POST")).toBe(false);
   });
 
   it("開著時吞 rest 的寫入, 但讀取照過", () => {
-    setWritesBlocked(true);
+    setTourWritesBlocked(true);
     expect(shouldSwallow(REST, "POST")).toBe(true);
     expect(shouldSwallow(REST, "PATCH")).toBe(true);
     expect(shouldSwallow(REST, "DELETE")).toBe(true);
@@ -165,10 +171,33 @@ describe("練習模式吞寫入 — 絕對不能碰 auth", () => {
   });
 
   it("**token 刷新是 POST /auth/v1/ — 吞掉就是把人登出**", () => {
-    setWritesBlocked(true);
+    setTourWritesBlocked(true);
     expect(shouldSwallow(AUTH, "POST")).toBe(false);
     expect(shouldSwallow("https://x.supabase.co/auth/v1/logout", "POST")).toBe(false);
-    setWritesBlocked(false);
+    setTourWritesBlocked(false);
+  });
+
+  it("一般寫入回「成功但沒有列」—— 樂觀更新留在畫面上, 不跳錯誤 toast", async () => {
+    setTourWritesBlocked(true);
+    const res = swallowResponse({ method: "POST" });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+    setTourWritesBlocked(false);
+  });
+
+  it("**.single() 的寫入必須回錯誤**: 呼叫端會拿裡面的 id 去導頁 (建立賽事), 假成功會導到不存在的頁", async () => {
+    setTourWritesBlocked(true);
+    const res = swallowResponse({
+      method: "POST",
+      headers: { Accept: "application/vnd.pgrst.object+json" },
+    });
+    expect(res.ok).toBe(false);
+    expect((await res.json()).message).toBe(TOUR_WRITE_MESSAGE);
+    // Headers 物件與陣列形式也要認得 (supabase-js 內部可能兩種都用)
+    expect(
+      swallowResponse({ headers: new Headers({ Accept: "application/vnd.pgrst.object+json" }) }).ok
+    ).toBe(false);
+    setTourWritesBlocked(false);
   });
 });
 
