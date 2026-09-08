@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { NOINDEX } from "@/lib/site";
 import { Suspense } from "react";
-import { Sofa } from "lucide-react";
+import { CoachBallMark } from "@/components/coach-ball-mark";
 
 import { PageShell } from "@/components/page-shell";
 import { LoginForm } from "./login-form";
@@ -31,7 +31,7 @@ export default function LoginPage() {
         <div className="mx-auto flex max-w-sm flex-col items-center text-center">
           {/* 品牌 —— 跟 SiteHeader 同一組圖示 + 名稱, 讓人確定沒走錯站 */}
           <div className="flex items-center gap-2 text-lg font-semibold">
-            <Sofa className="h-5 w-5 text-amber-500" aria-hidden />
+            <CoachBallMark className="h-5 w-5 shrink-0" />
             教練休息室
           </div>
           <h1 className="mt-6 text-2xl font-bold tracking-tight">登入</h1>

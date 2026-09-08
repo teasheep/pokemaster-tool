@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Upload, BookOpen, Candy, Shield, Sofa } from "lucide-react";
+import { Upload, BookOpen, Candy, Shield } from "lucide-react";
 
 import { getSessionUser } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { CoachBallMark } from "@/components/coach-ball-mark";
 import { HeaderSignIn } from "@/components/header-sign-in";
 import { ShellRow } from "@/components/page-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -23,10 +24,11 @@ export async function SiteHeader() {
           href={user ? "/gyms" : "/"}
           className="flex shrink-0 items-center gap-2 font-semibold pointer-coarse:min-h-11"
         >
-          {/* 品牌 icon 用沙發 (休息室), 與導覽列「道館」的盾牌區隔 */}
-          <Sofa className="h-5 w-5 text-amber-500" />
+          {/* 品牌圖示 = 大師球外框 (npm run logo:build 產生的那顆), 與導覽列「道館」的盾牌區隔。
+              吃 currentColor, 所以深淺主題都跟著文字色走 */}
+          <CoachBallMark className="h-5 w-5 shrink-0" />
           {/* 手機的三個分頁移到底部導覽列了, 空出來的寬度拿來顯示站名 —
-              只有一顆沙發圖示認不出這是什麼站。桌機 (sm~md) 維持原樣: 站名藏起來讓給分頁 */}
+              只有一顆圖示認不出這是什麼站。桌機 (sm~md) 維持原樣: 站名藏起來讓給分頁 */}
           <span className="inline sm:hidden md:inline">教練休息室</span>
         </Link>
 

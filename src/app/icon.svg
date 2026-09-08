@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="教練休息室">
+  <title>教練休息室</title>
+  <!-- 由 npm run logo:build 產生, 不要手改。分頁列底色深淺都有, 所以自己換色。
+       小尺寸簡化版 (favicon 常被畫到 16px) —— 理由見腳本裡的 SMALL_GEOM。 -->
+  <style>
+    :root { --ink: #000; }
+    @media (prefers-color-scheme: dark) { :root { --ink: #fff; } }
+  </style>
+  <g fill="none" stroke="var(--ink)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="100" cy="100" r="84"/>
+    <path d="M16 100 H68"/>
+    <path d="M132 100 H184"/>
+    <path d="M79 63 V35 L100 53 L121 35 V63" stroke-width="15"/>
+    <circle cx="100" cy="100" r="26"/>
+  </g>
+</svg>
