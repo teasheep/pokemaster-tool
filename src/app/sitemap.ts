@@ -25,5 +25,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    // 法遵頁。列進來是刻意的: Google OAuth 審核要求隱私權政策與服務條款是
+    // **公開、不需登入**的網址, 進 sitemap 等於再明確一次「這兩頁就是給所有人看的」。
+    { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ];
 }

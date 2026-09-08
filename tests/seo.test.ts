@@ -59,7 +59,23 @@ describe("sitemap.xml", () => {
   const urls = sitemap().map((e) => e.url);
 
   it("只列不需要登入、而且真的有內容的頁", () => {
-    expect(urls).toEqual([`${SITE_URL}/`, `${SITE_URL}/pairs`]);
+    // 法遵頁 (privacy/terms) 也在裡面: Google OAuth 審核要求它們是公開、不需登入的網址,
+    // 列進 sitemap 是刻意的宣告。要加別的頁進來之前先想清楚它是不是真的該被收錄。
+    expect(urls).toEqual([
+      `${SITE_URL}/`,
+      `${SITE_URL}/pairs`,
+      `${SITE_URL}/privacy`,
+      `${SITE_URL}/terms`,
+    ]);
+  });
+
+  it("**法遵頁一定要在公開路由裡** — 被登入牆擋住 Google OAuth 審核就過不了", async () => {
+    const fs = await import("node:fs");
+    const proxy = fs.readFileSync("src/lib/supabase/proxy.ts", "utf8");
+    const list = proxy.slice(proxy.indexOf("PUBLIC_ROUTES"), proxy.indexOf("];", proxy.indexOf("PUBLIC_ROUTES")));
+    for (const p of ["/privacy", "/terms"]) {
+      expect(list, `${p} 不在 PUBLIC_ROUTES`).toContain(`"${p}"`);
+    }
   });
 
   it("不含任何需要登入或半秘密的路徑", () => {

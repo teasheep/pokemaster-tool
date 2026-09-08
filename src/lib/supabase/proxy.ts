@@ -17,6 +17,10 @@ const PUBLIC_ROUTES = [
   "/pairs",
   "/welcome",
   "/api/export",
+  // 法遵頁。**一定要公開** —— Google OAuth 審核會去打這兩個網址, 被登入牆擋住就過不了
+  // (審核端沒有 session, 看到的會是 /login)。內容本來也就是公開文件。
+  "/privacy",
+  "/terms",
 ];
 
 // cookie 的判讀與「這一趟要不要打網路」的決定都在 session-cookie.ts (純函式, 有測試)。
