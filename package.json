@@ -19,7 +19,9 @@
     "preview:cf": "node scripts/deploy-cloudflare.mjs --preview",
     "art:preview": "node scripts/preview-trainer-art.mjs",
     "art:trainer": "node scripts/fetch-wiki-trainer-images.mjs",
-    "qa:click": "node scripts/click-test.node.mjs"
+    "qa:click": "node scripts/click-test.node.mjs",
+    "logo:font": "node scripts/fetch-logo-font.node.mjs",
+    "logo:build": "node scripts/build-logo.node.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -56,6 +58,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "^16.3.0",
+    "opentype.js": "^2.0.0",
     "pg": "^8.21.0",
     "playwright": "^1.63.0",
     "tailwindcss": "^4",

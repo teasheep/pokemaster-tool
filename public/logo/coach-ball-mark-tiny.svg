@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="教練休息室">
+  <title>教練休息室</title>
+  <!-- 無字加粗版 — 只給 16px 這種極小尺寸 (一般線寬在那裡會糊掉)。
+       文字已轉為路徑 (Noto Sans TC Bold, SIL OFL) — 不依賴系統字型。
+       要改字就重跑 npm run logo:build, 不要手改下面那條 path。 -->
+  <g fill="none" stroke="#000" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="100" cy="100" r="86" fill="#fff"/>
+    <path d="M14 100 H70"/>
+    <path d="M130 100 H186"/>
+    <circle cx="55" cy="48" r="9"/>
+    <circle cx="145" cy="48" r="9"/>
+    <path d="M79 63 V35 L100 53 L121 35 V63" stroke-width="13"/>
+    <circle cx="100" cy="100" r="27" fill="#fff"/>
+    <circle cx="100" cy="100" r="12"/>
+  </g>
+</svg>
