@@ -454,6 +454,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 手機側板 = bottom sheet (`ui/side-panel.tsx` 已處理, 新側板沿用該元件)。
 - **使用者看得到的值一律繁中** — 資料層的英文值 (region 等) 顯示前必須過對照表
   (`REGION_LABELS`/`TYPE_LABELS`/`ROLE_LABELS`/`SERIES_LABELS`), 不要直出英文。
+- **UI 的點擊行為用 `npm run qa:click` 驗, 不要只驗 SSR** (2026-09-08 加):
+  抓頁面只證明「畫得出來」, 證明不了「按鈕按下去會怎樣」—— 上線前那一輪掃出來的 8 個 bug,
+  一半是點下去才會發生的。那支用**本機安裝的 Chrome** (playwright `channel: "chrome"`,
+  不下載 Chromium), 登入走 render-probe 合成 cookie, 並且**把 pageerror 與 console error
+  一律當失敗** —— 那正是 SSR 探測看不到的那一半。
+  它會建一個隔離的測試帳號與測試道館, 跑完 (含失敗) 一定刪掉, **不碰那 20 位真實成員的資料**。
+  前置: dev server 要跑著; 加 `-- --headed` 可以開著視窗看它點。
+  (Claude 的 Chrome 擴充沒裝時就走這條, 不必卡在那裡。)
 - **決定「畫面長什麼樣」的 client 狀態一律同步進網址** (`lib/use-url-state.ts`,
   2026-09-08 使用者:「重新整理會固定帶到道館重點拍組的 tab, 但應該要留在使用者目前的
   畫面才對, 這個整體都需要調整一下」)。目前有: `/pairs` 的 `tab` / `owned`,
