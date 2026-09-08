@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { PageHeading, PageShell } from "@/components/page-shell";
 import { LEGAL_UPDATED, LegalLink, LegalSection } from "@/components/legal";
-import { REPO_ISSUES_URL, REPO_URL, SITE_NAME } from "@/lib/site";
+import { CONTACT_EMAIL, REPO_ISSUES_URL, REPO_URL, SITE_NAME } from "@/lib/site";
 
 // **這頁必須是公開的** (Google OAuth 審核要求)。理由與 /privacy 相同, 見 components/legal.tsx。
 export const metadata: Metadata = {
@@ -118,9 +118,14 @@ export default function TermsPage() {
 
           <LegalSection title="十、聯絡方式">
             <p>
-              對本條款有任何疑問，請到 GitHub 專案
-              <LegalLink href={REPO_ISSUES_URL}>開一個 issue</LegalLink>
-              與開發者聯繫。issue 是公開的，請不要在內容裡留下個人資料。
+              對本條款有任何疑問，或要求刪除帳號，請來信
+              <LegalLink href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</LegalLink>
+              （請用你登入本服務的那個 Google 帳號寄信，以便確認是本人提出）。
+            </p>
+            <p>
+              功能建議與問題回報則可以到
+              <LegalLink href={REPO_ISSUES_URL}>GitHub issue</LegalLink>
+              ；issue 是公開的，請不要在裡面留下個人資料。
             </p>
           </LegalSection>
 

@@ -93,10 +93,19 @@ describe("sitemap.xml", () => {
 });
 
 describe("法遵頁的聯絡方式", () => {
-  // 沒有客服信箱, 唯一的對外管道就是 GitHub issue。兩頁都要指到它 ——
-  // 這條壞掉沒有徵兆 (頁面照樣渲染, 只是「聯絡方式」變成一句沒有連結的空話),
+  // 兩個管道是**分工不是備援**: 個人資料的事走 email (issue 是公開的),
+  // 功能建議走 issue。兩頁都要同時有這兩個 ——
+  // 壞掉沒有徵兆 (頁面照樣渲染, 只是「聯絡方式」變成一句沒有連結的空話),
   // 而 Google OAuth 審核看的正是這一段。
-  it("兩頁都連到 GitHub issue (唯一的對外聯絡管道)", async () => {
+  it("兩頁都給得出可觸及的信箱 (刪除帳號的請求要走這裡)", async () => {
+    const fs = await import("node:fs");
+    for (const page of ["src/app/privacy/page.tsx", "src/app/terms/page.tsx"]) {
+      const src = fs.readFileSync(page, "utf8");
+      expect(src, `${page} 沒有 mailto:CONTACT_EMAIL`).toContain("mailto:${CONTACT_EMAIL}");
+    }
+  });
+
+  it("兩頁都連到 GitHub issue (功能建議與問題回報)", async () => {
     const fs = await import("node:fs");
     for (const page of ["src/app/privacy/page.tsx", "src/app/terms/page.tsx"]) {
       const src = fs.readFileSync(page, "utf8");

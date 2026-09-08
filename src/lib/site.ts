@@ -30,8 +30,20 @@ export const OG_IMAGE = "/og.png";
  */
 export const REPO_URL = "https://github.com/teasheep/pokemaster-tool";
 
-/** 提 issue 的直接入口 —— 「聯絡作者」在這個專案就是這一件事 */
+/** 提 issue 的直接入口 —— 功能建議、bug 回報走這裡 (公開) */
 export const REPO_ISSUES_URL = `${REPO_URL}/issues`;
+
+/**
+ * 作者的聯絡信箱 (使用者 2026-09-08 指定)。
+ *
+ * **兩個管道是分工不是備援**: issue 是公開的, 所以「要求刪除帳號與資料」這種
+ * 必然要講到自己是誰的事一律走 email; 功能建議與 bug 則走 issue (公開討論才有意義)。
+ * 隱私權政策與服務條款都照這個分工寫, 改一邊記得改另一邊。
+ *
+ * 這個位址也是 Google Cloud Console 那邊 OAuth 同意畫面的支援信箱 ——
+ * 審核會比對「政策上寫的聯絡方式」與「同意畫面填的」, 兩邊一致比較不會被退。
+ */
+export const CONTACT_EMAIL = "eric990262@gmail.com";
 
 /**
  * 私密頁的 metadata —— 直接展開到頁面的 `export const metadata`。

@@ -622,11 +622,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      那條擋的是需要登入或半秘密的內容, 法遵頁本來就是公開文件), 並且列進 sitemap。
   2. **站上要連得到** —— 審核除了看網址, 也會看它們是不是真的掛在應用程式裡; 頁尾在每一頁都有,
      是最穩的位置。
-  3. **聯絡方式 = GitHub issue, 沒有客服信箱** (使用者 2026-09-08 指定, 因為專案已開源):
-     網址只有一份 —— `lib/site.ts` 的 `REPO_URL` / `REPO_ISSUES_URL`, 兩頁與頁尾都吃它。
-     文案要提醒「issue 是公開的, 不要留個人資料」—— 隱私權政策叫人來提刪除帳號的要求,
-     而那個管道本身是公開的, 不講就是把人推去公開場合貼自己的資料。
-  `tests/seo.test.ts` 釘住這三條 (公開路由 / sitemap / 兩頁與頁尾都指到 issue) ——
+  3. **聯絡方式有兩個管道, 是分工不是備援** (使用者 2026-09-08 指定):
+     **個人資料的事走 email** (`CONTACT_EMAIL`, 作者信箱) —— 要求查詢/刪除帳號必然要講到
+     自己是誰, 而 **GitHub issue 是公開的**; **功能建議與 bug 走 issue** (公開討論才有意義)。
+     兩頁都要同時給出這兩個, 並提醒 issue 不要留個人資料 —— 少了這句就是把人推去
+     公開場合貼自己的 email 與真實姓名。
+     位址只有一份 —— `lib/site.ts` 的 `REPO_URL` / `REPO_ISSUES_URL` / `CONTACT_EMAIL`。
+     信箱要與 **Google Cloud Console 同意畫面的支援信箱一致** (審核會比對兩邊),
+     而且政策要求「用登入本服務的那個 Google 帳號寄信」當本人核對 —— 這是這個站唯一
+     能做的身分驗證 (帳號識別一律 email = auth 帳號)。
+  `tests/seo.test.ts` 釘住這三條 (公開路由 / sitemap / 兩頁都要有信箱與 issue, 頁尾連得到) ——
   全部都是**壞掉沒有徵兆**的東西: 頁面照樣渲染, 只是審核那天才發現過不了。
 - **安全標頭寫在 `next.config.ts` 的 `headers()` 不是 `public/_headers`**: 後者只作用在
   **靜態資產命中的回應**, 而頁面 HTML 是 Worker 動態產的。`_headers` 裡第二次設同一個 key 是
