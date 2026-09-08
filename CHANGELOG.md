@@ -8,6 +8,10 @@
 
 預計要做的事見 [ROADMAP.md](ROADMAP.md)。
 
+## [1.4.1] — 2026-09-08
+
+重新整理留在原本的畫面；九位訓練家的立繪取景校正。
+
 ### 修正
 
 - **重新整理會留在你目前的畫面，不再跳回「道館重點拍組」**。
@@ -293,7 +297,8 @@
 初版。原本的目標是「上傳遊戲截圖自動辨識拍組」（DINOv2 embedding 兩階段比對），
 2026-08 中轉向道館賽協作功能，辨識管線暫緩但程式碼保留。
 
-[未發布]: https://github.com/teasheep/pokemaster-tool/compare/v1.4.0...HEAD
+[未發布]: https://github.com/teasheep/pokemaster-tool/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/teasheep/pokemaster-tool/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/teasheep/pokemaster-tool/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/teasheep/pokemaster-tool/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/teasheep/pokemaster-tool/releases/tag/v1.2.0
