@@ -28,9 +28,28 @@
 // 都會被算進「頭寬」→ 縮太小 (實測 gain=1 時她們是整個人站在框裡)。
 // 只有 9 張, 逐張目視定比自動偵測可靠。**gain 大 = 更近**。
 
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
-const sharp = require("sharp");
+// 一般 import 而不是 createRequire —— 這支會被本機工具頁的 API route 一起打包,
+// createRequire(import.meta.url) 與 new URL(..., import.meta.url) 都會讓 bundler 解析失敗。
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import sharp from "sharp";
+
+/** wiki 原圖的本機快取 (ref/ 不進版控) —— 調參數要重算很多次, 不該每次都打 wiki */
+const CACHE_DIR = path.join(process.cwd(), "ref/.art-src");
+
+/** 下載並快取原圖; 腳本與工具頁的 API 共用同一份 */
+export async function sourceBuffer(id, url) {
+  const cached = path.join(CACHE_DIR, id + ".png");
+  if (existsSync(cached)) return readFileSync(cached);
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  mkdirSync(CACHE_DIR, { recursive: true });
+  writeFileSync(cached, buf);
+  return buf;
+}
 
 /** 原生胸像的取景基準 (128 畫布上的像素) */
 export const TARGET = { headW: 0.438 * 128, headCx: 0.363 * 128, headTop: 0.016 * 128 };

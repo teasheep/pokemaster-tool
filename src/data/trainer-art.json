@@ -1,0 +1,77 @@
+{
+  "_note": "brybry 給的不是頭肩胸像的那幾位 (通用職業 NPC + 主角) —— 改從 fandom wiki 的 1024x1024 全身圖重裁。gain 大 = 更近; dx 正 = 往右; dy 正 = 往下。標準是官方原生縮圖, 不是喜好。本機工具頁 /dev/trainer-art 可以拉滑桿調並直接寫回這裡。",
+  "targets": [
+    {
+      "id": "ch0653_68_kirika",
+      "note": "桐華 Kali (長袖和服少女)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/9/9e/Furisode_Girl_1.png/revision/latest?cb=20221227040416&format=original",
+      "gain": 2.2,
+      "dx": 0,
+      "dy": 0
+    },
+    {
+      "id": "ch0658_00_karen",
+      "note": "華蓮 Katherine (長袖和服少女)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/6/60/Furisode_Girl_2.png/revision/latest?cb=20231227073845&format=original",
+      "gain": 2.4,
+      "dx": 0,
+      "dy": 0
+    },
+    {
+      "id": "ch0351_00_shione",
+      "note": "汐音 Blossom (長袖和服少女)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/1/10/Furisode_Girl_3.png/revision/latest?cb=20250105072546&format=original",
+      "gain": 1.3,
+      "dx": 0,
+      "dy": 0
+    },
+    {
+      "id": "ch0363_00_asami",
+      "note": "亞莎美 Linnea (長袖和服少女)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/e/ef/Furisode_Girl_4.png/revision/latest?cb=20251226014519&format=original",
+      "gain": 1.15,
+      "dx": 0,
+      "dy": 0
+    },
+    {
+      "id": "ch0652_68_sayoko",
+      "note": "紗幽子 Helena (靈異迷)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/e/e9/Hex_Maniac.png/revision/latest?cb=20220926182000&format=original",
+      "gain": 1.75,
+      "dx": 38,
+      "dy": 0
+    },
+    {
+      "id": "chp000_00_player",
+      "note": "主角 Scottie (11 個 player-* 拍組共用這一張)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/4/4b/Scottie.png/revision/latest",
+      "gain": 1.12,
+      "dx": 12,
+      "dy": 7
+    },
+    {
+      "id": "ch0656_00_ibu",
+      "note": "伊芙 Eve (寶可夢小朋友, 伊布連帽裝)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/f/fa/Pok%C3%A9_Kid_Female.png/revision/latest?cb=20231221070512&format=original",
+      "gain": 1.3,
+      "dx": 12,
+      "dy": 0
+    },
+    {
+      "id": "ch0657_00_chusuke",
+      "note": "丘助 Petey (寶可夢小朋友, 皮卡丘連帽裝)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/4/46/Pok%C3%A9_Kid_Male.png/revision/latest?cb=20240211065103&format=original",
+      "gain": 1.3,
+      "dx": 20,
+      "dy": 0
+    },
+    {
+      "id": "ch0364_00_masahito",
+      "note": "勇仁 Teddy (登山男)",
+      "url": "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/a/a9/Hiker.png/revision/latest?cb=20220318142155&format=original",
+      "gain": 0.85,
+      "dx": 0,
+      "dy": 0
+    }
+  ]
+}

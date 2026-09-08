@@ -115,23 +115,30 @@ export function loadPairsById(): Promise<Map<string, PairRecord>> {
 //    每天最多重算一次, CPU 成本可以忽略 (免費方案每請求 10ms 上限)。
 //    靜態資產那條路徑是**建置時**產的, 不會自己更新 → 新拍組上架當天要重跑
 //    `npm run data:catalog` 並重新部署, 「全圖鑑」才看得到 (SSR 頁面則會自動放行)。
+/**
+ * 一筆記錄 → client 投影。**只是欄位挑選, 不含任何「能不能對外送」的判斷** ——
+ * 那個判斷在 `loadPairsForClient()` 的 filter, 不要搬進來。
+ * (抽出來是為了本機的取景工具頁能拿未上市拍組畫卡片, 又不必抄一份投影。)
+ */
+export function toClientPair(r: PairRecord): ClientPairRecord {
+  const out = {} as Record<string, unknown>;
+  for (const k of CLIENT_PAIR_FIELDS) out[k] = r[k];
+  // 太晶化判定 = change 是 TERA, 或 forms 裡有 TERA_* 形態 (太晶前是一般型態的拍組)。
+  // 判定放這裡而不是卡片裡: forms 是 catalog 最肥的欄位 (~62KB/頁), client 只為了這
+  // 十來隻太晶拍組載整包不划算 → 投影時折成一個布林。
+  out.isTera =
+    r.change === "TERA" ||
+    (r.forms ?? []).some((f) => String(f.kind ?? "").startsWith("TERA"));
+  return out as ClientPairRecord;
+}
+
 let clientCache: { day: string; value: Promise<ClientPairRecord[]> } | null = null;
 export function loadPairsForClient(): Promise<ClientPairRecord[]> {
   const day = taipeiToday();
   if (!clientCache || clientCache.day !== day) {
     const value = loadPairs().then((records) =>
       // 還不能對外送的拍組一律濾掉 (判準見 isUnreleasedPair)
-      records.filter((r) => !isUnreleasedPair(r, day)).map((r) => {
-        const out = {} as Record<string, unknown>;
-        for (const k of CLIENT_PAIR_FIELDS) out[k] = r[k];
-        // 太晶化判定 = change 是 TERA, 或 forms 裡有 TERA_* 形態 (太晶前是一般型態的拍組)。
-        // 判定放這裡而不是卡片裡: forms 是 catalog 最肥的欄位 (~62KB/頁), client 只為了這
-        // 十來隻太晶拍組載整包不划算 → 投影時折成一個布林。
-        out.isTera =
-          r.change === "TERA" ||
-          (r.forms ?? []).some((f) => String(f.kind ?? "").startsWith("TERA"));
-        return out as ClientPairRecord;
-      })
+      records.filter((r) => !isUnreleasedPair(r, day)).map(toClientPair)
     );
     clientCache = { day, value };
   }

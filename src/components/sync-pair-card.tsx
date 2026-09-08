@@ -92,6 +92,12 @@ type Props = {
   hideStars?: boolean;
   /** 顯示 EX role 第二徽章 (預設關, 由 /pairs 全域 toggle 控制) */
   showExRole?: boolean;
+  /**
+   * 換掉訓練家立繪的來源 (data: URL 也可以) —— **只給本機的取景工具頁用**
+   * (`/dev/trainer-art`, 那頁在 cloudflare build 完全不存在)。
+   * 站上一律不要傳: 立繪路徑的單一來源就是 trainerId, 傳了等於多一條規則。
+   */
+  trainerImgSrc?: string;
   /** 超覺醒等級 0-5 (使用者資料); >0 時在左側顯示超覺醒星 */
   superAwakening?: number;
   /** 是否已擁有; false 時卡片變灰 (管理頁未點亮狀態) */
@@ -138,6 +144,7 @@ export const SyncPairCard = memo(function SyncPairCard({
   showName = true,
   hideStars = false,
   showExRole = false,
+  trainerImgSrc,
   superAwakening = 0,
   owned = true,
   exStyle = false,
@@ -182,7 +189,7 @@ export const SyncPairCard = memo(function SyncPairCard({
   // (public/.assetsignore)。所以這裡改回 .png 會讓線上整牆變空圖。
   // 重啟 EX 換裝時要把 exStyleImagePath 加回 CLIENT_PAIR_FIELDS (見 AGENTS.md『EX 裝』) —
   // 立繪路徑一律吃 catalog 的 exStyleImagePath, 不要用 trainerId 拼 (同名多變體會拼錯)。
-  const tImg = `/reference/trainer/${pair.trainerId}_128.webp`;
+  const tImg = trainerImgSrc ?? `/reference/trainer/${pair.trainerId}_128.webp`;
   const pImg = `/reference/pokemon/${pair.pokemonId}_128.webp`;
 
   // 延遲載圖: 只延後「每張卡獨有的重圖」= 訓練家立繪 + 寶可夢圖 (一頁 645 張卡 ≈ 981 個請求

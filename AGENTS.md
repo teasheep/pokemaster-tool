@@ -398,7 +398,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      量頭寬會被誇張的髮型與裝扮騙 ——
      華蓮的雙馬尾、伊芙的伊布耳朵、紗幽子的長髮都會被算進「頭寬」, gain=1 時她們是
      整個人站在框裡。**gain 大 = 更近**。
-  4. **產出不要在下方留白** —— 墊了就又變成人物浮在框裡, 那正是要修的問題本身。
+  4. **參數的單一來源是 `src/data/trainer-art.json`**; 本機工具頁 `/dev/trainer-art`
+     (登入後開 http://localhost:3030/dev/trainer-art) 可以拉滑桿即時看**真正的卡片**,
+     按「寫入」同時更新 PNG/WebP 與那個 JSON, 之後 `npm run art:trainer` 重跑產出同一張。
+     那頁與它的 API 都是 `.node.*` 副檔名 → **線上建置根本不會產生這兩條路由**
+     (與截圖辨識同一套, 見 next.config.ts); `tests/trainer-art.test.ts` 釘住這件事。
+     `SyncPairCard` 的 `trainerImgSrc` prop 只給那頁用, 站上不要傳。
+  5. **產出不要在下方留白** —— 墊了就又變成人物浮在框裡, 那正是要修的問題本身。
   `tests/trainer-art.test.ts` 掃全部 471 張擋這兩件事 (畫布一律 128×128、下緣不得留白);
   新拍組帶進全身圖時它會變紅, 把 trainerId 加進 TARGETS 重跑即可。
   ⚠ 改完要跑 `npm run data:webp` (線上只吃 .webp), 而 `/reference/*` 的快取是 30 天

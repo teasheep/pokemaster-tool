@@ -47,6 +47,54 @@ const files = fs.existsSync(DIR)
   ? fs.readdirSync(DIR).filter((f) => f.endsWith("_128.webp"))
   : [];
 
+describe("取景工具頁只能存在於本機", () => {
+  // 它 import sharp (原生模組) 而且會寫檔 —— 一旦跟著上線, Workers 載不動會整條路由炸掉,
+  // 而「寫檔」本身在線上也毫無意義。做法與截圖辨識同一套: `.node.*` 副檔名讓
+  // cloudflare build 的 pageExtensions 根本不把它當路由 (見 next.config.ts 檔頭)。
+  it("page 與 API 都是 .node.* 副檔名", () => {
+    for (const f of [
+      "src/app/dev/trainer-art/page.node.tsx",
+      "src/app/api/dev/trainer-art/route.node.ts",
+    ]) {
+      expect(fs.existsSync(path.join(process.cwd(), f)), `${f} 不見了`).toBe(true);
+    }
+    // 同名但沒有 .node 的版本會被線上建置當成路由 —— 絕對不可以存在
+    for (const f of [
+      "src/app/dev/trainer-art/page.tsx",
+      "src/app/api/dev/trainer-art/route.ts",
+    ]) {
+      expect(fs.existsSync(path.join(process.cwd(), f)), `${f} 會被線上建置收進去`).toBe(false);
+    }
+  });
+
+  it("兩支都有 production 的保險絲 (萬一哪天被建出來也要 404)", () => {
+    for (const f of [
+      "src/app/dev/trainer-art/page.node.tsx",
+      "src/app/api/dev/trainer-art/route.node.ts",
+    ]) {
+      expect(fs.readFileSync(path.join(process.cwd(), f), "utf8"), `${f} 少了保險絲`).toContain(
+        'process.env.NODE_ENV === "production"'
+      );
+    }
+  });
+
+  it("站上的元件不可以傳 trainerImgSrc (那個 prop 只給工具頁)", () => {
+    const dir = path.join(process.cwd(), "src");
+    const offenders: string[] = [];
+    const walk = (d: string) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const full = path.join(d, e.name);
+        if (e.isDirectory()) walk(full);
+        else if (/\.tsx?$/.test(e.name) && !full.includes("trainer-art") && !e.name.startsWith("sync-pair-card")) {
+          if (fs.readFileSync(full, "utf8").includes("trainerImgSrc")) offenders.push(full);
+        }
+      }
+    };
+    walk(dir);
+    expect(offenders, "立繪路徑的單一來源是 trainerId").toEqual([]);
+  });
+});
+
 describe("訓練家立繪的取景", () => {
   it("掃得到圖 (掃不到代表這個測試自己壞了)", () => {
     expect(files.length).toBeGreaterThan(400);
