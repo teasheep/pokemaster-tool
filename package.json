@@ -16,7 +16,9 @@
     "data:webp": "node scripts/convert-card-images.mjs",
     "data:webp:verify": "node scripts/convert-card-images.mjs --verify",
     "deploy:cf": "node scripts/deploy-cloudflare.mjs",
-    "preview:cf": "node scripts/deploy-cloudflare.mjs --preview"
+    "preview:cf": "node scripts/deploy-cloudflare.mjs --preview",
+    "art:preview": "node scripts/preview-trainer-art.mjs",
+    "art:trainer": "node scripts/fetch-wiki-trainer-images.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
