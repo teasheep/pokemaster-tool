@@ -378,6 +378,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   徽章會蓋掉 series (有 11 隻掛大師徽章實為 BP 兌換) → 另存 `acquisitions[]` 全展開, 篩選兩邊都吃。
 - **主角 (Player) 拍組**由 `add-protagonist-pairs.mjs` 補 (管線 4d, 在 meta patch 之後);
   形象固定用官方預設男主角 Scottie。datamine 的重複拍組用 `dedupe-catalog-pairs.mjs` 以 wiki 為準去重。
+- **訓練家立繪一律是「頭肩胸像」** (2026-09-08 使用者回報:「人物的位置都跟其他拍組有落差」):
+  卡片把整張圖塞進固定的 144×144 再裁切 (`sync-pair-card.tsx`), 所以人物在畫布裡多大、
+  在哪, 完全由圖決定。brybry 原生縮圖是臉大、頭頂貼上緣、**肩胸被下緣裁掉**;
+  但通用職業 NPC (長袖和服少女 ×4、靈異迷、寶可夢小朋友 ×2、登山男) 與主角, brybry 給的是
+  **全身圖** —— 縮進同一個框就變成「小人漂浮」, 一整面卡牆裡一眼就看得出來。
+  這 9 張改從 fandom wiki 的 1024×1024 原圖重裁 (`scripts/fetch-wiki-trainer-images.mjs`),
+  規格在 `scripts/lib-trainer-image.mjs` 的 `toPortrait()`。三件事:
+  1. **判準是「下緣有沒有留白」**, 不是量頭的大小 —— 頭寬會被誇張髮型騙
+     (華蓮的雙馬尾量出來比原生基準還「大」, 方向完全相反)。原生胸像的下緣留白一律是 0。
+  2. **`band` 逐張目視定, 不要改成自動偵測**: 舊版的「取頂部 寬×0.85」在手臂張開的圖
+     (寬 ≥ 高×0.85) 根本不裁, 在兜帽角色上又會切過臉。只有 9 張, 用眼睛比較可靠。
+  3. **產出不要在下方留白** —— 墊了就又變成人物浮在框裡, 那正是要修的問題本身。
+  `tests/trainer-art.test.ts` 掃全部 471 張擋這兩件事 (畫布一律 128×128、下緣不得留白);
+  新拍組帶進全身圖時它會變紅, 把 trainerId 加進 TARGETS 重跑即可。
+  ⚠ 改完要跑 `npm run data:webp` (線上只吃 .webp), 而 `/reference/*` 的快取是 30 天
+  且刻意不給 immutable —— 已經看過舊圖的人最久要 30 天才會換到新的。
 - **對外資料匯出**: `/api/export?key=` (唯讀)。金鑰**跟著人走** (profiles.export_token, 0037) —
   範圍 = 這個人加入的每一個道館 (成員/顧問都算) + 他自己的收藏, 不是一館一把鑰匙。
   不得輸出 email / auth uid; 這條路由必須在 proxy.ts 的 PUBLIC_ROUTES (它自己用金鑰授權)。
