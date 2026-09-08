@@ -40,6 +40,7 @@ import {
 } from "@/lib/pairs/filter";
 import { cycleEntry, defaultEntry } from "@/lib/collection-entry";
 import { setGymPair } from "@/lib/gym/gym-pairs-client";
+import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -53,6 +54,8 @@ type Props = {
   gymSync?: GymSyncInfo | null;
   /** ?tab= 深連結 */
   initialTab?: Tab | null;
+  /** ?owned=1 深連結 — 重新整理要留在原本的畫面 */
+  initialOwnedOnly?: boolean;
   /** 道館管理員 (可在側板把拍組設為/取消道館拍組) */
   isGymAdmin?: boolean;
 };
@@ -76,6 +79,7 @@ export function PairsHub({
   gymSync = null,
   isGymAdmin = false,
   initialTab = null,
+  initialOwnedOnly = false,
 }: Props) {
   const [collection, setCollection] = useState<CollectionMap>(initialCollection);
   const hasGym = gymPairIds.length > 0;
@@ -83,7 +87,14 @@ export function PairsHub({
     !signedIn || !hasGym ? "all" : (initialTab ?? "gym")
   );
   /** 只看我持有的 — 預設關 (顯示全部, 沒有的是灰卡) */
-  const [ownedOnly, setOwnedOnly] = useState(false);
+  const [ownedOnly, setOwnedOnly] = useState(initialOwnedOnly);
+
+  // 重新整理要留在同一個畫面 → 把子分頁與持有開關寫進網址 (見 lib/use-url-state.ts)。
+  // 預設值一律不寫進去, 網址才不會長出一串沒有意義的參數。
+  useUrlState({
+    tab: tab === "gym" ? null : tab,
+    owned: ownedOnly ? "1" : null,
+  });
 
   const [filters, setFilters] = useState<PairFilters>(EMPTY_PAIR_FILTERS);
   // 篩選延後處理: 打字/點選即時更新控制項, 600+ 卡重篩交給 React 排程

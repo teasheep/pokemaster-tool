@@ -56,6 +56,7 @@ import {
 import { type PairSortKey } from "@/lib/pairs/name";
 import { cn } from "@/lib/utils";
 import { buildMembersCsv, downloadCsv } from "@/lib/gym/export-csv";
+import { useUrlState } from "@/lib/use-url-state";
 import type { CollectionEntry } from "@/lib/collection";
 import { cycleEntry, defaultEntry } from "@/lib/collection-entry";
 import { createClient } from "@/lib/supabase/client";
@@ -103,6 +104,17 @@ type Props = {
   /** 全館視角 (道館拍組總覽) 需要的資料 */
   gymPairs: GymPairRow[];
   grades: PackedGrades;
+  /**
+   * 網址帶來的畫面狀態 —— 重新整理要留在原本的畫面, 不要每次都跳回預設
+   * (2026-09-08 使用者:「重新整理會固定帶到道館重點拍組的 tab」)。
+   * 由 page.tsx 從 searchParams 讀了傳下來, 不在 client 讀 (會 hydration mismatch)。
+   */
+  initialView: {
+    member: string | null;
+    view: "pairs" | "resources";
+    scope: "gym" | "all";
+    ownedOnly: boolean;
+  };
 };
 
 /** 名冊第一項 = 全館視角 (不是某個成員) */
@@ -172,6 +184,7 @@ export function MembersClient({
   invite,
   gymPairs,
   grades,
+  initialView,
 }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -191,13 +204,22 @@ export function MembersClient({
     [gymPairs]
   );
   const [selectedId, setSelectedId] = useState<string | null>(
-    viewer.memberId ?? ALL_GYM
+    initialView.member ?? viewer.memberId ?? ALL_GYM
   );
+  /** 成員底下的分頁 (拍組 / 資源) —— 也要跟著網址走 */
+  const [view, setView] = useState<"pairs" | "resources">(initialView.view);
   /**
    * 換人要重畫整面卡牆 (道館視角約 144 張, 全圖鑑 600+) → 丟進 transition,
    * 點名冊當下不會卡住; 右欄在算的期間淡一下 (高度不變, 捲軸不會跳)。
    */
   const [switching, startSwitch] = useTransition();
+
+  // 重新整理留在原本的畫面: 看誰 + 哪個分頁寫進網址。
+  // 預設值不寫 (自己那一列、拍組分頁) —— 網址才不會長出一串沒有意義的參數。
+  useUrlState({
+    member: selectedId && selectedId !== (viewer.memberId ?? ALL_GYM) ? selectedId : null,
+    view: view === "resources" ? "resources" : null,
+  });
   const selectMember = useCallback((id: string) => {
     startSwitch(() => setSelectedId(id));
   }, []);
@@ -400,6 +422,7 @@ export function MembersClient({
       >
         {selectedId === ALL_GYM ? (
           <GymPairsClient
+            initialScope={initialView.scope}
             gymId={gymId}
             isAdmin={viewer.isAdmin}
             members={gymViewMembers}
@@ -413,7 +436,7 @@ export function MembersClient({
         ) : !selected ? (
           <p className="text-sm text-muted-foreground">選擇一位成員檢視資料。</p>
         ) : (
-          <Tabs defaultValue="pairs">
+          <Tabs value={view} onValueChange={(v) => setView(v === "resources" ? "resources" : "pairs")}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 lg:mb-4">
               {/* 手機: 上面那條選擇器已經寫著「現在在看誰」, 這裡不再重複一次名字 */}
               <h2 className="hidden items-center gap-2 text-lg font-semibold lg:flex">
@@ -464,6 +487,8 @@ export function MembersClient({
                 loading={loading}
                 onChanged={reloadSelected}
                 onOptimistic={patchPairGrade}
+                initialScope={initialView.scope}
+                initialOwnedOnly={initialView.ownedOnly}
               />
             </TabsContent>
             <TabsContent value="resources">
@@ -913,6 +938,8 @@ function PairsPanel({
   loading,
   onChanged,
   onOptimistic,
+  initialScope,
+  initialOwnedOnly,
 }: {
   gymId: string;
   isAdmin: boolean;
@@ -930,6 +957,9 @@ function PairsPanel({
   gymPairIds: string[];
   loading: boolean;
   onChanged: () => void;
+  /** 網址帶來的初始狀態 (見上層的 initialView) */
+  initialScope: "gym" | "all";
+  initialOwnedOnly: boolean;
   /** 送出前先把畫面改掉 (見上層的 patchPairGrade) — 受控的側板下拉不能等兩趟往返 */
   onOptimistic: (
     pairId: string,
@@ -941,7 +971,7 @@ function PairsPanel({
 }) {
   const supabase = useMemo(() => createClient(), []);
   /** 範圍: 道館拍組 (預設) / 所有遊戲拍組 — 與全館視角同一種分頁 */
-  const [scope, setScope] = useState<"gym" | "all">("gym");
+  const [scope, setScope] = useState<"gym" | "all">(initialScope);
   /** 切範圍要對整份圖鑑重算 → transition, pending 期間卡牆淡一下 */
   const [scopePending, startScopeTransition] = useTransition();
   /** 篩選/排序一律用共用元件 (與全館拍組、我的拍組同一套) */
@@ -986,7 +1016,10 @@ function PairsPanel({
    * (2026-09-07 補: 道館拍組分頁收嚴之後, 「他還有什麼」只剩全圖鑑可看, 645 張太難找)。
    * **預設關 (顯示全部)**, 與 /pairs 一致 —— 道館名單裡他沒有的那些灰卡才是這頁的重點。
    */
-  const [ownedOnly, setOwnedOnly] = useState(false);
+  const [ownedOnly, setOwnedOnly] = useState(initialOwnedOnly);
+
+  // 重新整理留在原本的畫面 (範圍 + 持有開關)
+  useUrlState({ scope: scope === "all" ? "all" : null, owned: ownedOnly ? "1" : null });
   /**
    * 這一輪操作過的卡 —— 開著「只看持有的」時把寶數循環回 0, 卡片會當場消失,
    * 手就懸在半空 (/pairs 踩過同一個坑, 解法一樣: 操作過的留著顯示灰卡)。

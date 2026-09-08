@@ -34,9 +34,9 @@ export const metadata: Metadata = {
 export default async function PairsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; owned?: string }>;
 }) {
-  const { tab } = await searchParams;
+  const { tab, owned } = await searchParams;
   const catalog = await loadPairsForClient().catch(() => []);
 
   let collection: CollectionMap = {};
@@ -86,6 +86,7 @@ export default async function PairsPage({
           gymPairIds={gymPairIds}
           isGymAdmin={isGymAdmin}
           initialTab={tab === "all" || tab === "mine" ? "all" : tab === "gym" ? "gym" : null}
+          initialOwnedOnly={owned === "1"}
         />
       </PageShell>
     </main>

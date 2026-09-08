@@ -5,16 +5,20 @@ import { Button } from "@/components/ui/button";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { fetchGymGrades, getGymContext } from "@/lib/gym/queries";
 import { CATALOG_VERSION, loadPairsForClient } from "@/lib/pairs/loader";
+import { pickParam } from "@/lib/use-url-state";
 import { MembersClient } from "./members-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function GymMembersPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  // 重新整理要留在原本的畫面 → 這幾個決定畫面長相的狀態走網址 (見 lib/use-url-state.ts)
+  searchParams: Promise<{ member?: string; view?: string; scope?: string; owned?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const user = await getSessionUser();
   if (!user) {
@@ -78,6 +82,12 @@ export default async function GymMembersPage({
 
   return (
     <MembersClient
+      initialView={{
+        member: sp.member ?? null,
+        view: pickParam(sp.view, ["pairs", "resources"] as const, "pairs"),
+        scope: pickParam(sp.scope, ["gym", "all"] as const, "gym"),
+        ownedOnly: sp.owned === "1",
+      }}
       gymId={id}
       viewer={viewer}
       gymPairs={gymPairs ?? []}

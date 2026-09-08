@@ -439,6 +439,23 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 手機側板 = bottom sheet (`ui/side-panel.tsx` 已處理, 新側板沿用該元件)。
 - **使用者看得到的值一律繁中** — 資料層的英文值 (region 等) 顯示前必須過對照表
   (`REGION_LABELS`/`TYPE_LABELS`/`ROLE_LABELS`/`SERIES_LABELS`), 不要直出英文。
+- **決定「畫面長什麼樣」的 client 狀態一律同步進網址** (`lib/use-url-state.ts`,
+  2026-09-08 使用者:「重新整理會固定帶到道館重點拍組的 tab, 但應該要留在使用者目前的
+  畫面才對, 這個整體都需要調整一下」)。目前有: `/pairs` 的 `tab` / `owned`,
+  道館成員頁的 `member` / `view` / `scope` / `owned`。
+  四件事:
+  1. **網址而不是 localStorage** —— 網址同時解決重新整理、上一頁/下一頁、把連結貼給別人;
+     localStorage 只解決第一件, 而且會讓「同一個網址兩個人看到不一樣的東西」。
+  2. **用原生 `history.replaceState`, 不要用 `router.replace`** —— 這些頁都是
+     `force-dynamic`, 走 Next 導覽等於每點一次分頁就多付一趟伺服器往返
+     (那正是 middleware 樂觀檢查在省的)。Next 16 明文支援原生 History API 並會與路由同步
+     (`docs/01-app/02-guides/single-page-applications.md` 的 Shallow routing on the client)。
+     **replaceState 不是 pushState**: 切分頁不該塞進歷史, 不然按上一頁要按五次才離開這頁。
+  3. **初始值一律由 server 的 `page.tsx` 從 `searchParams` 讀了往下傳**, client 不要自己
+     `useSearchParams` 當初始值 —— 那會 hydration mismatch。hook 只負責**寫**。
+  4. **預設值不寫進網址** (例如 `tab=gym` 是預設就不留), 免得網址長出一串沒有意義的參數。
+  `tests/url-state.test.ts` 釘住「client 寫的參數名 = server 讀的參數名」——
+  兩邊對不起來完全沒有徵兆, 網址看起來是對的, 只是重整就跳回預設。
 - **版面寬度一律 `PageShell`** (`components/page-shell.tsx`; wide/prose/form 三種) —
   SiteHeader/SiteFooter 在 root layout, 道館子頁的容器在 `gyms/[id]/layout.tsx`,
   子頁只回傳內容 + `PageHeading`。頁面自己包 `container`/`max-w-*` = 切分頁時寬度跳動 (前科)。

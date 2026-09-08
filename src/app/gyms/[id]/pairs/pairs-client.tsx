@@ -29,6 +29,7 @@ import { setGymPair } from "@/lib/gym/gym-pairs-client";
 import { createClient } from "@/lib/supabase/client";
 import { normPairKey } from "@/lib/gym/types";
 import type { SyncPairType } from "@/lib/supabase/types";
+import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 
 export type GymPairRow = {
@@ -57,6 +58,8 @@ export type PackedGrades = {
 };
 
 type Props = {
+  /** 網址帶來的初始範圍 — 重新整理要留在原本的畫面 (見 lib/use-url-state.ts) */
+  initialScope?: "gym" | "all";
   gymId: string;
   isAdmin: boolean;
   members: { id: string; displayName: string; lineName: string | null; avatarUrl?: string | null }[];
@@ -111,6 +114,7 @@ const CoverageBar = memo(function CoverageBar({
 });
 
 export function GymPairsClient({
+  initialScope = "gym",
   gymId,
   isAdmin,
   members,
@@ -128,7 +132,9 @@ export function GymPairsClient({
   const deferredFilters = useDeferredValue(filters);
   const [sortBy, setSortBy] = useState<PairSortKey>("release-desc");
   /** 範圍: 道館拍組 (★ 名單) / 全圖鑑 */
-  const [scope, setScope] = useState<"gym" | "all">("gym");
+  const [scope, setScope] = useState<"gym" | "all">(initialScope);
+  // 重新整理留在原本的範圍 (與成員視角共用同一個 ?scope=)
+  useUrlState({ scope: scope === "all" ? "all" : null });
   /** 切範圍要對整份圖鑑重算 → 丟進 transition, 用 pending 讓卡牆淡一下 */
   const [scopePending, startScopeTransition] = useTransition();
 
