@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { fetchGymGrades, getGymContext } from "@/lib/gym/queries";
 import { CATALOG_VERSION, loadPairsForClient } from "@/lib/pairs/loader";
-import { pickParam } from "@/lib/use-url-state";
+import { pickParam } from "@/lib/url-params";
 import { MembersClient } from "./members-client";
 
 export const dynamic = "force-dynamic";

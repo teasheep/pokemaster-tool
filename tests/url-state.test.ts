@@ -11,7 +11,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { pickParam } from "@/lib/use-url-state";
+import { pickParam } from "@/lib/url-params";
 
 const read = (p: string) => fs.readFileSync(path.join(process.cwd(), p), "utf8");
 
@@ -66,6 +66,22 @@ describe("寫進網址的參數, server 端都要讀得回來", () => {
       "src/app/gyms/[id]/pairs/pairs-client.tsx",
     ]) {
       expect(read(f), `${f} 用了 useSearchParams`).not.toContain("useSearchParams");
+    }
+  });
+
+  it("**server 的 page.tsx 不可以 import 標了 use client 的模組** (前科: 整頁炸掉)", () => {
+    // 2026-09-08: pickParam 本來跟 useUrlState 放在同一個 "use client" 檔案裡,
+    // server component 一呼叫就是
+    //   「Attempted to call pickParam() from the server but pickParam is on the client」
+    // —— tsc 與 lint 都不會擋, 只有實際開頁面才看得到。
+    // 只看檔案開頭的**指示詞**, 不是內文提到的字 (註解裡會寫「這支不可以標 use client」)
+    const directive = (p: string) => read(p).trimStart().startsWith('"use client"');
+    expect(directive("src/lib/url-params.ts"), "url-params 不該標 use client").toBe(false);
+    expect(directive("src/lib/use-url-state.ts"), "hook 檔要標 use client").toBe(true);
+    for (const f of ["src/app/pairs/page.tsx", "src/app/gyms/[id]/members/page.tsx"]) {
+      expect(read(f), `${f} 直接 import 了 client 專用的 use-url-state`).not.toContain(
+        "@/lib/use-url-state"
+      );
     }
   });
 

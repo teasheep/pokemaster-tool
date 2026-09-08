@@ -54,13 +54,3 @@ export function useUrlState(values: Record<string, string | null | undefined>): 
     }
   }, [serialized]);
 }
-
-/** 把查詢字串的值收斂成允許的選項之一; 不認得就回預設 (使用者可以手改網址) */
-export function pickParam<T extends string>(
-  raw: string | string[] | undefined,
-  allowed: readonly T[],
-  fallback: T
-): T {
-  const v = Array.isArray(raw) ? raw[0] : raw;
-  return allowed.includes(v as T) ? (v as T) : fallback;
-}
