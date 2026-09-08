@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeading, PageShell } from "@/components/page-shell";
-import { LEGAL_UPDATED, LegalSection } from "@/components/legal";
-import { SITE_NAME } from "@/lib/site";
+import { LEGAL_UPDATED, LegalLink, LegalSection } from "@/components/legal";
+import { REPO_ISSUES_URL, SITE_NAME } from "@/lib/site";
 
 // **這頁必須是公開的**: Google OAuth 審核要求隱私權政策的網址不需登入就打得開。
 // 它在 proxy.ts 的 PUBLIC_ROUTES 裡, 也刻意**不**設 NOINDEX ——
@@ -137,7 +137,15 @@ export default function PrivacyPage() {
 
           <LegalSection title="九、聯絡方式">
             <p>
-              對本政策有任何疑問，或要求刪除帳號與資料，請透過道館內的聯絡管道與管理員聯繫。
+              本服務是開源專案，由開發者個人維護。對本政策有任何疑問，或要求刪除帳號與資料，
+              請到 GitHub 專案
+              <LegalLink href={REPO_ISSUES_URL}>開一個 issue</LegalLink>
+              與開發者聯繫。
+            </p>
+            <p>
+              <strong>GitHub 的 issue 是公開的</strong>
+              ，請不要在內容裡留下個人資料（電子郵件、真實姓名等）。
+              只要說明你的需求即可；需要核對身分時，開發者會在該 issue 中說明作法。
             </p>
           </LegalSection>
 

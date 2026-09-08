@@ -8,6 +8,24 @@
 /** 兩頁共用的「最後更新」日期 */
 export const LEGAL_UPDATED = "2026-09-08";
 
+/**
+ * 法遵頁裡的外站連結 (目前只有 GitHub)。
+ * 抽出來是為了 `rel="noopener noreferrer"` 與底線樣式兩頁一致 —— 少一個 rel
+ * 不會有任何徵兆, 但那是我們唯一對外的連結。
+ */
+export function LegalLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mx-1 underline underline-offset-4"
+    >
+      {children}
+    </a>
+  );
+}
+
 export function LegalSection({
   title,
   children,

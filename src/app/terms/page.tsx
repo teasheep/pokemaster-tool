@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeading, PageShell } from "@/components/page-shell";
-import { LEGAL_UPDATED, LegalSection } from "@/components/legal";
-import { SITE_NAME } from "@/lib/site";
+import { LEGAL_UPDATED, LegalLink, LegalSection } from "@/components/legal";
+import { REPO_ISSUES_URL, REPO_URL, SITE_NAME } from "@/lib/site";
 
 // **這頁必須是公開的** (Google OAuth 審核要求)。理由與 /privacy 相同, 見 components/legal.tsx。
 export const metadata: Metadata = {
@@ -102,8 +102,26 @@ export default function TermsPage() {
             </p>
           </LegalSection>
 
-          <LegalSection title="九、聯絡方式">
-            <p>對本條款有任何疑問，請透過道館內的聯絡管道與管理員聯繫。</p>
+          <LegalSection title="九、原始碼與授權">
+            <p>
+              本服務是開源專案，程式碼公開在
+              <LegalLink href={REPO_URL}>GitHub</LegalLink>
+              並以 MIT 授權釋出，歡迎提出 issue 或送出 PR
+              （送出的貢獻同樣以 MIT 授權釋出）。
+            </p>
+            <p>
+              <strong>MIT 只涵蓋本專案自己的程式碼。</strong>
+              遊戲資料與素材（拍組名稱、訓練家立繪、寶可夢圖像等）的權利屬其各自所有者，
+              不在該授權範圍內。詳見專案內的 NOTICE 檔案。
+            </p>
+          </LegalSection>
+
+          <LegalSection title="十、聯絡方式">
+            <p>
+              對本條款有任何疑問，請到 GitHub 專案
+              <LegalLink href={REPO_ISSUES_URL}>開一個 issue</LegalLink>
+              與開發者聯繫。issue 是公開的，請不要在內容裡留下個人資料。
+            </p>
           </LegalSection>
 
           <p>

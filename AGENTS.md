@@ -616,6 +616,18 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   5. **OG 圖 `public/og.png` 進版控**, 由 `scripts/make-og-image.mjs` 用瀏覽器截圖產
      (中文字型交給瀏覽器排, sharp 的 SVG 文字會因機器而異; `next/og` 則是每次請求現算 CPU)。
      它**不在** `.assetsignore` 的排除範圍 (那幾行只針對 `reference/`), 改文案或配色才要重跑。
+- **法遵頁 `/privacy` 與 `/terms` 是 Google OAuth 審核要的** (2026-09-08), 三件事一起成立才有用:
+  1. **一定要在 `proxy.ts` 的 `PUBLIC_ROUTES`** —— 審核端沒有 session, 被登入牆擋住看到的是
+     `/login`, 直接不過。同理**刻意不設 `NOINDEX`** (與「只有 `/` 與 `/pairs` 可被收錄」不衝突:
+     那條擋的是需要登入或半秘密的內容, 法遵頁本來就是公開文件), 並且列進 sitemap。
+  2. **站上要連得到** —— 審核除了看網址, 也會看它們是不是真的掛在應用程式裡; 頁尾在每一頁都有,
+     是最穩的位置。
+  3. **聯絡方式 = GitHub issue, 沒有客服信箱** (使用者 2026-09-08 指定, 因為專案已開源):
+     網址只有一份 —— `lib/site.ts` 的 `REPO_URL` / `REPO_ISSUES_URL`, 兩頁與頁尾都吃它。
+     文案要提醒「issue 是公開的, 不要留個人資料」—— 隱私權政策叫人來提刪除帳號的要求,
+     而那個管道本身是公開的, 不講就是把人推去公開場合貼自己的資料。
+  `tests/seo.test.ts` 釘住這三條 (公開路由 / sitemap / 兩頁與頁尾都指到 issue) ——
+  全部都是**壞掉沒有徵兆**的東西: 頁面照樣渲染, 只是審核那天才發現過不了。
 - **安全標頭寫在 `next.config.ts` 的 `headers()` 不是 `public/_headers`**: 後者只作用在
   **靜態資產命中的回應**, 而頁面 HTML 是 Worker 動態產的。`_headers` 裡第二次設同一個 key 是
   **append 不是覆蓋**, 所以不要在 `/*` 寫 Cache-Control。CSP 只上 `frame-ancestors`/`base-uri`/

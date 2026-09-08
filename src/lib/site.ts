@@ -21,6 +21,19 @@ export const SITE_DESCRIPTION =
 export const OG_IMAGE = "/og.png";
 
 /**
+ * 開源程式庫 (MIT, 見 repo 的 LICENSE 與 NOTICE)。
+ *
+ * **這是本服務唯一的對外聯絡管道** —— 沒有客服信箱, 隱私權政策與服務條款的
+ * 「聯絡方式」都指向這裡, 頁尾也連過去。所以網址只寫一份:
+ * 哪天 repo 改名或搬家, 漏改其中一頁的症狀是「法遵頁上的聯絡方式是死連結」,
+ * 那正是 Google OAuth 審核會看的東西 (`tests/seo.test.ts` 釘住兩頁都要指到它)。
+ */
+export const REPO_URL = "https://github.com/teasheep/pokemaster-tool";
+
+/** 提 issue 的直接入口 —— 「聯絡作者」在這個專案就是這一件事 */
+export const REPO_ISSUES_URL = `${REPO_URL}/issues`;
+
+/**
  * 私密頁的 metadata —— 直接展開到頁面的 `export const metadata`。
  *
  * `robots.txt` 已經把這些路徑 Disallow 了, 但兩個機制擋的東西不一樣:

@@ -92,6 +92,26 @@ describe("sitemap.xml", () => {
   });
 });
 
+describe("法遵頁的聯絡方式", () => {
+  // 沒有客服信箱, 唯一的對外管道就是 GitHub issue。兩頁都要指到它 ——
+  // 這條壞掉沒有徵兆 (頁面照樣渲染, 只是「聯絡方式」變成一句沒有連結的空話),
+  // 而 Google OAuth 審核看的正是這一段。
+  it("兩頁都連到 GitHub issue (唯一的對外聯絡管道)", async () => {
+    const fs = await import("node:fs");
+    for (const page of ["src/app/privacy/page.tsx", "src/app/terms/page.tsx"]) {
+      const src = fs.readFileSync(page, "utf8");
+      expect(src, `${page} 沒有連到 REPO_ISSUES_URL`).toContain("REPO_ISSUES_URL");
+    }
+  });
+
+  it("頁尾也連得到原始碼與 issue (法遵頁指的就是這裡)", async () => {
+    const fs = await import("node:fs");
+    const footer = fs.readFileSync("src/components/site-footer.tsx", "utf8");
+    expect(footer).toContain("REPO_URL");
+    expect(footer).toContain("REPO_ISSUES_URL");
+  });
+});
+
 describe("私密頁的 metadata", () => {
   it("NOINDEX 同時關掉索引與跟隨, 並清掉繼承來的 canonical", () => {
     expect(NOINDEX.robots.index).toBe(false);
