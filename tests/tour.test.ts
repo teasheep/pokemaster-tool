@@ -151,6 +151,30 @@ describe("互動與串接", () => {
   });
 });
 
+describe("教學一打開就吞寫入, 提示也必須同時出現", () => {
+  const runner = fs.readFileSync(
+    path.join(process.cwd(), "src/components/tour/tour-runner.tsx"),
+    "utf8"
+  );
+
+  it("**膠囊的條件是 s.open 不是 running**", () => {
+    // 前科 (2026-09-08): 寫入從 setTourWritesBlocked(s.open) 就開始吞, 但膠囊只在
+    // running 時畫 → 新成員第一次登入看到選擇卡、不理它、直接按「用邀請碼加入」,
+    // 得到紅字「加入失敗」而畫面上沒有任何字說是教學擋的。整層 pointer-events:none,
+    // 他本來就點得到那些按鈕。
+    expect(runner).toContain("setTourWritesBlocked(s.open)");
+    // 膠囊那一段的條件
+    const capsule = runner.slice(runner.indexOf("ref={barRef}") - 800, runner.indexOf("ref={barRef}"));
+    expect(capsule, "膠囊還在用 running 當條件").toMatch(/\{s\.open \? \(/);
+  });
+
+  it("指路要跳過「指回使用者已經在的那一頁」的候選", () => {
+    // 前科: 人停在 /gyms 而目標在 /gyms/<id>/members 時, 鏈條退到「道館」那一格,
+    // 框住他現在就站在上面的入口 → 那一步永遠完成不了。
+    expect(runner, "wayHop 沒有比對 hop.to").toMatch(/h\.to \? pathname !== h\.to : true/);
+  });
+});
+
 describe("教學期間吞寫入 — 絕對不能碰 auth", () => {
   const REST = "https://x.supabase.co/rest/v1/user_collection";
   const AUTH = "https://x.supabase.co/auth/v1/token?grant_type=refresh_token";

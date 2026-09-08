@@ -939,7 +939,10 @@ function BattleLogsCard({
   const [showAll, setShowAll] = useState(false);
 
   const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
-  const canReport = viewer.isAdmin || viewer.memberId !== null;
+  // 顧問也有 memberId (他就是一列 role=advisor 的 gym_members), 所以光看 memberId 會把
+  // 唯讀身分放進來 —— 表單畫得出來、按得下去, 然後被 RLS 擋下, 使用者看到的是英文的
+  // 「new row violates row-level security policy」。`viewer.canEdit` 就是 !isAdvisor。
+  const canReport = viewer.canEdit && (viewer.isAdmin || viewer.memberId !== null);
   const stageOf = (id: string | null) => stages.find((x) => x.id === id);
 
   async function submit() {

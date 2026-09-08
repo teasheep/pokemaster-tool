@@ -261,8 +261,12 @@ export function TourRunner({ userId }: { userId: string }) {
       // 目標不在畫面上 → **改成指路**: 框住「進去那一頁的入口」, 等他自己點
       // (使用者:「應該指引使用者點哪裡可以連到那頁, 不是幫我開跟加一行廢話」)。
       // 已經在那一頁了就沒有路可指 (例如那一館還沒有賽事), 那才降級成置中說明卡。
+      // 跳過「指回使用者已經在的那一頁」的候選 (hop.to) —— 框一個他現在就站在上面的入口,
+      // 再點也不會變, 那一步永遠完成不了 (前科見 tour-steps 的 TourHop)。
       const wayHop =
-        need && !onPage(pathname, need) ? chain.find((h) => findTarget(h.target)) : undefined;
+        need && !onPage(pathname, need)
+          ? chain.find((h) => (h.to ? pathname !== h.to : true) && findTarget(h.target))
+          : undefined;
       const wayEl = wayHop ? findTarget(wayHop.target) : null;
       setHop(wayHop ?? null);
       // 同一顆 DOM 節點 / 同一個 HOP 常數 → React 自己 bail out, 每幀呼叫不會重繪
@@ -467,7 +471,12 @@ export function TourRunner({ userId }: { userId: string }) {
           做成頂端置中的膠囊而不是整條橫貫的 bar: 整條會蓋住 header, 而教學正需要那排
           導覽列看得見也點得到 (指路就是框它)。
           文案只有一種, 因為規則也只有一條: 教學開著 = 什麼都不會存進資料庫。 */}
-      {running ? (
+      {/* ⚠ 條件是 `s.open` 不是 `running` —— 寫入從教學**一打開**就被吞
+          (setTourWritesBlocked(s.open)), 所以提示也必須從那一刻就在。
+          前科 (2026-09-08): 這裡本來是 running, 於是選擇卡與收尾卡那段畫面上沒有任何說明,
+          新成員第一次登入看到選擇卡、不理它、直接去按「用邀請碼加入」→ 紅字「加入失敗」,
+          完全不知道是教學擋的。整層是 pointer-events:none, 他本來就點得到那些按鈕。 */}
+      {s.open ? (
         <div
           ref={barRef}
           className="pointer-events-none absolute inset-x-0 top-0 flex justify-center px-2 pt-[max(0.5rem,env(safe-area-inset-top))]"

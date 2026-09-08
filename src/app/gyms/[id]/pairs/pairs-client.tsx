@@ -8,7 +8,7 @@
 // 「範圍」切換 = 道館拍組 / 全圖鑑, 跟「我的拍組 / 所有拍組」同一個心智模型:
 // 管理員在全圖鑑點灰卡開側板, 按 ★ 就加進名單 — 不需要另一個搜尋新增面板。
 
-import { memo, useCallback, useDeferredValue, useMemo, useState, useTransition } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { SidePanel } from "@/components/ui/side-panel";
@@ -149,6 +149,19 @@ export function GymPairsClient({
     }
     startScopeTransition(() => setScope(next));
   }
+
+  /**
+   * 從網址掛載成 scope=all 時要自己補抓整本圖鑑 —— 否則分頁看起來選中了, 卡牆卻只有子集,
+   * 而且沒有任何載入或錯誤提示 (與成員頁同一個洞, 2026-09-08 加網址同步時開的)。
+   */
+  const askedFull = useRef(false);
+  useEffect(() => {
+    if (scope !== "all" || catalogIsFull || !onNeedFullCatalog || askedFull.current) return;
+    askedFull.current = true;
+    void onNeedFullCatalog().then((ok) => {
+      if (!ok) setScope("gym");
+    });
+  }, [scope, catalogIsFull, onNeedFullCatalog]);
   /** 側板開在哪張卡 (key 與卡片牆一致) */
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   /** 點卡片 = 開側板。grid 級穩定 handler — 開側板時卡牆才不會整面重畫 */

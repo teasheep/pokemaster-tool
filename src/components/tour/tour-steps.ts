@@ -144,6 +144,12 @@ export const TRACKS: TourTrackDef[] = [
         title: "點任何一位成員",
         body: "右邊就會列出他的持有拍組與練度。第一項的「全館拍組」則是整館的 ★ 名單加持有率 —— 誰還缺哪一張一眼看得出來。",
         advance: { on: "click" },
+        // 手機/平板的名冊收在 bottom sheet 裡, 沒打開就框不到任何東西 (member-row 不存在)。
+        // member-picker 只在 < lg 看得見, 所以這段補充只會出現在需要的人眼前。
+        extra: {
+          ifTarget: "member-picker",
+          body: "手機上名冊收起來了 —— 先點上面那條「切換」把成員清單打開, 再點一位。",
+        },
       },
       {
         target: "nav-resources",
@@ -218,21 +224,32 @@ export function resolveAt(at: string | undefined, gymId: string | null): string 
 // 同一個 data-tour 在桌機 (header) 與手機 (底部導覽列) 各有一份, findTarget 只挑
 // 看得見的那個, 所以手機自動框到底部那排, 不必為手機另寫一套。
 
-export type TourHop = { target: string; title: string; body: string };
+/**
+ * 指路的一站。`to` = 點下去會到哪一頁 —— 用來擋掉「指回使用者已經在的那一頁」。
+ *
+ * 前科 (2026-09-08): 人停在 `/gyms` 而這一步的目標在 `/gyms/<id>/members` 時,
+ * 候選鏈會退到最外層的「道館」那一格 —— 框住他剛剛才點過、而且現在就站在上面的入口,
+ * 再點一次網址不變、畫面不變, 那一步永遠完成不了。有 `to` 就能跳過這種沒有意義的一站,
+ * 降級成置中說明卡 (至少看得完內容, 也有「跳過這步」)。
+ */
+export type TourHop = { target: string; title: string; body: string; to?: string };
 
 const HOP = {
   pairs: {
     target: "nav-pairs",
+    to: "/pairs",
     title: "先進「拍組」",
     body: "框起來的就是入口 —— 桌機在最上面那排、手機在螢幕最下面那排。點它。",
   },
   gyms: {
     target: "nav-gyms",
+    to: "/gyms",
     title: "先進「道館」",
     body: "框起來的就是入口 —— 桌機在最上面那排、手機在螢幕最下面那排。點它。",
   },
   resources: {
     target: "nav-resources",
+    to: "/resources",
     title: "先進「我的資源」",
     body: "框起來的就是入口 —— 桌機在最上面那排、手機在螢幕最下面那排。點它。",
   },

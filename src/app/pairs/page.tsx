@@ -86,7 +86,9 @@ export default async function PairsPage({
           gymPairIds={gymPairIds}
           isGymAdmin={isGymAdmin}
           initialTab={tab === "all" || tab === "mine" ? "all" : tab === "gym" ? "gym" : null}
-          initialOwnedOnly={owned === "1"}
+          // 訪客沒有「只看我持有的」那顆開關, 吃了這個參數就會看到空白圖鑑而且救不回來
+          // (這頁在 PUBLIC_ROUTES 裡, 登出/過期後回到同一個網址就會發生)
+          initialOwnedOnly={signedIn && owned === "1"}
         />
       </PageShell>
     </main>

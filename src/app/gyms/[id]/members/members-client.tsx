@@ -361,13 +361,17 @@ export function MembersClient({
       ) : null}
       <div className="grid gap-4 lg:grid-cols-[260px_1fr] lg:gap-6">
       {/* 手機/平板 (< lg = 名冊與明細疊成一欄的寬度): 名冊收成一列「目前在看誰」,
-          點開 bottom sheet 選人 — 20 人的垂直清單擺在最上面等於把拍組推到第二屏。 */}
+          點開 bottom sheet 選人 — 20 人的垂直清單擺在最上面等於把拍組推到第二屏。
+          外面這層 `member-picker` 是**只有手機看得見**的教學目標: 教學「點任何一位成員」
+          那一步框的 member-row 在手機是收在這個 sheet 裡的, 沒開就框不到任何東西
+          (findTarget 只挑看得見的, 桌機這層是 lg:hidden 所以量到 0 高度會被跳過)。 */}
+      <div className="lg:hidden" data-tour="member-picker">
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={pickerOpen}
-        className="flex min-h-14 w-full items-center gap-2.5 rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-accent/40 lg:hidden"
+        className="flex min-h-14 w-full items-center gap-2.5 rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-accent/40"
         data-tour="gym-pairs-row"
       >
         {selectedId === ALL_GYM || !selected ? (
@@ -398,6 +402,7 @@ export function MembersClient({
           <ChevronsUpDown className="h-4 w-4" />
         </span>
       </button>
+      </div>
 
       {/* 名冊 (頭像卡片) — 第一項是「全館」(道館拍組總覽), 顧問另外分區不佔名額。
           桌機常駐左欄; 手機同一份清單長在 bottom sheet 裡 (見頁尾的 SidePanel)。 */}
@@ -970,6 +975,7 @@ function PairsPanel({
   ) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
   /** 範圍: 道館拍組 (預設) / 所有遊戲拍組 — 與全館視角同一種分頁 */
   const [scope, setScope] = useState<"gym" | "all">(initialScope);
   /** 切範圍要對整份圖鑑重算 → transition, pending 期間卡牆淡一下 */
@@ -992,6 +998,24 @@ function PairsPanel({
     }
     startScopeTransition(() => setScope(next));
   }
+
+  /**
+   * **從網址掛載成 scope=all 時要自己補抓整本圖鑑**。
+   *
+   * 前科 (2026-09-08, 加網址同步時開的洞): scope 現在會寫進網址, 於是重新整理或把連結
+   * 貼給別人時, 元件會直接掛載成 scope="all" 而 catalogIsFull=false ——
+   * 分頁看起來是選中的、沒有載入中、也沒有錯誤, 但卡牆只剩約 146 張的子集,
+   * 其餘 500 隻整個不存在。「入口還在但內容少一半」是 AGENTS 點名過的前科。
+   * 抓失敗就退回「道館拍組」, 不要留在一份假的全圖鑑上。
+   */
+  const askedFull = useRef(false);
+  useEffect(() => {
+    if (scope !== "all" || catalogIsFull || askedFull.current) return;
+    askedFull.current = true;
+    void onNeedFullCatalog().then((ok) => {
+      if (!ok) setScope("gym");
+    });
+  }, [scope, catalogIsFull, onNeedFullCatalog]);
 
   /** pairId → 這位成員的持有列 */
   const rowByPairId = useMemo(() => {
@@ -1187,7 +1211,18 @@ function PairsPanel({
       });
     apply(!isIn);
     const ok = await setGymPair(supabase, gymId, rec, !isIn);
-    if (!ok) apply(isIn);
+    if (!ok) {
+      apply(isIn);
+      return;
+    }
+    /**
+     * **一定要 router.refresh()**: `gymSet` 只是這個面板的本地 state, 初始值來自
+     * server 傳下來的 `gymPairIds`。不刷新的話, 使用者切到「資源」分頁或名冊第一項
+     * 再切回來 (面板重新掛載) 時, 初始值仍是**舊的那一份**, ★ 就不見了 ——
+     * 看起來像沒存到, 管理員很可能再按一次, 那一次是 delete, 反而真的把名單移掉。
+     * (2026-09-08 掃到的前科。)
+     */
+    router.refresh();
   }
 
 
@@ -1289,11 +1324,22 @@ function PairsPanel({
               pair={panelPair}
               entry={entryOf(panelPair)}
                 editable={canEdit}
-              // 側板的 entry 帶著真實的等級與星數 (entryOf 從 member_pairs 讀), 所以連同送出 ——
-            // 改寶數時等於原值寫回, 改等級/星數時就是新值
-            onChange={(next) =>
-              void saveGrade(panelPair, next, { level: next.level, promotion: next.promotion })
-            }
+              /**
+               * **只送使用者這次真的改動的欄位** —— 沒改的一律不傳 (RPC 的 null = 不要動)。
+               *
+               * 前科 (2026-09-08): 本來每次都把 next.level / next.promotion 一起送。
+               * 但 entryOf 讀的是 member_pairs 的鏡像, 而寶數歸零時那一列會被刪掉 →
+               * 側板接著顯示的是 defaultEntry 的預設值 (Lv1 / 原始星級)。使用者把
+               * 「未持有」再改回寶3 時, 那兩個預設值就被當成「使用者的選擇」寫進
+               * user_collection, 把他真正的 Lv200 / 6★EX 洗掉 (資料真的沒了)。
+               */
+              onChange={(next) => {
+                const cur = entryOf(panelPair);
+                void saveGrade(panelPair, next, {
+                  level: next.level !== cur.level ? next.level : undefined,
+                  promotion: next.promotion !== cur.promotion ? next.promotion : undefined,
+                });
+              }}
               // 左下角循環: 與卡牆同一個手勢、同一條寫入路徑
               onCountClick={() => onCountCard(panelPair.pairId)}
               gymPair={{

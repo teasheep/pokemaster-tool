@@ -85,6 +85,23 @@ describe("寫進網址的參數, server 端都要讀得回來", () => {
     }
   });
 
+  it("**訪客不吃 ?owned=1** — 他沒有那顆開關, 吃了會看到空白圖鑑而且救不回來", () => {
+    // 前科 (2026-09-08): 成員把 /pairs?owned=1 貼給別人 / 自己登出後回到同一個網址,
+    // 會看到「沒有符合的拍組」而且畫面上沒有任何辦法關掉那個篩選 (/pairs 是公開路由)。
+    expect(read("src/app/pairs/page.tsx")).toMatch(/initialOwnedOnly=\{signedIn && owned === "1"\}/);
+  });
+
+  it("**從網址掛載成 scope=all 時要自己補抓整本圖鑑**", () => {
+    // 前科 (2026-09-08): 抓整本只掛在 switchScope 的點擊上, 從網址直接掛載會顯示一份
+    // 「只有 146 隻」的假全圖鑑 —— 沒有載入中也沒有錯誤, 使用者以為站上沒收錄那隻拍組。
+    for (const f of [
+      "src/app/gyms/[id]/members/members-client.tsx",
+      "src/app/gyms/[id]/pairs/pairs-client.tsx",
+    ]) {
+      expect(read(f), `${f} 少了掛載時補抓整本圖鑑`).toMatch(/askedFull/);
+    }
+  });
+
   it("用 replaceState 不是 pushState (切分頁不該塞滿上一頁的歷史)", () => {
     const hook = read("src/lib/use-url-state.ts");
     expect(hook).toContain("history.replaceState");
