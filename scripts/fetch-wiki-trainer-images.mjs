@@ -19,10 +19,12 @@
 //    **下緣有留白** (人物沒被下框裁到) 就是全身圖。原生胸像一律是 0。
 //    tests/trainer-art.test.ts 會自動擋下來。
 
-import { writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { alignToNative } from "./lib-trainer-image.mjs";
 
 const OUT = new URL("../public/reference/trainer/", import.meta.url);
+/** 原圖快取 (ref/ 不進版控); 刪掉就會重新下載 */
+const CACHE = new URL("../ref/.art-src/", import.meta.url);
 
 /** [trainerId, 原圖網址, { gain, dx?, dy? }, 備註] */
 const TARGETS = [
@@ -34,9 +36,9 @@ const TARGETS = [
   // 靈異迷 (Hex Maniac)
   ["ch0652_68_sayoko", "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/e/e9/Hex_Maniac.png/revision/latest?cb=20220926182000&format=original", { gain: 1.75, dx: 38 }, "紗幽子 Helena"],
   // 主角 (官方預設男主角 Scottie) — 11 個 player-* 拍組共用這一張
-  ["chp000_00_player", "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/4/4b/Scottie.png/revision/latest", { gain: 1 }, "主角 Scottie"],
+  ["chp000_00_player", "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/4/4b/Scottie.png/revision/latest", { gain: 1.12, dx: 12, dy: 7 }, "主角 Scottie"],
   // 寶可夢小朋友 (Poké Kid) — 檔名帶重音, 是 Poké 不是 Poke
-  ["ch0656_00_ibu", "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/f/fa/Pok%C3%A9_Kid_Female.png/revision/latest?cb=20231221070512&format=original", { gain: 1.3, dx: 32 }, "伊芙 Eve (伊布連帽裝)"],
+  ["ch0656_00_ibu", "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/f/fa/Pok%C3%A9_Kid_Female.png/revision/latest?cb=20231221070512&format=original", { gain: 1.3, dx: 12 }, "伊芙 Eve (伊布連帽裝)"],
   ["ch0657_00_chusuke", "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/4/46/Pok%C3%A9_Kid_Male.png/revision/latest?cb=20240211065103&format=original", { gain: 1.3, dx: 20 }, "丘助 Petey (皮卡丘連帽裝)"],
   // 登山男 (Hiker) — 只有一張通用立繪, 上傳於 2022 但拍組 2025 才實裝
   ["ch0364_00_masahito", "https://static.wikia.nocookie.net/pokemon-masters-ex-game/images/a/a9/Hiker.png/revision/latest?cb=20220318142155&format=original", { gain: 0.85 }, "勇仁 Teddy"],
@@ -45,15 +47,24 @@ const TARGETS = [
 let failed = 0;
 for (const [id, url, opts, note] of TARGETS) {
   try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
-    });
-    if (!res.ok) {
-      console.error(`✗ ${id} (${note}) HTTP ${res.status}`);
-      failed++;
-      continue;
+    // 原圖快取在 ref/ (不進版控) —— 調參數要重跑很多次, 不用每次都去打 wiki
+    const cached = new URL(`${id}.png`, CACHE);
+    let buf;
+    if (existsSync(cached)) {
+      buf = readFileSync(cached);
+    } else {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+      });
+      if (!res.ok) {
+        console.error(`✗ ${id} (${note}) HTTP ${res.status}`);
+        failed++;
+        continue;
+      }
+      buf = Buffer.from(await res.arrayBuffer());
+      mkdirSync(CACHE, { recursive: true });
+      writeFileSync(cached, buf);
     }
-    const buf = Buffer.from(await res.arrayBuffer());
     writeFileSync(new URL(`${id}_128.png`, OUT), await alignToNative(buf, opts));
     console.log(`✓ ${id}  gain=${opts.gain}${opts.dx ? ` dx=${opts.dx}` : ""}${opts.dy ? ` dy=${opts.dy}` : ""}  ${note}`);
   } catch (e) {
