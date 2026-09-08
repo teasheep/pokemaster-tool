@@ -113,11 +113,20 @@ describe("法遵頁的聯絡方式", () => {
     }
   });
 
-  it("頁尾也連得到原始碼與 issue (法遵頁指的就是這裡)", async () => {
+  // 頁尾是法遵頁**唯一**的站內入口 (Google OAuth 審核會看它們有沒有真的掛在應用程式裡),
+  // 而原始碼只放一個 GitHub icon —— issues 從專案頁一步就到, 不在頁尾開第二個入口。
+  it("頁尾連得到兩頁法遵頁與原始碼", async () => {
     const fs = await import("node:fs");
     const footer = fs.readFileSync("src/components/site-footer.tsx", "utf8");
-    expect(footer).toContain("REPO_URL");
-    expect(footer).toContain("REPO_ISSUES_URL");
+    for (const href of ['"/privacy"', '"/terms"', "REPO_URL"]) {
+      expect(footer, `頁尾少了 ${href}`).toContain(href);
+    }
+  });
+
+  it("只有 icon 的 GitHub 連結要有無障礙名稱", async () => {
+    const fs = await import("node:fs");
+    const footer = fs.readFileSync("src/components/site-footer.tsx", "utf8");
+    expect(footer).toContain("aria-label=");
   });
 });
 
