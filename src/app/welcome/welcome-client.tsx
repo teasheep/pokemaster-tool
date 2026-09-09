@@ -14,10 +14,8 @@ import { Label } from "@/components/ui/label";
 import { MemberAvatar } from "@/components/gym/member-card";
 import { createClient } from "@/lib/supabase/client";
 import { saveProfile, uploadAvatar } from "@/lib/profile";
-
-const JOIN_ERRORS: Record<string, string> = {
-  INVALID_CODE: "邀請碼無效",
-};
+// 錯誤代碼 → 中文的對照只有一份 (lib/gym/gym-rpc.ts) —— 這頁與 /gyms 共用同一套訊息
+import { readGymRpc } from "@/lib/gym/gym-rpc";
 
 export function WelcomeClient({
   userId,
@@ -71,14 +69,14 @@ export function WelcomeClient({
       const code = inviteCode.trim();
       if (!hasGym && code) {
         const { data, error } = await supabase.rpc("join_gym", { p_code: code });
-        if (error) {
-          const key = Object.keys(JOIN_ERRORS).find((k) => error.message.includes(k));
-          toast.error("加入道館失敗", { description: key ? JOIN_ERRORS[key] : error.message });
+        const res = readGymRpc(data, error);
+        if (res.error) {
+          toast.error("加入道館失敗", { description: res.error });
           setSaving(false);
           return;
         }
         toast.success("已加入道館");
-        router.push(`/gyms/${data}`);
+        router.push(`/gyms/${res.gymId}`);
         router.refresh();
         return;
       }

@@ -20,18 +20,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { readGymRpc } from "@/lib/gym/gym-rpc";
 
 type GymListItem = {
   id: string;
   name: string;
   isAdmin: boolean;
   memberCount: number;
-};
-
-/** join_gym RPC 的錯誤代碼 → 中文訊息 */
-const JOIN_ERRORS: Record<string, string> = {
-  AUTH_REQUIRED: "請先登入",
-  INVALID_CODE: "邀請碼無效",
 };
 
 export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
@@ -43,22 +38,32 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
   const [busy, setBusy] = useState(false);
   const [gymName, setGymName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  /** 建館碼 (封測) — 一組只能用一次, 由作者發 */
+  const [createCode, setCreateCode] = useState("");
 
   async function handleCreate() {
     if (!gymName.trim()) {
       toast.error("請輸入道館名稱");
       return;
     }
+    if (!createCode.trim()) {
+      toast.error("請輸入建館碼");
+      return;
+    }
     setBusy(true);
     try {
-      // 原子地 建道館 + 自己成為管理員 (名字取自個人設定)
-      const { data: gymId, error } = await supabase.rpc("create_gym", { p_name: gymName.trim() });
-      if (error || !gymId) {
-        toast.error("建立道館失敗", { description: error?.message });
+      // 原子地 認領建館碼 + 建道館 + 自己成為管理員 (名字取自個人設定)
+      const { data, error } = await supabase.rpc("create_gym", {
+        p_name: gymName.trim(),
+        p_code: createCode.trim(),
+      });
+      const res = readGymRpc(data, error);
+      if (res.error) {
+        toast.error("建立道館失敗", { description: res.error });
         return;
       }
       setCreateOpen(false);
-      router.push(`/gyms/${gymId}`);
+      router.push(`/gyms/${res.gymId}`);
       router.refresh();
     } finally {
       setBusy(false);
@@ -69,16 +74,14 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
     setBusy(true);
     try {
       const { data, error } = await supabase.rpc("join_gym", { p_code: inviteCode.trim() });
-      if (error) {
-        const code = Object.keys(JOIN_ERRORS).find((k) => error.message.includes(k));
-        toast.error(code ? JOIN_ERRORS[code] : "加入失敗", {
-          description: code ? undefined : error.message,
-        });
+      const res = readGymRpc(data, error);
+      if (res.error) {
+        toast.error("加入失敗", { description: res.error });
         return;
       }
       toast.success("已加入道館");
       setJoinOpen(false);
-      router.push(`/gyms/${data}`);
+      router.push(`/gyms/${res.gymId}`);
       router.refresh();
     } finally {
       setBusy(false);
@@ -98,7 +101,10 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>建立道館</DialogTitle>
-              <DialogDescription>你會成為管理員, 建立後可用邀請碼邀請成員。</DialogDescription>
+              {/* 這句與教學卡片、錯誤訊息講的是同一件事, 三處用同一組字 */}
+              <DialogDescription>
+                目前為封測，需要作者提供的建館碼，一組只能用一次。你會成為管理員，建立後可用邀請碼邀請成員。
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -109,6 +115,20 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
                   onChange={(e) => setGymName(e.target.value)}
                   placeholder="例: 館主跑路自救會"
                   maxLength={50}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gym-create-code">建館碼</Label>
+                {/* 等寬 + 全大寫顯示: 與邀請碼欄位同一種手感 (碼本身大小寫不敏感, RPC 會正規化) */}
+                <Input
+                  id="gym-create-code"
+                  value={createCode}
+                  onChange={(e) => setCreateCode(e.target.value)}
+                  placeholder="12 碼"
+                  maxLength={12}
+                  autoCapitalize="characters"
+                  className="font-mono uppercase"
+                  data-tour="gym-create-code"
                 />
               </div>
             </div>

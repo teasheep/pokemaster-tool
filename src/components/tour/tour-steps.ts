@@ -12,7 +12,7 @@
 //
 // 內容一律講站內真的有的規則, 而且優先講「不講就沒人會發現」的事。
 
-export type TourTrack = "leader" | "member" | "battle";
+export type TourTrack = "leader" | "member" | "battle" | "leader2";
 
 /** 這一步什麼時候算完成 */
 export type TourAdvance =
@@ -44,6 +44,24 @@ export type TourStep = {
    * 對看不到的人講那個按鈕只會讓他找不到東西。
    */
   extra?: { ifTarget: string; body: string };
+  /**
+   * 這一步是**分叉**: 問一個是非題, 兩顆一樣大的鈕 (與收尾卡的「不用了 / 繼續看」同一套,
+   * 不是一顆主鈕配一行小字)。
+   *
+   * 用在「你有沒有建館碼」: 沒有的人再往下走也只會撞牆 —— 建館對話框會擋他,
+   * 那不如在第一步就講清楚, 而且給他一個能做的事。
+   */
+  gate?: {
+    yes: string;
+    no: string;
+    /** 選「沒有」之後的終點卡 (顯示完就結束教學) */
+    denied: {
+      title: string;
+      body: string;
+      /** 給他一個能做的事 —— 按鈕是動作, 不是又一行說明 */
+      action?: { label: string; to: string };
+    };
+  };
 };
 
 export type TourTrackDef = {
@@ -53,22 +71,58 @@ export type TourTrackDef = {
   steps: TourStep[];
   /** 走完之後可以順著問「要不要再看這一段」 */
   next?: TourTrack;
+  /**
+   * 這一段的終點不是收尾卡, 而是**先去做一件真的事**, 做完了才接上 `resume` 那一段。
+   *
+   * 為什麼要有這個: 教學開著時所有寫入都被吞掉 (RPC 一律回錯誤), 所以「在教學裡建道館」
+   * 本來就不可能成立。使用者 2026-09-09 指定的順序是「他填了、建了道館(實際資料),
+   * 才開始後續的教學」—— 那唯一自洽的做法就是**先結束教學**, 讓他真的去建。
+   */
+  handoff?: { label: string; resume: TourTrack };
 };
 
 export const TRACKS: TourTrackDef[] = [
   {
     id: "leader",
     title: "我是道館負責人",
-    hint: "我要建立道館",
-    next: "battle",
+    // 選擇卡上就講清楚要什麼 —— 不然是走了幾步之後才發現自己做不到
+    hint: "我要建立道館（需要建館碼）",
+    handoff: { label: "我去建", resume: "leader2" },
     steps: [
+      {
+        // 純說明卡 (沒有 target): 這一步問的是「你有沒有碼」, 畫面上沒有東西好框
+        title: "先確認一件事",
+        body: "建立道館目前為封測，需要作者提供的建館碼，一組只能用一次。",
+        advance: { on: "next" },
+        gate: {
+          yes: "我有建館碼",
+          no: "我沒有",
+          denied: {
+            title: "建立道館目前為封測",
+            // 文案是使用者指定的原話。**不要在這裡寫信箱或 GitHub** ——
+            // 那兩個留給懂程式的人自己從隱私權政策/服務條款找 (使用者 2026-09-09 指定)。
+            body: "目前該功能封測中，請在賴群聯絡作者取得建館碼。",
+            action: { label: "先去記我的拍組", to: "/pairs" },
+          },
+        },
+      },
       {
         target: "gym-create",
         at: "/gyms?list=1",
-        title: "建一個道館",
-        body: "只要填館名。建的人就是管理員，之後可以把別人也升成管理員（最後一位管理員動不了，免得整館沒人管）。",
+        title: "拿到碼之後就從這裡開始",
+        body: "填館名與建館碼。建的人就是管理員，之後可以把別人也升成管理員（最後一位管理員動不了，免得整館沒人管）。教學先停在這裡 —— 道館真的建好了，後面那幾步才有東西可以看。",
         advance: { on: "next" },
       },
+    ],
+  },
+  {
+    // 建好道館之後自動接上的續集 (不在 CHOOSABLE — 沒有道館的人選了也沒東西可看)。
+    // 觸發條件在 tour-runner: 落地在某個道館的成員頁 + 自己是那一館的管理員。
+    id: "leader2",
+    title: "道館建好了",
+    hint: "把人找進來、選出全館要練的拍組",
+    next: "battle",
+    steps: [
       {
         target: "invite-codes",
         at: "gym:/members",

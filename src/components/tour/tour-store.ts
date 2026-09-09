@@ -128,3 +128,39 @@ export function markTourSeen(userId: string) {
     // 寫不進去就算了 — 這一輪還是照跳, 只是下次會再跳一次
   }
 }
+
+// ── 續章 (先去做一件真的事, 做完再接上) ──────────────────────────────────
+//
+// 「我是道館負責人」那條在「去建道館」就結束了 —— 因為教學開著時所有寫入都被吞掉,
+// 在教學裡建館本來就不可能成立 (使用者:「他填了、建了道館(實際資料), 才開始後續的教學」)。
+// 所以離開時記一個標記, 等他真的建好、落地在自己的道館時再自動接上下一段。
+//
+// **與 tour-seen 是兩件事**, 所以分開存: seen 是「跳過那一次了」, resume 是「還欠他一段」。
+// 一樣放 localStorage 不放資料庫 —— 換裝置就不接了, 那沒關係, 頭像選單隨時叫得出來。
+
+const RESUME_PREFIX = "pm-gym:tour-resume:v1:";
+
+export function markTourResume(userId: string, track: TourTrack) {
+  try {
+    window.localStorage.setItem(RESUME_PREFIX + userId, track);
+  } catch {
+    // 寫不進去就是不接續集, 不影響任何既有功能
+  }
+}
+
+/** 有沒有欠他一段 (不清掉 —— 條件還沒確認之前不要把標記燒掉) */
+export function peekTourResume(userId: string): TourTrack | null {
+  try {
+    return (window.localStorage.getItem(RESUME_PREFIX + userId) as TourTrack | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearTourResume(userId: string) {
+  try {
+    window.localStorage.removeItem(RESUME_PREFIX + userId);
+  } catch {
+    // 清不掉最多就是下次再接一次同一段
+  }
+}

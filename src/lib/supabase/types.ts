@@ -692,15 +692,23 @@ export type Database = {
           expires_at: string | null;
         }[];
       };
-      /** 加入道館 — 只要邀請碼/顧問碼, 名字取自 profiles (0040) */
+      /**
+       * 加入道館 — 只要邀請碼/顧問碼, 名字取自 profiles (0040)。
+       * 0061 起回 `{ gym_id }` 或 `{ error }` (jsonb): 試碼要記錄失敗, 而丟例外會讓
+       * 那筆紀錄跟著交易一起回滾。判讀一律走 `lib/gym/gym-rpc.ts` 的 readGymRpc ——
+       * 它同時吃得下舊版的 uuid 字串 (部署與 migration 之間那幾分鐘)。
+       */
       join_gym: {
         Args: { p_code: string };
-        Returns: string;
+        Returns: Json;
       };
-      /** 建立道館 — 原子地建道館 + 自己成為管理員 (0041, 館主概念已移除) */
+      /**
+       * 建立道館 — 原子地認領建館碼 + 建道館 + 自己成為管理員 (0041 / 0060)。
+       * `p_code` 是一次性的建館碼 (封測, 作者發)。回傳形狀同 join_gym。
+       */
       create_gym: {
-        Args: { p_name: string };
-        Returns: string;
+        Args: { p_name: string; p_code: string };
+        Returns: Json;
       };
       /** 個人資料匯出金鑰 (0037) — 跟著人走, 不跟道館走 */
       get_my_export_token: { Args: Record<string, never>; Returns: string };

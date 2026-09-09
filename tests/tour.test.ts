@@ -115,9 +115,32 @@ describe("互動與串接", () => {
 
   it("道館戰接在成員與負責人後面, 而且不出現在一開始的選擇卡 (不強迫看)", () => {
     expect(trackDef("member").next).toBe("battle");
-    expect(trackDef("leader").next).toBe("battle");
+    // 負責人那條 2026-09-09 拆成兩段: 第一段在「去建道館」結束 (教學裡建不了館),
+    // 道館戰因此接在**續集** leader2 後面。
+    expect(trackDef("leader").next).toBeUndefined();
+    expect(trackDef("leader2").next).toBe("battle");
     expect(CHOOSABLE).not.toContain("battle");
+    // leader2 也不在選擇卡上 —— 還沒有道館的人選了只會看到一堆框不到的東西
     expect(CHOOSABLE).toEqual(["leader", "member"]);
+  });
+
+  it("負責人那條在「去建道館」就交棒, 續集要接得回來", () => {
+    const leader = trackDef("leader");
+    // handoff = 先結束教學讓他真的去建 (教學開著時所有寫入都被吞掉, 建館一定失敗)
+    expect(leader.handoff?.resume).toBe("leader2");
+    expect(leader.handoff?.label).toBeTruthy();
+    // 第一步是分叉: 沒有建館碼的人不該被帶到牆前面才知道
+    const gate = leader.steps[0].gate;
+    expect(gate, "第一步要問「有沒有建館碼」").toBeTruthy();
+    expect(gate!.denied.body).toContain("封測");
+    // **不要在教學文字裡寫信箱或 GitHub** (使用者 2026-09-09 指定: 那兩個只給懂程式的人
+    // 自己從隱私權政策/服務條款找)
+    for (const t of TRACKS) {
+      for (const s of t.steps) {
+        const text = `${s.title}${s.body}${s.gate?.denied.body ?? ""}${s.extra?.body ?? ""}`;
+        expect(text, `${t.id} 的步驟裡出現了聯絡管道`).not.toMatch(/@|github|gmail/i);
+      }
+    }
   });
 
   it("有一步教「怎麼看館內其他人的拍組」", () => {

@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import { chromium } from "playwright";
 import { createClient } from "@supabase/supabase-js";
+import { createTestGym, dropTestGymCode } from "./qa-lib-gym.mjs";
 
 const HEADED = process.argv.includes("--headed");
 const BASE = "http://localhost:3030";
@@ -44,6 +45,7 @@ function check(cond, name, detail = "") {
 
 let userId = null;
 let gymId = null;
+let createCode = null;
 let browser = null;
 
 try {
@@ -69,8 +71,10 @@ try {
     auth: { persistSession: false },
     global: { headers: { Authorization: `Bearer ${sess.session.access_token}` } },
   });
-  const { data: gid } = await asUser.rpc("create_gym", { p_name: "QA 點擊道館" });
-  gymId = gid;
+  // 0060 起建館需要一次性的建館碼 (發碼 → 建館 → 收尾一起刪, 見 qa-lib-gym.mjs)
+  const made = await createTestGym(admin, asUser, "QA 點擊道館");
+  gymId = made.gymId;
+  createCode = made.code;
 
   // @supabase/ssr 的 cookie 格式 (超過 3180 就切塊)
   const raw = "base64-" + Buffer.from(JSON.stringify(sess.session), "utf8").toString("base64url");
@@ -187,6 +191,7 @@ try {
 } finally {
   if (browser) await browser.close();
   if (gymId) await admin.from("gyms").delete().eq("id", gymId);
+  await dropTestGymCode(admin, createCode);
   if (userId) await admin.auth.admin.deleteUser(userId);
   const fail = results.filter((r) => !r.ok);
   console.log(

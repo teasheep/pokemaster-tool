@@ -45,12 +45,15 @@ import {
 } from "./tour-steps";
 import {
   backToChooser,
+  clearTourResume,
   closeTour,
   finishTrack,
   goToStep,
   hasSeenTour,
+  markTourResume,
   markTourSeen,
   openTour,
+  peekTourResume,
   setTourGymId,
   startTrack,
   useTourState,
@@ -138,12 +141,24 @@ export function TourRunner({ userId }: { userId: string }) {
 
   /** 目標不在畫面上時要先指的入口 (由內而外挑第一個看得見的) */
   const [hop, setHop] = useState<TourHop | null>(null);
+  /** 分叉步驟選了「我沒有」→ 顯示終點卡 (換步驟/換路就歸零) */
+  const [denied, setDenied] = useState(false);
 
   const steps = s.track ? stepsFor(s.track) : [];
   const step = s.phase === "run" ? steps[s.step] : undefined;
   const running = s.open && s.phase === "run" && Boolean(step);
   const last = running && s.step === steps.length - 1;
   const interactive = step ? step.advance.on !== "next" : false;
+
+  // 換步驟 / 換路 → 分叉的選擇歸零 (不然回上一步會停在終點卡)。
+  // 在 render 期間調整而不是寫 effect: React 官方對「外部值變了要重設 state」的作法,
+  // 而且 react-hooks/set-state-in-effect 會擋 effect 版本。
+  const stepKey = `${s.track ?? ""}:${s.step}`;
+  const [seenStepKey, setSeenStepKey] = useState(stepKey);
+  if (seenStepKey !== stepKey) {
+    setSeenStepKey(stepKey);
+    setDenied(false);
+  }
 
   const advance = useCallback(() => {
     setCheer(true);
@@ -162,6 +177,52 @@ export function TourRunner({ userId }: { userId: string }) {
     markTourSeen(userId);
     openTour(true);
   }, [pathname, userId]);
+
+  /**
+   * ── 續章: 道館真的建好了才接上下一段 ──
+   *
+   * 「我是道館負責人」那條在「去建道館」就結束 (教學開著時建不了館, 見 tour-steps 的 handoff),
+   * 離開時記了一個標記。他真的建好、落地在**自己是管理員**的那個道館時, 這裡把下一段接上。
+   *
+   * **這不是第二個入口** (AGENTS 教學第 1 條) —— 它是同一次教學的續集, 與「第一次登入
+   * 自動跳的那一次」同一個性質。
+   *
+   * 管理員這個條件不能省: 他可能最後沒建館, 改用邀請碼加入了別人的館 ——
+   * 那時候彈出「你的道館設定」整段是錯的。條件不符時**不清標記**, 等他真的建了再接。
+   */
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (resumed.current || s.open) return;
+    const parts = pathname.split("/");
+    const gymId = parts.length === 4 && parts[1] === "gyms" && parts[3] === "members" ? parts[2] : null;
+    if (!gymId) return;
+    // 先看 localStorage, 沒欠他就不必去問資料庫
+    const track = peekTourResume(userId);
+    if (!track) return;
+    resumed.current = true;
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("gym_members")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("gym_id", gymId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.role !== "admin") {
+        resumed.current = false; // 標記留著 —— 他之後真的建了館還是要接
+        return;
+      }
+      clearTourResume(userId);
+      setTourGymId(gymId);
+      openTour(true);
+      startTrack(track);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, userId, s.open]);
 
   // ── 找出使用者的道館 (指路要用它判斷「那一頁」是哪一個網址) ──
   useEffect(() => {
@@ -566,12 +627,13 @@ export function TourRunner({ userId }: { userId: string }) {
               </span>
             </div>
 
-            {/* 目標不在這一頁 → 先講「怎麼走過去」, 走到了才換回這一步本身 */}
+            {/* 目標不在這一頁 → 先講「怎麼走過去」, 走到了才換回這一步本身。
+                分叉選了「沒有」→ 換成終點卡的內容 */}
             <h2 id="tour-title" className="mt-2 text-base font-semibold leading-snug">
-              {hop ? hop.title : step.title}
+              {denied && step.gate ? step.gate.denied.title : hop ? hop.title : step.title}
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-              {hop ? hop.body : step.body}
+              {denied && step.gate ? step.gate.denied.body : hop ? hop.body : step.body}
             </p>
             {!hop && step.extra && extraOn ? (
               <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-300">
@@ -579,29 +641,82 @@ export function TourRunner({ userId }: { userId: string }) {
               </p>
             ) : null}
 
-            <div className="mt-4 flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={closeTour}>
-                結束教學
-              </Button>
-              <div className="ml-auto flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => (s.step === 0 ? backToChooser() : goToStep(s.step - 1))}
-                >
-                  {s.step === 0 ? "回上頁" : "上一步"}
+            {denied && step.gate ? (
+              /* 分叉的終點: 兩顆一樣大 (與收尾卡的「不用了 / 繼續看」同一套)。
+                 「先去記我的拍組」是**動作**不是又一行說明 —— 他現在真的只能做這件事。
+                 兩顆都會結束教學: 這條路到這裡就完了。 */
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={closeTour}>
+                  知道了
                 </Button>
-                {/* 互動步驟也留一顆「跳過這步」—— 做不到的人不能被卡住 */}
-                <Button
-                  ref={primaryRef}
-                  size="sm"
-                  variant={interactive ? "outline" : "default"}
-                  onClick={() => (last ? finishTrack() : goToStep(s.step + 1))}
-                >
-                  {interactive ? "跳過這步" : last ? "看完了" : "下一步"}
-                </Button>
+                {step.gate.denied.action ? (
+                  <Button
+                    ref={primaryRef}
+                    size="sm"
+                    onClick={() => {
+                      const to = step.gate!.denied.action!.to;
+                      closeTour();
+                      router.push(to);
+                    }}
+                  >
+                    {step.gate.denied.action.label}
+                  </Button>
+                ) : null}
               </div>
-            </div>
+            ) : step.gate ? (
+              /* 分叉本身: 是非題, 兩顆一樣大 */
+              <div className="mt-4 flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={closeTour}>
+                  結束教學
+                </Button>
+                <div className="ml-auto flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setDenied(true)}>
+                    {step.gate.no}
+                  </Button>
+                  <Button ref={primaryRef} size="sm" onClick={() => goToStep(s.step + 1)}>
+                    {step.gate.yes}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={closeTour}>
+                  結束教學
+                </Button>
+                <div className="ml-auto flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => (s.step === 0 ? backToChooser() : goToStep(s.step - 1))}
+                  >
+                    {s.step === 0 ? "回上頁" : "上一步"}
+                  </Button>
+                  {/* 互動步驟也留一顆「跳過這步」—— 做不到的人不能被卡住。
+                      最後一步若是 handoff (先去做一件真的事), 按下去是結束教學 + 記下續章,
+                      不是收尾卡 —— 收尾卡會說「教學裡做的都沒存」, 但他接下來要做的是真的。 */}
+                  <Button
+                    ref={primaryRef}
+                    size="sm"
+                    variant={interactive ? "outline" : "default"}
+                    onClick={() => {
+                      if (last && def?.handoff && !interactive) {
+                        markTourResume(userId, def.handoff.resume);
+                        closeTour();
+                        return;
+                      }
+                      if (last) finishTrack();
+                      else goToStep(s.step + 1);
+                    }}
+                  >
+                    {interactive
+                      ? "跳過這步"
+                      : last
+                        ? (def?.handoff?.label ?? "看完了")
+                        : "下一步"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </>
         ) : s.phase === "done" ? (
           <DoneCard trackTitle={def?.title ?? ""} nextTrack={nextTrack ?? null} />

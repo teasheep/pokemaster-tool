@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import { chromium } from "playwright";
 import { createClient } from "@supabase/supabase-js";
+import { createTestGym, dropTestGymCode } from "./qa-lib-gym.mjs";
 const BASE = process.env.QA_BASE ?? "http://localhost:3030", E1 = "qa-race-a@example.invalid", E2 = "qa-race-b@example.invalid";
 const env = Object.fromEntries(fs.readFileSync(".env.local", "utf8").split(/\r?\n/)
   .filter(l => l && !l.startsWith("#") && l.includes("=")).map(l => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]));
@@ -26,7 +27,7 @@ const recs = JSON.parse(fs.readFileSync("src/data/pomatools-pairs.json", "utf8")
 const lab = p => `${p.trainerNameZh || p.trainerName}&${p.pokemonNameZh || p.pokemonName}`;
 const nameOf = p => `${p.trainerNameZh || p.trainerName} & ${p.pokemonNameZh || p.pokemonName}`;
 const ids = [];
-let gymId = null, browser = null;
+let gymId = null, browser = null, createCode = null;
 const results = [];
 const check = (ok, name, detail = "") => { results.push(ok); console.log(`${ok ? "✓" : "✗"} ${name}${detail ? "  " + detail : ""}`); };
 
@@ -44,8 +45,9 @@ async function mkUser(email, display) {
 try {
   const A = await mkUser(E1, "管理員甲");
   const B = await mkUser(E2, "管理員乙");
-  const { data: gid } = await A.cli.rpc("create_gym", { p_name: "同時新增測試" });
-  gymId = gid;
+  const made = await createTestGym(admin, A.cli, "同時新增測試");
+  gymId = made.gymId;
+  createCode = made.code;
   const { data: inv } = await admin.from("gym_invites").select("code").eq("gym_id", gymId).single();
   await B.cli.rpc("join_gym", { p_code: inv.code });
   const { data: bm } = await admin.from("gym_members").select("id").eq("gym_id", gymId).eq("user_id", B.userId).single();
@@ -112,6 +114,7 @@ try {
 } finally {
   if (browser) await browser.close();
   if (gymId) await admin.from("gyms").delete().eq("id", gymId);
+  await dropTestGymCode(admin, createCode);
   for (const id of ids) await admin.auth.admin.deleteUser(id);
   console.log("已清除測試道館與帳號");
 }
