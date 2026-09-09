@@ -79,7 +79,7 @@ docs/
 # Cloudflare (OpenNext build 產物 / wrangler 本地狀態 / 部署憑證)
 .open-next/
 .wrangler/
-.cloudflare-token
+.cloudflare-token*
 .cloudflare-account-id
 
 # ── 可重新產生的衍生檔 (2026-09-02) ──
