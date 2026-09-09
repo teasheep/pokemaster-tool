@@ -49,6 +49,7 @@ export default async function GymActivityPage({
           displayName: m.display_name,
           lineName: m.line_name,
           avatarUrl: m.avatar_url,
+          badgeText: m.badge_text,
         }))}
         catalog={catalog}
       />

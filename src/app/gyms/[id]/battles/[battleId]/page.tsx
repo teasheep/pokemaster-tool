@@ -188,6 +188,7 @@ export default async function BattlePage({
               role: m.role,
               bound: m.user_id !== null,
               avatarUrl: m.avatar_url,
+              badgeText: m.badge_text,
             }))}
             initialStages={stages ?? []}
             initialTickets={tickets ?? []}

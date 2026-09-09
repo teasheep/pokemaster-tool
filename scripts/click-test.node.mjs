@@ -36,6 +36,13 @@ const projectRef = new URL(SB).hostname.split(".")[0];
 const admin = createClient(SB, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const anon = createClient(SB, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
 
+/** 從 catalog 拿一組已上市的拍組當測試資料 (pair_label 的寫法與 lib/pairs/name 一致) */
+function catalogSample() {
+  const recs = JSON.parse(fs.readFileSync("src/data/pomatools-pairs.json", "utf8")).records;
+  const p = recs.find((r) => r.releaseDate && r.trainerNameZh && r.pokemonNameZh);
+  return { pairId: p.pairId, label: `${p.trainerNameZh}&${p.pokemonNameZh}`, type: p.type };
+}
+
 const results = [];
 /** 一條檢查。cond 為真就過, 否則記成要看的 */
 function check(cond, name, detail = "") {
@@ -148,6 +155,49 @@ try {
     await page.waitForTimeout(2500);
     const cards = await page.locator('[class*="w-24"]').count();
     check(cards > 300, "重新整理後仍是整本圖鑑", cards + " 張卡");
+  }
+
+  // ── 3b. 改別人的資料要先確認一次 (2026-09-09 成員意見; 有人被誤點成「未持有」過) ──
+  //     插一位**沒有綁帳號**的測試同伴 (站上本來就支援這種列), 用管理員身分去改他的練度。
+  {
+    const { data: mate } = await admin
+      .from("gym_members")
+      .insert({ gym_id: gymId, display_name: "測試同伴", line_name: "同伴", role: "member" })
+      .select("id")
+      .single();
+    const rec = catalogSample();
+    await admin.from("gym_pairs").insert({
+      gym_id: gymId, pair_label: rec.label, pair_id: rec.pairId, type: rec.type,
+    });
+    const pairCount = async () =>
+      (await admin.from("member_pairs").select("id", { count: "exact", head: true }).eq("member_id", mate.id)).count;
+
+    await goto(`/gyms/${gymId}/members?member=${mate.id}`);
+    await page.waitForTimeout(2500);
+    const card = page.locator("div.relative.w-24").first();
+    check(await card.count(), "選到同伴之後看得到道館拍組的卡");
+    if (await card.count()) {
+      // 左下角 = 寶數循環 (卡片 96px, 左下角那一格)
+      await card.click({ position: { x: 14, y: 82 } });
+      await page.waitForTimeout(900);
+      const warn = page.getByText("這是別人的資料");
+      check(await warn.count(), "改別人的資料會先跳確認");
+
+      await page.getByRole("button", { name: "取消" }).click();
+      await page.waitForTimeout(1200);
+      check((await pairCount()) === 0, "按取消 → 真的沒有寫進去");
+
+      await card.click({ position: { x: 14, y: 82 } });
+      await page.waitForTimeout(900);
+      await page.getByRole("checkbox").first().click();          // 今天不再提示
+      await page.getByRole("button", { name: "確定修改" }).click();
+      await page.waitForTimeout(1800);
+      check((await pairCount()) === 1, "按確定 → 寫得進去");
+
+      await card.click({ position: { x: 14, y: 82 } });
+      await page.waitForTimeout(1200);
+      check((await page.getByText("這是別人的資料").count()) === 0, "勾了「今天不再提示」就不再問");
+    }
   }
 
   await goto(`/gyms/${gymId}/battles`);

@@ -172,6 +172,8 @@ export type Database = {
           line_name: string | null;
           availability: string | null;
           avatar_url: string | null;
+          /** 頭像圓圈的自訂文字 (0062, 1-3 字; null = 從社群名取字) */
+          badge_text: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -184,6 +186,7 @@ export type Database = {
           line_name?: string | null;
           availability?: string | null;
           avatar_url?: string | null;
+          badge_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -196,6 +199,7 @@ export type Database = {
           line_name?: string | null;
           availability?: string | null;
           avatar_url?: string | null;
+          badge_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };

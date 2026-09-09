@@ -18,6 +18,12 @@ export type MemberCardData = {
   bound?: boolean;
   /** 上傳頭貼 — Supabase Storage 公開網址 */
   avatarUrl?: string | null;
+  /**
+   * 頭像圓圈裡的自訂文字 (最多 3 個字)。沒設就從社群名取字。
+   * 2026-09-09 成員的意見:「圓圈醒目文字可以替每一位會友選定特別的文字, 看到圈圈
+   * 就可以馬上知道是哪一位會友」—— 有頭貼的人不受影響 (圖優先)。
+   */
+  badgeText?: string | null;
 };
 
 // 手機的縮寫字放大到 12px (10-11px 在手機上根本認不出是哪個字)
@@ -27,11 +33,22 @@ const SIZES = {
   lg: "h-16 w-16 text-xl",
 };
 
-/** 全站統一的成員顯示名: 遊戲名(社群名) — 兩名不同才加括號 */
+/**
+ * 全站統一的成員顯示名: **社群名(遊戲名)** — 兩名不同才加括號。
+ *
+ * 社群名在前是 2026-09-09 成員的意見:「大家比較習慣用 LINE 社群名字稱呼彼此」——
+ * 括號裡那個是用來對上遊戲內帳號的, 平常認人靠的是前面那個。
+ * 沒填社群名的人維持只顯示遊戲名 (不要變成「(遊戲名)」那種空括號)。
+ */
 export function memberLabel(m: { displayName: string; lineName?: string | null }): string {
   return m.lineName && m.lineName !== m.displayName
-    ? `${m.displayName}(${m.lineName})`
+    ? `${m.lineName}(${m.displayName})`
     : m.displayName;
+}
+
+/** 認人優先的那個名字 (頭像縮寫、排序、搜尋都用它) */
+export function memberCallName(m: { displayName: string; lineName?: string | null }): string {
+  return m.lineName?.trim() || m.displayName;
 }
 
 /** 沒設頭像時的底色 — 從名字 hash 出固定色相, 每個人顏色不同才好認 */
@@ -45,11 +62,19 @@ function nameHue(name: string): number {
  * 頭像縮寫: 一眼認人優先。
  * 中文名取第一個字 (兩個字在小圓裡會被擠成上下排看不清);
  * 英文名取前兩個字母。
+ * **吃的是「大家怎麼叫他」那個名字 (社群名優先)**, 與 memberLabel 同一個判斷。
  */
 function avatarInitial(name: string): string {
   const first = [...name][0] ?? "?";
   if (/[a-z0-9]/i.test(first)) return name.slice(0, 2);
   return first;
+}
+
+/** 圓圈裡要顯示什麼: 自訂文字 > 社群名/遊戲名的縮寫 */
+export function avatarText(m: MemberCardData): string {
+  const custom = m.badgeText?.trim();
+  if (custom) return custom;
+  return avatarInitial(memberCallName(m));
 }
 
 export function MemberAvatar({
@@ -93,7 +118,7 @@ export function MemberAvatar({
           draggable={false}
         />
       ) : (
-        avatarInitial(member.displayName)
+        avatarText(member)
       )}
     </span>
   );
@@ -113,9 +138,9 @@ export function MemberOption({ member }: { member: MemberCardData }) {
         size="sm"
         className="h-5 w-5 text-[9px] max-sm:h-7 max-sm:w-7 max-sm:text-xs"
       />
-      <span className="truncate">{member.displayName}</span>
+      <span className="truncate">{memberCallName(member)}</span>
       {showLine ? (
-        <span className="truncate text-xs text-muted-foreground">({member.lineName})</span>
+        <span className="truncate text-xs text-muted-foreground">({member.displayName})</span>
       ) : null}
     </span>
   );
@@ -161,11 +186,15 @@ export function MemberCard({
   onClick,
   footer,
   strongTypes,
+  me,
 }: {
   member: MemberCardData;
   selected?: boolean;
   onClick?: () => void;
   footer?: React.ReactNode;
+  /** 這一列是自己 —— 名字後面標「（我）」。**不要把它接進 displayName**:
+      那樣括號裡的遊戲名會變成「Eric（我）」, 而那不是他的遊戲名 */
+  me?: boolean;
   /** 擅長屬性 (顯示 icon 列, 一眼看出這位成員能挑戰哪些關) */
   strongTypes?: SyncPairType[];
 }) {
@@ -182,9 +211,12 @@ export function MemberCard({
       <MemberAvatar member={member} size="md" />
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-1">
-          <span className="truncate font-semibold">{member.displayName}</span>
+          <span className="truncate font-semibold">
+            {memberCallName(member)}
+            {me ? "（我）" : ""}
+          </span>
           {member.lineName && member.lineName !== member.displayName ? (
-            <span className="truncate text-sm text-muted-foreground">({member.lineName})</span>
+            <span className="truncate text-sm text-muted-foreground">({member.displayName})</span>
           ) : null}
           {member.role === "admin" ? (
             <Badge variant="outline" className="px-1 text-[10px] max-sm:text-xs">

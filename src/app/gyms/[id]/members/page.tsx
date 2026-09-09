@@ -101,6 +101,7 @@ export default async function GymMembersPage({
         lineName: m.line_name,
         availability: m.availability,
         avatarUrl: m.avatar_url,
+        badgeText: m.badge_text,
       }))}
       catalog={catalog}
       fullCatalogUrl={`/api/catalog?v=${CATALOG_VERSION}`}

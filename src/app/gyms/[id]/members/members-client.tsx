@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MemberAvatar, MemberCard, memberLabel } from "@/components/gym/member-card";
+import { useEditOthersGuard } from "@/components/gym/edit-others-guard";
 import { PageHeading } from "@/components/page-shell";
 import { CandyBarSkeleton, PairWallSkeleton } from "@/components/skeletons";
 import { CandyBar, useMyCandies } from "@/components/gym/candy";
@@ -73,6 +74,8 @@ type MemberItem = {
   lineName: string | null;
   availability: string | null;
   avatarUrl: string | null;
+  /** 頭像圓圈的自訂文字 (0062) — 沒設就從社群名取字 */
+  badgeText: string | null;
 };
 
 type PairRow = {
@@ -290,6 +293,17 @@ export function MembersClient({
 
   const selected = members.find((m) => m.id === selectedId) ?? null;
   const canEdit = viewer.isAdmin || (selectedId !== null && selectedId === viewer.memberId);
+  /**
+   * 改別人的資料要先確認一次 (2026-09-09 使用者回報的成員意見)。
+   * **建在這一層**: 拍組與資源兩個面板共用同一份「問過了」—— 在拍組那邊確認過,
+   * 切到資源分頁不會再問一次; 換一位成員才會再問。
+   */
+  const guard = useEditOthersGuard({
+    userId: viewer.userId,
+    memberId: selected?.id ?? "",
+    memberName: selected ? memberLabel(selected) : "",
+    isSelf: selected?.id === viewer.memberId,
+  });
   // 查表用整份 (子集 + 抓回來的整本): 從「所有遊戲拍組」點的卡也要開得了側板/改得了寶數
   const pairById = useMemo(() => new Map(catalogAll.map((p) => [p.pairId, p])), [catalogAll]);
 
@@ -396,12 +410,15 @@ export function MembersClient({
           displayName: m.displayName,
           lineName: m.lineName,
           avatarUrl: m.avatarUrl,
+          badgeText: m.badgeText,
         })),
     [members]
   );
 
   return (
     <>
+      {/* 「你正在改別人的資料」確認 —— 拍組與資源兩個面板共用這一個 */}
+      {guard.dialog}
       <PageHeading
         title="成員與拍組"
         beside={viewer.isAdmin && invite ? <InviteCodes invite={invite} /> : null}
@@ -548,6 +565,7 @@ export function MembersClient({
                 loading={loading}
                 onChanged={reloadSelected}
                 onOptimistic={patchPairGrade}
+                guard={guard.run}
                 initialScope={initialView.scope}
                 initialOwnedOnly={initialView.ownedOnly}
               />
@@ -559,6 +577,7 @@ export function MembersClient({
                 gymId={gymId}
                 memberId={selected.id}
                 canEdit={canEdit}
+                guard={guard.run}
               />
             </TabsContent>
           </Tabs>
@@ -690,7 +709,7 @@ function MemberRow({
       <MemberCard
         member={{
           id: member.id,
-          displayName: member.displayName + (isMe ? "（我）" : ""),
+          displayName: member.displayName,
           lineName: member.lineName,
           availability: member.availability,
           role: member.role,
@@ -698,6 +717,7 @@ function MemberRow({
           avatarUrl: member.avatarUrl,
         }}
         selected={selected}
+        me={isMe}
         onClick={onSelect}
       />
       {canManage ? (
@@ -732,6 +752,7 @@ function MemberEditDialog({
   const [displayName, setDisplayName] = useState(member.displayName);
   const [lineName, setLineName] = useState(member.lineName ?? "");
   const [availability, setAvailability] = useState(member.availability ?? "");
+  const [badgeText, setBadgeText] = useState(member.badgeText ?? "");
   const [role, setRole] = useState(member.role);
   const [busy, setBusy] = useState(false);
   /** 移除要按兩次 (第一下變成紅色確認) — 動到全館名單, 不做單擊即刪 */
@@ -751,6 +772,8 @@ function MemberEditDialog({
         display_name: name,
         line_name: lineName.trim() || null,
         availability: availability.trim() || null,
+        // 空白 = 沒設 → 圓圈退回從社群名取字 (0062 的 check 只允許 1-3 字)
+        badge_text: badgeText.trim() || null,
         role: role as "admin" | "member" | "advisor",
       })
       .eq("id", member.id);
@@ -810,6 +833,30 @@ function MemberEditDialog({
             />
           </div>
           <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">頭像文字</Label>
+            <div className="flex items-center gap-2">
+              {/* 即時預覽 —— 這個欄位改的就是這顆圓圈, 不看到它就不知道自己在改什麼 */}
+              <MemberAvatar
+                member={{
+                  id: member.id,
+                  displayName: displayName || member.displayName,
+                  lineName: lineName || null,
+                  avatarUrl: null,
+                  badgeText: badgeText.trim() || null,
+                }}
+              />
+              <Input
+                value={badgeText}
+                onChange={(e) => setBadgeText(e.target.value)}
+                maxLength={3}
+                placeholder="留空 = 取社群名第一個字"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              最多 3 個字。有上傳頭貼的人看不到這個圓圈（圖優先）。
+            </p>
+          </div>
+          <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">出沒時段</Label>
             <Input
               value={availability}
@@ -863,10 +910,13 @@ function ResourcePanel({
   gymId,
   memberId,
   canEdit,
+  guard,
 }: {
   gymId: string;
   memberId: string;
   canEdit: boolean;
+  /** 改別人的資料要先確認一次 (components/gym/edit-others-guard.tsx) */
+  guard: (action: () => void) => void;
 }) {
   const candies = useMyCandies(gymId, memberId);
   const focus = useMyTypeFocus(gymId, memberId);
@@ -885,7 +935,7 @@ function ResourcePanel({
         {candies.counts ? (
           <CandyBar
             counts={candies.counts}
-            onChange={canEdit ? candies.change : undefined}
+            onChange={canEdit ? (type, next) => guard(() => candies.change(type, next)) : undefined}
             editable={canEdit}
           />
         ) : (
@@ -897,7 +947,7 @@ function ResourcePanel({
           key={kind}
           kind={kind}
           selected={focus.focus?.[kind] ?? null}
-          onToggle={focus.toggle}
+          onToggle={(fk, type) => guard(() => focus.toggle(fk, type))}
           editable={canEdit}
           level={3}
         />
@@ -997,6 +1047,7 @@ function PairsPanel({
   pairById,
   gymPairIds,
   loading,
+  guard,
   onChanged,
   onOptimistic,
   initialScope,
@@ -1029,6 +1080,8 @@ function PairsPanel({
     superAwakening: number,
     extra?: { level?: number; promotion?: number }
   ) => void;
+  /** 改別人的資料要先確認一次 (components/gym/edit-others-guard.tsx) */
+  guard: (action: () => void) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -1209,7 +1262,7 @@ function PairsPanel({
    * 走 set_member_pair RPC: 成員已綁定帳號時會一併更新他的個人收藏,
    * 否則他下次自己一改就會把這裡填的值蓋回去 (舊版就是這樣默默丟資料的)。
    */
-  const saveGrade = useCallback(
+  const writeGrade = useCallback(
     async (
       rec: ClientPairRecord,
       next: { potential: number; superAwakening: number },
@@ -1243,6 +1296,22 @@ function PairsPanel({
       onChanged();
     },
     [supabase, memberId, onChanged, onOptimistic]
+  );
+
+  /**
+   * **全站寫入成員練度的唯一入口就是這一顆** (左下角循環與側板下拉都走它),
+   * 所以防呆包在這裡一次就好 —— 改別人的資料時先問一次「這是 XXX 的資料」。
+   * 樂觀更新也在 writeGrade 裡面, 所以「按取消」的畫面不會先變再彈回去。
+   */
+  const saveGrade = useCallback(
+    (
+      rec: ClientPairRecord,
+      next: { potential: number; superAwakening: number },
+      extra?: { level?: number; promotion?: number }
+    ) => {
+      guard(() => void writeGrade(rec, next, extra));
+    },
+    [guard, writeGrade]
   );
 
   // 卡片互動標準: 點卡片 (含灰卡) = 開側板; 點左下角 = 寶數循環。整牆共用同兩顆 handler。
