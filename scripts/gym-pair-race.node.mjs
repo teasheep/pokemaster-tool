@@ -9,14 +9,16 @@
 // 不碰那 20 位真實成員的任何資料。登入照 AGENTS 的 render-probe (service key 產
 // magiclink → verifyOtp → 合成 @supabase/ssr 的 cookie)。
 //
-// 用法: npm run qa:gympair    前置: dev server 要在 3030 跑著 (npm run dev)。
+// 用法: npm run qa:gympair                     打本機 (dev server 要在 3030 跑著)
+//       QA_BASE=https://pokemaster-tool.com npm run qa:gympair   打線上 (部署後驗收用)
 // 檔名 .node.mjs = 本機工具 (需要 playwright + service key), 與線上無關。
 import fs from "node:fs";
 import { chromium } from "playwright";
 import { createClient } from "@supabase/supabase-js";
-const BASE = "http://localhost:3030", E1 = "qa-race-a@example.invalid", E2 = "qa-race-b@example.invalid";
+const BASE = process.env.QA_BASE ?? "http://localhost:3030", E1 = "qa-race-a@example.invalid", E2 = "qa-race-b@example.invalid";
 const env = Object.fromEntries(fs.readFileSync(".env.local", "utf8").split(/\r?\n/)
   .filter(l => l && !l.startsWith("#") && l.includes("=")).map(l => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]));
+const DOMAIN = new URL(BASE).hostname;
 const SB = env.NEXT_PUBLIC_SUPABASE_URL, ref = new URL(SB).hostname.split(".")[0];
 const admin = createClient(SB, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const newAnon = () => createClient(SB, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
@@ -57,7 +59,7 @@ try {
   const parts = raw.length <= 3180 ? [[NAME, raw]] : raw.match(/.{1,3180}/g).map((x, i) => [`${NAME}.${i}`, x]);
   browser = await chromium.launch({ channel: "chrome", headless: true });
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 950 } });
-  await ctx.addCookies(parts.map(([name, value]) => ({ name, value, domain: "localhost", path: "/" })));
+  await ctx.addCookies(parts.map(([name, value]) => ({ name, value, domain: DOMAIN, path: "/" })));
   await ctx.addInitScript(k => { try { localStorage.setItem(k, "1"); } catch {} }, `pm-gym:tour-seen:v1:${A.userId}`);
   const page = await ctx.newPage();
   const errs = [];
