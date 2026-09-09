@@ -171,6 +171,21 @@ export function GymPairsClient({
   const [gymSet, setGymSet] = useState<Set<string>>(
     () => new Set(gymPairs.map((p) => p.pair_id).filter((v): v is string => !!v))
   );
+  /**
+   * server 送新名單下來就跟上 —— `useState` 的初始值只算一次, 而這個面板在
+   * 「全館拍組 ↔ 選成員」之間切換時**不一定**會重新掛載。另一位管理員改過名單時,
+   * 不同步就是「他加的 ★ 在我這邊看不到」, 而且畫面零徵兆 (2026-09-09 使用者回報)。
+   * 依賴用字串: server 每次渲染都是新陣列, 用陣列會把樂觀更新洗掉。
+   */
+  const gymPairKey = gymPairs
+    .map((p) => p.pair_id)
+    .filter((v): v is string => !!v)
+    .join(",");
+  const [seenGymPairKey, setSeenGymPairKey] = useState(gymPairKey);
+  if (seenGymPairKey !== gymPairKey) {
+    setSeenGymPairKey(gymPairKey);
+    setGymSet(new Set(gymPairKey ? gymPairKey.split(",") : []));
+  }
 
   /** 持有名單一律「頭像 + memberLabel」→ 這裡要整筆成員資料, 不能只留名字 */
   const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);

@@ -121,6 +121,18 @@ export function PairsHub({
 
   // 道館名單做成 state — 側板可即時設為/取消道館拍組
   const [gymPairSet, setGymPairSet] = useState<Set<string>>(() => new Set(gymPairIds));
+  /**
+   * server 送新名單下來就跟上 (2026-09-09): `useState` 的初始值只在第一次掛載時算,
+   * 所以管理員在道館頁 (或另一位管理員) 改過名單之後, 這頁的「道館重點拍組」分頁
+   * 會停在舊的那一份 —— 沒有錯誤、沒有載入中, 只是少幾張卡。
+   * 依賴用字串: server 每次渲染都給新陣列, 用陣列當依賴會把樂觀更新洗掉。
+   */
+  const gymPairKey = gymPairIds.join(",");
+  const [seenGymPairKey, setSeenGymPairKey] = useState(gymPairKey);
+  if (seenGymPairKey !== gymPairKey) {
+    setSeenGymPairKey(gymPairKey);
+    setGymPairSet(new Set(gymPairKey ? gymPairKey.split(",") : []));
+  }
 
   const regions = useMemo(() => {
     const set = new Set<string>();

@@ -308,6 +308,29 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **道館拍組 ★ 只有一個開關**: 一律走 `setGymPair()` (`lib/gym/gym-pairs-client.ts`),
   文案固定「設為道館拍組 / 已設為道館拍組 (點擊取消)」。不要再做第二個搜尋新增面板 —
   要加名單就切到「全圖鑑」範圍點灰卡, 跟「所有拍組點灰卡點亮」同一個心智模型。
+- ⚠ **道館拍組名單是「多人同時在改」的東西, 三個機制缺一不可** (2026-09-09 使用者同時
+  回報兩個症狀, 根因是同一件事; 使用者自己判斷「有可能是兩個管理員同時進去新增造成的」,
+  正確)。三條都**壞掉沒有徵兆** —— 不會有錯誤也不會有載入中, 只是名單少幾張卡:
+  1. **加入名單要冪等**: `setGymPair` 用 `upsert(..., { onConflict: "gym_id,pair_label",
+     ignoreDuplicates: true })` **不要用裸 insert**。兩個管理員同時看著同一張卡時,
+     後按的那個會撞 `(gym_id, pair_label)` 唯一鍵 →
+     `duplicate key value violates unique constraint gym_pairs_gym_id_pair_label_key`
+     原文丟到使用者臉上, 而他多半會再按一次 —— **那一次是 delete, 反而真的把名單弄掉**。
+     這顆按鈕要的是**結果**不是動作。用 `on conflict do nothing` 而不是接住 23505:
+     結果一樣, 但衝突時前者 201 後者 **409**, 409 會在 devtools 留一行紅字。
+  2. **面板的本地名單要跟著 props 同步** (`gymPairKey` + `useEffect`, 三個面板都有):
+     `useState(() => new Set(...))` 的初始值**只在第一次掛載時算**, 而這些面板在
+     切成員/切分頁時不一定會重新掛載 → 別人加的拍組要整頁重新載入才看得到。
+     依賴一定要用 join 出來的**字串**: server 每次渲染都給新陣列, 用陣列會把樂觀更新洗掉。
+  3. **名單更新了還要有圖鑑紀錄才畫得出來**: 成員頁的 catalog 是**進頁面當下**算的子集
+     (道館名單 ∪ 全館持有), 別人後來加的拍組不在裡面 —— 名單同步了、`gymSet` 也對了,
+     **卡片還是不會出現**。所以缺 id 時要自動 `fullCatalog.load()`
+     (與 PairPicker 的 `useCatalogWithFullFallback({ ids })` 同一條規矩)。
+     這是這次最難查的一段: 資料庫、RLS、伺服器算出來的數字全部正確。
+  成員頁另外會在**回到分頁時重抓一次名單** (visibilitychange + focus, 5 秒節流,
+  與看板的新鮮度同一套)。這**不是** Realtime (沒有連線也沒有訂閱), 不牴觸下面那條。
+  端對端證明: `npm run qa:gympair` (兩個真的管理員帳號 + 真的瀏覽器, 隔離道館跑完就刪);
+  `tests/gym-pairs.test.ts` 釘住這三個機制還在。
 - **拍組側板只有一顆** (`components/pair-edit-panel.tsx`, 2026-09-07 使用者抓到):
   `/pairs`「我的拍組」與道館「成員與拍組 → 點某張卡」共用同一個 `PairEditPanel`。
   前科: 道館那邊本來是手刻的唯讀面板 + 一句「寶數請點卡片左下角調整」, 於是**同一張卡

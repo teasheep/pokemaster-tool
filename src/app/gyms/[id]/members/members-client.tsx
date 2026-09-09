@@ -198,11 +198,67 @@ export function MembersClient({
     const have = new Set(catalog.map((p) => p.pairId));
     return [...catalog, ...fullCatalog.records.filter((p) => !have.has(p.pairId))];
   }, [catalog, fullCatalog.records]);
-  /** 道館拍組 (★) 名單 — 成員拍組牆預設只列這些 (由 gymPairs 推導, 不另外送一份) */
+  /**
+   * 道館名單。**server 的那份是起點不是終點** —— 這一頁常常開著不動 (管理員一邊看名冊
+   * 一邊排), 而名單是**兩個管理員會同時改**的東西 (2026-09-09 使用者回報:
+   * 「管理員設定完, 我的道館拍組分頁沒有一起變」、「有可能是兩個管理員同時進去新增」)。
+   *
+   * 所以回到這個分頁時重抓一次 (與看板的新鮮度同一套: visibilitychange + focus, 5 秒節流)。
+   * 這**不是** Realtime —— 沒有連線、沒有訂閱, 只是回到畫面時多一個 150 列的小查詢
+   * (AGENTS「全站沒有 Realtime」那條擋的是連線, 不是這個)。
+   */
+  const [refetched, setRefetched] = useState<GymPairRow[] | null>(null);
+  // server 送了新的一份 → 丟掉本地重抓的那份 (它比較舊)。**在 render 期間調整 state**
+  // 是 React 官方對「props 變了要重設 state」的作法; 寫成 effect 會多一次 render,
+  // react-hooks/set-state-in-effect 也會擋 (見 react.dev「You Might Not Need an Effect」)。
+  const [seenProps, setSeenProps] = useState(gymPairs);
+  if (seenProps !== gymPairs) {
+    setSeenProps(gymPairs);
+    setRefetched(null);
+  }
+  const gymPairRows = refetched ?? gymPairs;
+  useEffect(() => {
+    let last = Date.now();
+    let alive = true;
+    const refetch = async () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - last < 5000) return;
+      last = Date.now();
+      const { data } = await supabase
+        .from("gym_pairs")
+        .select("id, pair_label, pair_id, type")
+        .eq("gym_id", gymId);
+      if (alive && data) setRefetched(data);
+    };
+    document.addEventListener("visibilitychange", refetch);
+    window.addEventListener("focus", refetch);
+    return () => {
+      alive = false;
+      document.removeEventListener("visibilitychange", refetch);
+      window.removeEventListener("focus", refetch);
+    };
+  }, [gymId, supabase]);
+
+  /** 道館拍組 (★) 名單 — 成員拍組牆預設只列這些 (由 gymPairRows 推導, 不另外送一份) */
   const gymPairIds = useMemo(
-    () => gymPairs.map((g) => g.pair_id).filter((v): v is string => !!v),
-    [gymPairs]
+    () => gymPairRows.map((g) => g.pair_id).filter((v): v is string => !!v),
+    [gymPairRows]
   );
+  /**
+   * **名單更新了還要有圖鑑紀錄才畫得出來**。server 送的是子集 (道館名單 ∪ 全館持有),
+   * 而那份是**進頁面當下**算的 —— 別人在你開著頁面時加的拍組不在裡面, 於是名單同步了
+   * 卡片還是不會出現 (這正是這次回報最難查的一段: 名單對了、畫面沒動、零錯誤)。
+   * 缺了就自動補抓整本圖鑑 —— 與 PairPicker 的 `useCatalogWithFullFallback({ ids })`
+   * 同一條規矩 (AGENTS:「別人在你開著頁面時加了名單外的拍組才會自動補抓」)。
+   * 抓回來就 return, 不會反覆抓。
+   */
+  const loadFullCatalog = fullCatalog.load;
+  const haveFullCatalog = fullCatalog.records !== null;
+  useEffect(() => {
+    if (haveFullCatalog) return;
+    const have = new Set(catalog.map((p) => p.pairId));
+    if (gymPairIds.some((id) => !have.has(id))) void loadFullCatalog();
+  }, [gymPairIds, catalog, haveFullCatalog, loadFullCatalog]);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialView.member ?? viewer.memberId ?? ALL_GYM
   );
@@ -431,7 +487,7 @@ export function MembersClient({
             gymId={gymId}
             isAdmin={viewer.isAdmin}
             members={gymViewMembers}
-            gymPairs={gymPairs}
+            gymPairs={gymPairRows}
             grades={grades}
             catalog={catalogAll}
             catalogIsFull={fullCatalog.records !== null}
@@ -1035,6 +1091,21 @@ function PairsPanel({
 
   // 道館名單做成 state — 側板按 ★ 即時反映 (管理員可在這裡把拍組加進道館名單)
   const [gymSet, setGymSet] = useState<Set<string>>(() => new Set(gymPairIds));
+  /**
+   * **server 送新名單下來就跟上** (2026-09-09 使用者回報「管理員設定完, 成員的道館拍組分頁
+   * 沒有一起變」)。`useState` 的初始值只在**第一次掛載**時算一次 —— 這個面板在切換成員時
+   * 不會重新掛載 (刻意的: 換人不該把篩選與範圍重設), 於是名單就永遠停在剛進頁面的那一份。
+   * 另一位管理員加的拍組因此要整頁重新載入才看得到, 而畫面上完全沒有徵兆。
+   *
+   * 依賴用 join 出來的字串而不是陣列本身: server 每次渲染都會給一個新陣列,
+   * 用陣列當依賴會每次都重設 state, 把樂觀更新洗掉。
+   */
+  const gymPairKey = gymPairIds.join(",");
+  const [seenGymPairKey, setSeenGymPairKey] = useState(gymPairKey);
+  if (seenGymPairKey !== gymPairKey) {
+    setSeenGymPairKey(gymPairKey);
+    setGymSet(new Set(gymPairKey ? gymPairKey.split(",") : []));
+  }
   /**
    * 只看這位成員持有的 —— 與 /pairs 的「顯示全部 / 只看我持有的」是同一顆藥丸、同一個心智模型
    * (2026-09-07 補: 道館拍組分頁收嚴之後, 「他還有什麼」只剩全圖鑑可看, 645 張太難找)。
