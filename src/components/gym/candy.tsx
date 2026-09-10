@@ -11,11 +11,12 @@
 // (全站最大顯示 60px × DPR2) 再轉檔; PNG 留 repo 但不進部署 (public/.assetsignore)。
 // 之後要放大顯示尺寸的話, 先去那支腳本把 CANDY_PX 調上去, 不然會糊。
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useCoalescedWrite } from "@/lib/pairs/use-coalesced-write";
 import type { SyncPairRole } from "@/lib/supabase/types";
 
 export type CandyType =
@@ -344,6 +345,9 @@ export function CandyBar({
   );
 }
 
+/** 一次寫入要送的東西。**gym/member 放在 payload 裡不是閉包裡** —— 見 flush 的註解。 */
+type CandyWrite = { gymId: string; memberId: string; type: CandyType; count: number };
+
 /** 自己的糖果庫存 (載入 + 樂觀更新), 給我的拍組頁用 */
 export function useMyCandies(gymId: string | null, memberId: string | null) {
   const supabase = useMemo(() => createClient(), []);
@@ -360,16 +364,48 @@ export function useMyCandies(gymId: string | null, memberId: string | null) {
     setCounts(m);
   };
 
+  /**
+   * 同一種糖的寫入要**排隊**。
+   *
+   * ⚠ 前科 (2026-09-10, 使用者:「為什麼 9/9 草地人會從 5→6? 是記錄問題還是預設問題?」):
+   * 舊版是「每按一次就立刻送一個**絕對值** upsert」, 連點時五六個請求同時在飛,
+   * 而 **HTTP 不保證到達順序** —— 送出去的 1,2,3,4,5 有機會以 3,2,1,4,5 落地。
+   * 症狀有兩種, 都很難懷疑到這裡:
+   *   1. 道館紀錄冒出讀不懂的跳號 (實測線上 277 筆糖果異動裡有 7 筆: 1→4 / 5→7 / 第一筆就是 3);
+   *   2. **最後存下來的數字可能少一格** —— 雷歐 2026-09-10 那次, 畫面顯示 7 而資料庫是 6,
+   *      持續了 5 秒; 他當時如果收手就真的少一顆, 而畫面不會告訴他。
+   * 樂觀更新讓畫面永遠是對的, 所以這個壞法完全沒有徵兆。
+   *
+   * 解法兩層: `useCoalescedWrite` 讓連點只送最後一個值 (450ms), 再加**每一種糖各一條佇列**
+   * 保證跨視窗的先後 —— 只有合併沒有佇列的話, 慢的那一趟還是可能後到。
+   *
+   * ⚠ **gymId / memberId 走 payload 不走閉包**: 這支 hook 的 memberId 會變 (管理員在
+   * 成員頁換人看), 而 useCoalescedWrite 記住的是**最新那顆 flush**。用閉包的話,
+   * 換人當下還在等的那一筆會被寫到**新的那個人**身上。
+   */
+  const queues = useRef(new Map<string, Promise<void>>());
+  const flush = useCallback(
+    (key: string, w: CandyWrite) => {
+      const tail = (queues.current.get(key) ?? Promise.resolve()).then(async () => {
+        const { error } = await supabase.from("member_candies").upsert(
+          { gym_id: w.gymId, member_id: w.memberId, candy_type: w.type, count: w.count },
+          { onConflict: "member_id,candy_type" }
+        );
+        if (error) toast.error("更新失敗", { description: error.message });
+      });
+      queues.current.set(key, tail);
+      return tail;
+    },
+    [supabase]
+  );
+  /** 合併規則 = 後者整包取代 (payload 就是「這種糖最後是幾個」, 不是差量) */
+  const schedule = useCoalescedWrite<CandyWrite>(flush, (_prev, next) => next);
+
   const change = (type: CandyType, next: number) => {
     if (!gymId || !memberId) return;
+    // 畫面照舊立刻動 —— 合併的只有網路那一段
     setCounts((prev) => ({ ...(prev ?? {}), [type]: next }));
-    void (async () => {
-      const { error } = await supabase.from("member_candies").upsert(
-        { gym_id: gymId, member_id: memberId, candy_type: type, count: next },
-        { onConflict: "member_id,candy_type" }
-      );
-      if (error) toast.error("更新失敗", { description: error.message });
-    })();
+    schedule(`${memberId}:${type}`, { gymId, memberId, type, count: next });
   };
 
   return { counts, load, change };

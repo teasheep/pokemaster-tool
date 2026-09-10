@@ -39,6 +39,10 @@ import { CANDY_LABELS, CandyIcon, type CandyType } from "@/components/gym/candy"
 import { GRADE_LABELS } from "@/lib/gym/types";
 import { pairName } from "@/lib/pairs/name";
 import {
+  isNoop,
+  mergeRuns,
+  MERGE_WINDOW_MS,
+  type ActivityRow,
   ACTIVITY_KINDS,
   ACTIVITY_KIND_LABELS as KIND_LABELS,
   ACTIVITY_LOGGED_KINDS,
@@ -49,17 +53,7 @@ import type { ClientPairRecord } from "@/lib/pairs/types";
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 
-type ActivityRow = {
-  id: string;
-  member_id: string | null;
-  actor_id: string | null;
-  kind: string;
-  target: string | null;
-  target_id: string | null;
-  old_value: string | null;
-  new_value: string | null;
-  created_at: string;
-};
+
 
 /** 成員卡的資料 + auth 使用者 id (actor_id 記的是 auth.uid, 要靠它回查是誰) */
 type MemberLite = MemberCardData & { userId?: string | null };
@@ -127,7 +121,9 @@ function describe(a: ActivityRow): { target: string; from: string; to: string; g
     case "candy":
       return {
         target: CANDY_LABELS[a.target as CandyType] ?? a.target ?? "",
-        from: a.old_value ? `${a.old_value} 個` : "",
+        // 沒有 old_value = 這一格本來就沒有列 = **0 個**, 不是「不知道」——
+        // 留空的話畫面只印一個孤零零的「6 個」, 看不出來是從哪裡變過來的
+        from: a.old_value ? `${a.old_value} 個` : "0 個",
         to: a.new_value ? `${a.new_value} 個` : "0 個",
         gone: false,
       };
@@ -155,42 +151,6 @@ function describe(a: ActivityRow): { target: string; from: string; to: string; g
     default:
       return { target: a.target ?? "", from: a.old_value ?? "", to: a.new_value ?? "", gone: false };
   }
-}
-
-/**
- * 同一個人、同一個東西在短時間內連點多次 (寶0 一路點到超覺5 = 11 筆) 只留一列:
- * 起點取最舊的 old_value, 終點取最新的 new_value。
- */
-const MERGE_WINDOW_MS = 30 * 60 * 1000;
-
-function mergeRuns(rows: ActivityRow[]): ActivityRow[] {
-  const out: ActivityRow[] = [];
-  for (const r of rows) {
-    // rows 是新到舊 — 找最後一筆同人同物, 時間夠近就併進去 (它比較新, 保留它的 new_value)
-    const prev = out[out.length - 1];
-    const sameThing =
-      prev &&
-      prev.member_id === r.member_id &&
-      prev.kind === r.kind &&
-      prev.target === r.target &&
-      new Date(prev.created_at).getTime() - new Date(r.created_at).getTime() < MERGE_WINDOW_MS;
-    if (sameThing) {
-      out[out.length - 1] = { ...prev, old_value: r.old_value };
-      continue;
-    }
-    out.push(r);
-  }
-  return out;
-}
-
-/**
- * 併完之後**起點與終點一樣** = 誤點了又馬上改回來, 預設不顯示
- * (2026-09-10 使用者:「有時候誤點然後馬上改回來… 好像就不需要顯示,
- *  或者要更詳細的資料再顯示就可以」)。
- * 資料**不會刪**, 只是收起來 —— 想查「他到底點了什麼」時按一下就攤開。
- */
-function isNoop(r: ActivityRow): boolean {
-  return (r.old_value ?? "") === (r.new_value ?? "");
 }
 
 type Group = {
