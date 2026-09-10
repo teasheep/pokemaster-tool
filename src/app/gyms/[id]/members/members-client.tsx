@@ -10,7 +10,7 @@ import {
   useTransition,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronsUpDown, Copy, Download, Pencil, Users } from "lucide-react";
+import { Check, ChevronsUpDown, Copy, Download, Pencil, UserPlus, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,20 @@ type MemberItem = {
   badgeText: string | null;
 };
 
+/**
+ * 還在等管理員確認的加入申請 (0071)。**只有管理員拿得到這一份** (page.tsx 那邊擋掉),
+ * 而且它不進 `members` —— 名冊、持有率、排刀、匯出都不該有他。
+ */
+type PendingItem = {
+  id: string;
+  displayName: string;
+  lineName: string | null;
+  avatarUrl: string | null;
+  badgeText: string | null;
+  role: string;
+  requestedAt: string;
+};
+
 type PairRow = {
   id: string;
   pair_label: string;
@@ -112,6 +126,11 @@ type Props = {
   fullCatalogUrl: string;
   /** 邀請碼 (管理員才拿得到) — 加人是成員頁的職責 */
   invite?: { code: string | null; advisorCode: string | null };
+  /**
+   * 待確認的加入申請 (0071, 管理員才拿得到)。
+   * 碼有可能外流, 所以貼了碼只是排隊 —— 管理員按了勾勾他才看得到這一館。
+   */
+  pending?: PendingItem[];
   /** 全館視角 (道館拍組總覽) 需要的資料 */
   gymPairs: GymPairRow[];
   grades: PackedGrades;
@@ -196,6 +215,7 @@ export function MembersClient({
   gymPairs,
   grades,
   initialView,
+  pending = [],
 }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -412,6 +432,35 @@ export function MembersClient({
     []
   );
 
+  /**
+   * 待確認的申請: 勾勾 = 放行 (status → active), 叉叉 = 拒絕 (刪掉那一列)。
+   *
+   * 兩件事都走既有的 RLS (`gym_members_update_admin` / `gym_members_delete`),
+   * 沒有新的 RPC —— 這裡不需要 security definer, 管理員本來就改得動自己館的成員列。
+   * **樂觀更新用不上**: 放行之後那個人要出現在名冊上 (連同他的持有), 那是一整頁的資料,
+   * 所以直接 router.refresh() 重抓, 不自己拼半份畫面。
+   */
+  const [decidingId, setDecidingId] = useState<string | null>(null);
+  const decide = useCallback(
+    async (m: PendingItem, approve: boolean) => {
+      setDecidingId(m.id);
+      try {
+        const { error } = approve
+          ? await supabase.from("gym_members").update({ status: "active" }).eq("id", m.id)
+          : await supabase.from("gym_members").delete().eq("id", m.id);
+        if (error) {
+          toast.error(approve ? "確認失敗" : "拒絕失敗", { description: error.message });
+          return;
+        }
+        toast.success(approve ? `已讓 ${memberLabel(m)} 加入` : `已拒絕 ${memberLabel(m)}`);
+        router.refresh();
+      } finally {
+        setDecidingId(null);
+      }
+    },
+    [router, supabase]
+  );
+
   /** 全館視角要的成員清單 (不含顧問) — memo 掉, 否則 GymPairsClient 每次都收到新陣列 */
   const gymViewMembers = useMemo(
     () =>
@@ -495,6 +544,9 @@ export function MembersClient({
       <div className="hidden h-fit space-y-0.5 lg:block">
         <Roster
           members={members}
+          pending={pending}
+          decidingId={decidingId}
+          onDecide={decide}
           selectedId={selectedId}
           viewerMemberId={viewer.memberId}
           canManage={viewer.isAdmin}
@@ -609,6 +661,9 @@ export function MembersClient({
       >
         <Roster
           members={members}
+          pending={pending}
+          decidingId={decidingId}
+          onDecide={decide}
           selectedId={selectedId}
           viewerMemberId={viewer.memberId}
           canManage={viewer.isAdmin}
@@ -632,6 +687,9 @@ export function MembersClient({
  */
 function Roster({
   members,
+  pending = [],
+  decidingId = null,
+  onDecide,
   selectedId,
   viewerMemberId,
   canManage,
@@ -639,6 +697,10 @@ function Roster({
   onEdit,
 }: {
   members: MemberItem[];
+  /** 待確認的申請 (0071) — 非管理員一律是空陣列 (page.tsx 就擋掉了) */
+  pending?: PendingItem[];
+  decidingId?: string | null;
+  onDecide?: (m: PendingItem, approve: boolean) => void;
   selectedId: string | null;
   viewerMemberId: string | null;
   canManage: boolean;
@@ -661,6 +723,11 @@ function Roster({
         </span>
         <span className="font-semibold">全館拍組</span>
       </button>
+      {/* 待確認排在名冊最上面 (只有管理員看得到): 這是一件**等他處理**的事,
+          擺在 20 個人下面等於沒有人會看到。平常一列都沒有, 完全不佔版面。 */}
+      {pending.length > 0 && onDecide ? (
+        <PendingRequests pending={pending} decidingId={decidingId} onDecide={onDecide} />
+      ) : null}
       {members
         .filter((m) => m.role !== "advisor")
         .map((m, mi) => (
@@ -693,6 +760,84 @@ function Roster({
             />
           ))}
         </>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * 待確認的加入申請 (0071) —— 一個勾勾一個叉叉, 使用者指定的就是這兩顆。
+ *
+ * ⚠ **這一區不可以做成「點進去看他的資料」**: 他還沒被放行, 而這一整頁的意義就是
+ *   「被放行之前什麼都看不到」。這裡只回答一件事 —— 誰在門外, 要不要讓他進來。
+ * 叉叉要按兩下 (第一下轉紅) —— 誤按一下就把人家的申請刪掉, 而他不會收到任何通知,
+ * 只會發現自己一直在等 (與「移出道館」同一種手感)。
+ */
+function PendingRequests({
+  pending,
+  decidingId,
+  onDecide,
+}: {
+  pending: PendingItem[];
+  decidingId: string | null;
+  onDecide: (m: PendingItem, approve: boolean) => void;
+}) {
+  const [confirmRejectId, setConfirmRejectId] = useState<string | null>(null);
+  return (
+    <div
+      className="mb-1 rounded-lg border border-amber-500/40 bg-amber-500/5 p-1.5"
+      data-tour="pending-requests"
+    >
+      <p className="flex items-center gap-1.5 px-1 pb-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+        <UserPlus className="h-3.5 w-3.5" />
+        待確認加入 ({pending.length})
+      </p>
+      {pending.map((m) => (
+        <div key={m.id} className="flex items-center gap-2 rounded-md px-1 py-1">
+          <MemberAvatar member={m} size="md" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold">{memberLabel(m)}</span>
+            <span className="block text-[11px] text-muted-foreground max-sm:text-xs">
+              {m.role === "advisor" ? "顧問碼" : "成員碼"}
+            </span>
+          </span>
+          <button
+            type="button"
+            title="拒絕 (刪掉這筆申請)"
+            aria-label={`拒絕 ${memberLabel(m)}`}
+            disabled={decidingId === m.id}
+            onClick={() => {
+              if (confirmRejectId !== m.id) {
+                setConfirmRejectId(m.id);
+                return;
+              }
+              onDecide(m, false);
+            }}
+            className={cn(
+              "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors pointer-coarse:h-11 pointer-coarse:w-11",
+              confirmRejectId === m.id
+                ? "border-destructive bg-destructive text-white"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            )}
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            title="確認加入"
+            aria-label={`確認 ${memberLabel(m)} 加入`}
+            disabled={decidingId === m.id}
+            onClick={() => onDecide(m, true)}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-emerald-600/50 bg-emerald-600 text-white transition-colors hover:bg-emerald-700 pointer-coarse:h-11 pointer-coarse:w-11"
+          >
+            <Check className="h-4 w-4" />
+          </button>
+        </div>
+      ))}
+      {confirmRejectId ? (
+        <p className="px-1 pt-0.5 text-[11px] text-destructive max-sm:text-xs">
+          再按一次叉叉就拒絕 —— 他要重新貼一次碼才能再申請。
+        </p>
       ) : null}
     </div>
   );
@@ -1066,7 +1211,7 @@ function InviteCodes({
         <button
           onClick={() => void copy(invite.code!, "成員碼")}
           className="inline-flex items-center gap-1 rounded border px-2 py-1 hover:bg-accent pointer-coarse:min-h-11 pointer-coarse:px-3"
-          title="成員邀請碼 — 輸入即可加入, 佔 20 人名額"
+          title="成員邀請碼 — 對方貼上後要你按確認才加入, 佔 20 人名額"
         >
           成員碼 <span className="font-mono">{invite.code}</span>
           <Copy className="h-3 w-3" />
@@ -1076,7 +1221,7 @@ function InviteCodes({
         <button
           onClick={() => void copy(invite.advisorCode!, "顧問碼")}
           className="inline-flex items-center gap-1 rounded border border-violet-500/50 px-2 py-1 text-violet-700 hover:bg-accent dark:text-violet-300 pointer-coarse:min-h-11 pointer-coarse:px-3"
-          title="顧問邀請碼 — 加入後是唯讀顧問, 不佔名額"
+          title="顧問邀請碼 — 一樣要你按確認; 進來後是唯讀顧問, 不佔名額"
         >
           顧問碼 <span className="font-mono">{invite.advisorCode}</span>
           <Copy className="h-3 w-3" />

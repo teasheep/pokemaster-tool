@@ -3,6 +3,12 @@
 // 因此查不到 = 不是成員, 頁面以此判斷權限。
 
 import { createClient, getSessionUser } from "@/lib/supabase/server";
+// 判斷放在中立模組 (見那個檔的檔頭): /api/export 與測試都要用, 但它們不該被
+// next/headers 拖進來。這裡照舊 re-export, 呼叫端不必知道搬過家。
+import { isActiveMember, type PendingGym } from "@/lib/gym/membership";
+
+export { isActiveMember };
+export type { PendingGym };
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import type { Database } from "@/lib/supabase/types";
 
@@ -27,14 +33,18 @@ export type GymViewer = {
  * 讀道館 + 目前使用者的身分。gym 為 null = 不存在或無權限 (RLS 擋掉)。
  * members 只含「實際成員」(admin/member) — 排刀、券數、統計都以這份為準;
  * advisors 另外回傳 (顧問不佔名額)。
+ *
+ * **pending 另外一袋** (0071): 還在等確認的人不算成員 —— 名冊、持有率、排刀、
+ * 匯出一律不含他們, 只有管理員的「待確認」區塊拿得到那一份。
  */
 export async function getGymContext(gymId: string): Promise<{
   gym: GymRow | null;
   viewer: GymViewer | null;
   members: GymMemberRow[];
   advisors: GymMemberRow[];
+  pending: GymMemberRow[];
 }> {
-  const empty = { gym: null, viewer: null, members: [], advisors: [] };
+  const empty = { gym: null, viewer: null, members: [], advisors: [], pending: [] };
   const supabase = await createClient();
   const user = await getSessionUser();
   if (!user) return empty;
@@ -49,7 +59,10 @@ export async function getGymContext(gymId: string): Promise<{
   if (!gym) return empty;
 
   const rows = all ?? [];
-  const mine = rows.find((m) => m.user_id === user.id) ?? null;
+  const active = rows.filter(isActiveMember);
+  // 自己那一列也要是 active 才算數 —— 不然待確認的人在這裡會拿到 viewer 而看到半個道館。
+  // (實務上走不到: 他的 gyms select 早就被 RLS 擋成 null, 上面已經 return empty 了。)
+  const mine = active.find((m) => m.user_id === user.id) ?? null;
   const isAdmin = mine?.role === "admin";
   const isAdvisor = mine?.role === "advisor";
 
@@ -62,9 +75,30 @@ export async function getGymContext(gymId: string): Promise<{
       isAdvisor,
       canEdit: !isAdvisor,
     },
-    members: rows.filter((m) => m.role !== "advisor"),
-    advisors: rows.filter((m) => m.role === "advisor"),
+    members: active.filter((m) => m.role !== "advisor"),
+    advisors: active.filter((m) => m.role === "advisor"),
+    pending: rows.filter((m) => !isActiveMember(m)),
   };
+}
+
+/**
+ * 我還在等哪幾館確認。
+ *
+ * 走 RPC 而不是查表: 待確認的人**讀不到 gyms 也讀不到自己那一列** (RLS 兩邊都收了),
+ * 所以連館名都問不到 —— `my_pending_gyms()` 是 security definer, 只回呼叫者自己的申請。
+ * 查不到就回空陣列 (migration 還沒套時是 PGRST202): 這只是清單上的一塊提示,
+ * 不該讓整個「我的道館」頁掛掉。
+ */
+export async function getMyPendingGyms(): Promise<PendingGym[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("my_pending_gyms");
+  if (error || !data) return [];
+  return data.map((r) => ({
+    gymId: r.gym_id,
+    gymName: r.gym_name,
+    role: r.role,
+    requestedAt: r.requested_at,
+  }));
 }
 
 /** 全館持有的一列 (member_pairs 的最小投影) */

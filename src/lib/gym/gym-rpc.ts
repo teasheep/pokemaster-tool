@@ -25,8 +25,15 @@ const MESSAGES: Record<string, string> = {
 };
 
 export type GymRpcResult =
-  | { gymId: string; error?: undefined }
-  | { gymId?: undefined; error: string };
+  /**
+   * `pending` = 申請送出了, 但要等管理員按確認 (0071)。
+   * **呼叫端一定要分開處理**: 待確認的人讀不到那一館的任何資料, 照舊 push 進
+   * `/gyms/<id>` 就是一個「找不到道館」的空白頁。
+   * 舊版的資料庫不會回這個欄位 → undefined → 當成 false = 舊行為 (直接進道館),
+   * 所以先部署前端再套 migration 也不會壞。
+   */
+  | { gymId: string; pending: boolean; error?: undefined }
+  | { gymId?: undefined; pending?: undefined; error: string };
 
 /**
  * 把 supabase.rpc(...) 的 `{ data, error }` 收成 `{ gymId }` 或 `{ error: 中文訊息 }`。
@@ -42,10 +49,12 @@ export function readGymRpc(data: unknown, error: { message?: string; code?: stri
     return { error: key ? MESSAGES[key] : (error.message ?? "發生未知的錯誤") };
   }
   // 舊版: 直接回 uuid
-  if (typeof data === "string" && data) return { gymId: data };
+  if (typeof data === "string" && data) return { gymId: data, pending: false };
   if (data && typeof data === "object") {
-    const row = data as { gym_id?: unknown; error?: unknown };
-    if (typeof row.gym_id === "string" && row.gym_id) return { gymId: row.gym_id };
+    const row = data as { gym_id?: unknown; error?: unknown; pending?: unknown };
+    if (typeof row.gym_id === "string" && row.gym_id) {
+      return { gymId: row.gym_id, pending: row.pending === true };
+    }
     if (typeof row.error === "string") {
       return { error: MESSAGES[row.error] ?? row.error };
     }

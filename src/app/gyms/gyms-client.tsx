@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Shield, Users } from "lucide-react";
+import { Clock, Plus, Shield, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { readGymRpc } from "@/lib/gym/gym-rpc";
+import type { PendingGym } from "@/lib/gym/membership";
 
 type GymListItem = {
   id: string;
@@ -29,7 +30,14 @@ type GymListItem = {
   memberCount: number;
 };
 
-export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
+export function GymsClient({
+  gyms,
+  pending = [],
+}: {
+  gyms: GymListItem[];
+  /** 送出了但管理員還沒確認的申請 (0071) — 這些**還不是**我的道館, 點不進去 */
+  pending?: PendingGym[];
+}) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -79,8 +87,17 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
         toast.error("加入失敗", { description: res.error });
         return;
       }
-      toast.success("已加入道館");
       setJoinOpen(false);
+      setInviteCode("");
+      // 0071: 貼碼只是送出申請, 管理員按確認之後才進得去。
+      // **這裡不能 push 進道館** —— 待確認的人讀不到那一館的任何資料, 進去只會看到
+      // 「找不到道館或你不是成員」, 而他其實什麼都沒做錯。
+      if (res.pending) {
+        toast.success("已送出加入申請", { description: "等管理員確認後就會出現在這裡" });
+        router.refresh();
+        return;
+      }
+      toast.success("已加入道館");
       router.push(`/gyms/${res.gymId}`);
       router.refresh();
     } finally {
@@ -172,10 +189,14 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
         </Dialog>
       </div>
 
+      {pending.length > 0 ? <PendingGyms pending={pending} /> : null}
+
       {gyms.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          還沒有加入任何道館 — 建立一個, 或向管理員要邀請碼。
-        </p>
+        pending.length > 0 ? null : (
+          <p className="text-sm text-muted-foreground">
+            還沒有加入任何道館 — 建立一個, 或向管理員要邀請碼。
+          </p>
+        )
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {gyms.map((g) => (
@@ -196,6 +217,66 @@ export function GymsClient({ gyms }: { gyms: GymListItem[] }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * 「等管理員確認」的申請卡 (0071)。
+ *
+ * 刻意**不是** `<Link>`: 點進去只會看到「找不到道館或你不是成員」, 而那句話對
+ * 一個乖乖貼了碼的人來說是錯的訊息。這裡要講的只有兩件事 —— 你申請的是哪一館,
+ * 以及球在管理員那邊。
+ */
+function PendingGyms({ pending }: { pending: PendingGym[] }) {
+  const router = useRouter();
+  const supabase = createClient();
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function cancel(gymId: string) {
+    setBusy(gymId);
+    try {
+      const { error } = await supabase.rpc("cancel_join_request", { p_gym: gymId });
+      if (error) {
+        toast.error("取消失敗", { description: error.message });
+        return;
+      }
+      toast.success("已取消申請");
+      router.refresh();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <h2 className="text-sm font-medium text-muted-foreground">等待確認</h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {pending.map((p) => (
+          <Card key={p.gymId} className="border-dashed">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                {p.gymName}
+              </CardTitle>
+              <CardDescription>
+                {p.role === "advisor" ? "顧問申請" : "成員申請"}・等管理員確認
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-ml-2 text-muted-foreground"
+                disabled={busy === p.gymId}
+                onClick={() => void cancel(p.gymId)}
+              >
+                取消申請
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

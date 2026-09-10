@@ -217,6 +217,45 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   4. **`gym_create_codes` / `code_attempts` 兩張表沒有任何 RLS policy**, 連已登入者都讀不到;
      唯一的入口是那兩支 security definer 函式。要查碼用 service role (`npm run gym:code`)。
   端對端證明: `npm run qa:gymcode` (真的 Chrome 點下去 —— 碼錯/重複用/節流/教學分叉都驗)。
+- ⚠ **貼了邀請碼只是排隊, 管理員按確認才算加入** (0071, 2026-09-10 使用者指定:
+  「碼確實有可能被外流, 此時再踢出, 已經被看光了」)。`gym_members.status`:
+  `pending` = 送出申請, `active` = 正式成員; **顧問碼一模一樣**。
+  這是**安全邊界不是流程裝飾** —— 舊制的損害在他點進來那一秒就發生了 (全館練度、背包、
+  道館拍組名單、賽事看板一次看完), 事後踢出救不回來。
+  1. **收在 RLS helper, 不要在頁面層加判斷**: 全站道館資料的讀取都收斂在
+     `is_gym_member(gym_id)`, 所以只改那幾支 = 現有與以後才長出來的表一起生效。
+     **五支要一起收**, 少一支就是一扇側門: `is_gym_member` (讀) / `is_gym_editor` (寫共享
+     資料) / `is_gym_admin` (管理) / `is_gym_advisor` (顧問視野) / `is_self_member`
+     (「這一列是我的」= 成員資料表的寫入)。以後 `create or replace` 這五支的任何一支,
+     **一定要記得帶 `and status = 'active'`** —— `tests/member-approval.test.ts` 會掃
+     「全部 migration 裡最後一次定義」把漏掉的擋下來。
+  2. **不影響個人功能** (使用者明講): `/pairs` 個人收藏、`/resources` 我的背包、
+     分享頁、匯出金鑰都不看 is_gym_member, 待確認的人照樣用得到。
+  3. **判斷一律寫 `status !== "pending"` 不要寫 `=== "active"`**
+     (`lib/gym/membership.ts` 的 `isActiveMember`, 那個檔**不可以 import server 專用的東西**):
+     部署前端與套 migration 不會同時落地, 中間那幾分鐘讀回來是 `undefined` ——
+     前者自然是舊行為, 後者會讓**全館 20 個人一起變成「還沒確認」**, 名冊/持有率/匯出
+     一次全空而且沒有任何錯誤訊息。同理, 讀 gym_members 的地方一律 `select("*")`,
+     明列欄位名在 migration 還沒套時會直接 400。
+  4. **自助更新那條要把 status 釘死** (`gym_members_update_self` 的 with check 加
+     `status = my_gym_status(gym_id)`) —— RLS 沒有欄位粒度, 不釘就是一條自助核准的路
+     (與 0028 對 role 做的事完全一樣)。
+  5. **待確認的人讀不到 gyms 也讀不到自己那一列**, 所以「我還在等哪一館」要走
+     security definer 的 `my_pending_gyms()`; 它**刻意不回 gym_members.id** ——
+     `set_member_pair` 的自助分支 (`v_user = auth.uid()`) 沒有另外檢查 status,
+     擋住它的就是「拿不到自己那一列的 id」。哪天有人讓待確認狀態看得到自己那一列,
+     要回去替那支補一句 `status = 'active'`。
+  6. **勾勾與叉叉放在名冊最上面** (使用者:「可以放在原本的成員側板, 然後一個勾勾跟叉叉就可以了」),
+     桌機左欄與手機 bottom sheet 共用同一份 `Roster` —— 只接一邊的話手機上的管理員
+     永遠看不到有人在等。叉叉 = 刪掉那一列 (要按兩下), 他要重新貼一次碼才能再申請。
+     這一區**不可以做成「點進去看他的資料」**: 他還沒被放行, 而整條規則就是「放行前什麼都看不到」。
+     `/gyms` 那邊給申請人一張「等待確認」的卡 (**刻意不是連結** —— 點進去只會看到
+     「找不到道館或你不是成員」, 那句話對一個乖乖貼了碼的人是錯的訊息) 加一顆「取消申請」。
+  7. **貼完碼不可以 `router.push` 進那一館** —— 兩個入口 (`gyms-client` 與 `welcome-client`)
+     都要看 `readGymRpc` 回來的 `pending`。
+  端對端證明: `npm run qa:approval` (三個隔離帳號 + 真的 JWT 打 PostgREST ——
+  證明的是「待確認的帳號一列都讀不到」, 那件事用眼睛看不出來, 他的畫面本來就是空的)。
+  乾跑: `node scripts/dev/dryrun-0071.node.mjs` (BEGIN → 套 → 驗 → ROLLBACK)。
 - **登入只有 Google 一條路, 但有兩個觸發** (2026-09-01): 按鈕 `GoogleSignInButton`
   (整頁導向 → `/auth/callback`) 與 Google One Tap `components/google-one-tap.tsx`
   (`signInWithIdToken` → `/auth/one-tap`)。One Tap 是**捷徑不是第二種登入方式**, 按鈕永遠要留著 ——
@@ -676,6 +715,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   不下載 Chromium), 登入走 render-probe 合成 cookie, 並且**把 pageerror 與 console error
   一律當失敗** —— 那正是 SSR 探測看不到的那一半。
   它會建一個隔離的測試帳號與測試道館, 跑完 (含失敗) 一定刪掉, **不碰那 20 位真實成員的資料**。
+  ⚠ 這支**只驗畫面**。RLS 那一半 (誰讀得到什麼) 用 `npm run qa:approval` ——
+  它不開瀏覽器, 直接拿測試帳號的 JWT 打 PostgREST, 因為「看不到」在畫面上與「沒有資料」長得一樣。
   前置: dev server 要跑著; 加 `-- --headed` 可以開著視窗看它點。
   (Claude 的 Chrome 擴充沒裝時就走這條, 不必卡在那裡。)
 - **決定「畫面長什麼樣」的 client 狀態一律同步進網址** (`lib/use-url-state.ts`,

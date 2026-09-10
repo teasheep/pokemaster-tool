@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
-import { fetchGymGrades, getGymContext } from "@/lib/gym/queries";
+import { fetchGymGrades, getGymContext, getMyPendingGyms } from "@/lib/gym/queries";
 import { CATALOG_VERSION, loadPairsForClient } from "@/lib/pairs/loader";
 import { pickParam } from "@/lib/url-params";
 import { MembersClient } from "./members-client";
@@ -25,13 +25,24 @@ export default async function GymMembersPage({
     redirect(`/login?redirect=/gyms/${id}/members`);
   }
 
-  const { gym, viewer, members, advisors } = await getGymContext(id);
+  const { gym, viewer, members, advisors, pending } = await getGymContext(id);
   if (!gym || !viewer) {
+    // 「不是成員」有兩種: 真的不相干, 以及**貼了碼在等管理員確認** (0071)。
+    // 對後者講「找不到道館」是錯的訊息 —— 他什麼都沒做錯, 只是還沒被放行。
+    // 這一趟只在失敗路徑上多花 (正常成員永遠走不到這裡)。
+    const waiting = (await getMyPendingGyms()).find((p) => p.gymId === id);
     return (
       <div className="py-12 text-center">
-        <h1 className="text-2xl font-bold">找不到道館或你不是成員</h1>
+        <h1 className="text-2xl font-bold">
+          {waiting ? "等管理員確認中" : "找不到道館或你不是成員"}
+        </h1>
+        {waiting ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            你已經送出加入「{waiting.gymName}」的申請，管理員按確認後才看得到館內的資料。
+          </p>
+        ) : null}
         <Button asChild className="mt-4">
-          <Link href="/gyms">回道館列表</Link>
+          <Link href="/gyms?list=1">回道館列表</Link>
         </Button>
       </div>
     );
@@ -93,6 +104,21 @@ export default async function GymMembersPage({
       gymPairs={gymPairs ?? []}
       grades={{ memberIds: memberList.map((m) => m.id), byPair }}
       invite={invite ? { code: invite.code, advisorCode: invite.advisor_code } : undefined}
+      // 待確認的申請 (0071) **只送給管理員** —— 只有他按得動那個勾勾/叉叉,
+      // 而且沒必要讓全館看到誰在門外等。
+      pending={
+        viewer.isAdmin
+          ? pending.map((m) => ({
+              id: m.id,
+              displayName: m.display_name,
+              lineName: m.line_name,
+              avatarUrl: m.avatar_url,
+              badgeText: m.badge_text,
+              role: m.role,
+              requestedAt: m.created_at,
+            }))
+          : []
+      }
       members={memberList.map((m) => ({
         id: m.id,
         displayName: m.display_name,

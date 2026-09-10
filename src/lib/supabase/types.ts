@@ -180,6 +180,14 @@ export type Database = {
           avatar_url: string | null;
           /** 頭像圓圈的自訂文字 (0062, 1-3 字; null = 從社群名取字) */
           badge_text: string | null;
+          /**
+           * 0071: pending = 用邀請碼/顧問碼送出申請, 還沒被管理員確認 —— 這一館的資料
+           * 一列都讀不到 (RLS 的 is_gym_member 只認 active)。舊列與管理員手動新增的一律 active。
+           * ⚠ 判斷一律寫成 `status !== "pending"` 而不是 `=== "active"` —— 這一欄是後加的,
+           * 前端可能比 migration 早一步上線, 那時候讀回來是 undefined:
+           * 前者自然算 active, 後者會讓全館 20 個人一起變成「還沒確認」。
+           */
+          status: GymMemberStatus;
           created_at: string;
           updated_at: string;
         };
@@ -193,6 +201,7 @@ export type Database = {
           availability?: string | null;
           avatar_url?: string | null;
           badge_text?: string | null;
+          status?: GymMemberStatus;
           created_at?: string;
           updated_at?: string;
         };
@@ -206,6 +215,7 @@ export type Database = {
           availability?: string | null;
           avatar_url?: string | null;
           badge_text?: string | null;
+          status?: GymMemberStatus;
           created_at?: string;
           updated_at?: string;
         };
@@ -721,6 +731,24 @@ export type Database = {
         Returns: Json;
       };
       /**
+       * 我還在等確認的道館 (0071) —— 待確認的人讀不到 gyms 也讀不到自己那一列,
+       * 所以「我的道館」清單要靠這支才問得到館名。只回呼叫者自己的申請。
+       */
+      my_pending_gyms: {
+        Args: Record<string, never>;
+        Returns: {
+          gym_id: string;
+          gym_name: string;
+          role: GymMemberRole;
+          requested_at: string;
+        }[];
+      };
+      /** 取消自己送出的加入申請 (0071)。回 { ok: boolean }。 */
+      cancel_join_request: {
+        Args: { p_gym: string };
+        Returns: Json;
+      };
+      /**
        * 建立道館 — 原子地認領建館碼 + 建道館 + 自己成為管理員 (0041 / 0060)。
        * `p_code` 是一次性的建館碼 (封測, 作者發)。回傳形狀同 join_gym。
        */
@@ -791,6 +819,12 @@ export type SyncPairRole = "strike" | "tech" | "support" | "field" | "sprint" | 
 // ── 道館賽 (0005) 的欄位 union — 對應 SQL check constraints ──
 /** advisor = 顧問 (唯讀觀察者, 不佔 20 人名額) */
 export type GymMemberRole = "admin" | "member" | "advisor";
+
+/**
+ * 成員狀態 (0071)。pending = 貼了邀請碼但管理員還沒按確認 —— 他看不到這一館的任何資料
+ * (碼有可能外流, 舊制是「進來以後再踢, 但已經被看光了」)。
+ */
+export type GymMemberStatus = "pending" | "active";
 export type AttackCategory = "physical" | "special";
 /** 由賽期日期推導 (battleStatusFromDates), 不是 DB 欄位 (0047 drop) */
 export type BattleStatus = "planning" | "active" | "finished";

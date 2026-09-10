@@ -3,6 +3,7 @@ import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { createClient } from "@supabase/supabase-js";
 
 import { roleAssetToRole } from "@/data/sync-pairs";
+import { isActiveMember } from "@/lib/gym/membership";
 import { battleStatusFromDates } from "@/lib/gym/types";
 import { loadPairsById } from "@/lib/pairs/loader";
 import type { Database } from "@/lib/supabase/types";
@@ -77,8 +78,11 @@ export async function GET(req: Request) {
   }
   if (!owner) return NextResponse.json({ error: "key 無效" }, { status: 403 });
 
+  // 這支走 service role (金鑰本身就是授權憑證) → **RLS 不會幫忙擋**, 待確認的成員
+  // (0071) 要自己濾掉: 不然一個還沒被放行的人拿自己的金鑰就能把整館撈出去 ——
+  // 那正是這條功能要擋的事。`select("*")` 是因為 status 是後加的欄位 (見 /gyms 那條註解)。
   const [{ data: myMemberships }, { data: myCollection }, catalog] = await Promise.all([
-    db.from("gym_members").select("id, gym_id, role").eq("user_id", owner.id),
+    db.from("gym_members").select("*").eq("user_id", owner.id),
     db
       .from("user_collection")
       .select("pair_id, promotion, potential, super_awakening, ex_unlocked, level")
@@ -102,8 +106,9 @@ export async function GET(req: Request) {
     };
   };
 
-  const gymIds = [...new Set((myMemberships ?? []).map((m) => m.gym_id))];
-  const roleIn = new Map((myMemberships ?? []).map((m) => [m.gym_id, m.role]));
+  const myActive = (myMemberships ?? []).filter(isActiveMember);
+  const gymIds = [...new Set(myActive.map((m) => m.gym_id))];
+  const roleIn = new Map(myActive.map((m) => [m.gym_id, m.role]));
 
   const gyms = [];
   for (const gymId of gymIds) {
@@ -119,7 +124,7 @@ export async function GET(req: Request) {
       { data: battles },
     ] = await Promise.all([
       db.from("gyms").select("name").eq("id", gymId).maybeSingle(),
-      db.from("gym_members").select("id, display_name, role, availability").eq("gym_id", gymId).order("display_name"),
+      db.from("gym_members").select("*").eq("gym_id", gymId).order("display_name"),
       // 全館持有 — 超過 1000 列 (線上實測 2055), 分頁全量。
       // order("id") 是 offset 分頁的穩定排序: 沒有它, 讀取期間有人改練度就會讓
       // 列位移, 頁與頁的邊界可能重複或漏 (重複 = 同一個人的同一張卡輸出兩次)。
@@ -202,7 +207,8 @@ export async function GET(req: Request) {
     gyms.push({
       name: gym.name,
       myRole: roleIn.get(gymId) ?? null,
-      members: (members ?? []).map((m) => ({
+      // 待確認的成員 (0071) 不算名單上的人 —— 匯出給 AI 排刀的那一份也不該有他
+      members: (members ?? []).filter(isActiveMember).map((m) => ({
         id: m.id,
         name: m.display_name,
         role: m.role,

@@ -75,6 +75,14 @@ export function WelcomeClient({
           setSaving(false);
           return;
         }
+        // 0071: 貼碼是送出申請, 管理員按確認才進得去 —— 待確認的人讀不到那一館,
+        // 直接導進去只會看到「找不到道館或你不是成員」。改成停在道館清單, 那裡有等待中的卡片。
+        if (res.pending) {
+          toast.success("已送出加入申請", { description: "等管理員確認後就會出現在這裡" });
+          router.push("/gyms?list=1");
+          router.refresh();
+          return;
+        }
         toast.success("已加入道館");
         router.push(`/gyms/${res.gymId}`);
         router.refresh();
