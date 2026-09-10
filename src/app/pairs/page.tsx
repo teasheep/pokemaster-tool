@@ -59,7 +59,13 @@ export default async function PairsPage({
         ]);
         collection = col;
         if (active) {
-          gymSync = { gymId: active.gymId, memberId: active.memberId };
+          gymSync = {
+            gymId: active.gymId,
+            // 顧問不佔名額, 他的練度不屬於這一館 → **不要鏡射進 member_pairs** (0072)。
+            // memberId = null 就是 GymSyncInfo 本來就有的「不同步」開關, 不必長新旗標;
+            // gymId 照舊給, 側板的「☆ 已是道館拍組」他還是看得到 (那是全館的名單不是他的資料)。
+            memberId: active.role === "advisor" ? null : active.memberId,
+          };
           const supabase = await createClient();
           const { data: gp } = await supabase
             .from("gym_pairs")

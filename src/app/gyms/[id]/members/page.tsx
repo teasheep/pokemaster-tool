@@ -82,12 +82,19 @@ export default async function GymMembersPage({
    * 解回來的 gradeMap 逐項相同 (持有人數 / 持有者名單 / 全館最高寶數都不變)。
    * 索引 = 下面 members 那份陣列的位置, 所以兩者一定要用同一個 memberList。
    */
-  const memberIndex = new Map(memberList.map((m, i) => [m.id, i]));
+  // ⚠ 索引只收**正式成員** (getGymContext 的 members 已經排除顧問與待確認的),
+  // 不是 memberList —— 顧問不佔 20 人名額, 他的練度不該進持有率 (0072)。
+  // 前科: 索引用 memberList 而分母用 gymViewMembers (不含顧問), 於是一位顧問持有的卡
+  // 會算進**分子**卻不算分母 → 有機會出現「持有 20 / 19 人」, 而且側板的持有者清單
+  // 會冒出一顆沒有頭像、名字是「?」的晶片 (memberById 查不到他)。
+  // 這條今天就按得到: 管理員把一位成員降級成顧問, 他的 member_pairs 還留著 (刻意不刪,
+  // 改回成員時要回得來)。
+  const memberIndex = new Map(members.map((m, i) => [m.id, i]));
   const byPair: Record<string, number[]> = {};
   for (const g of grades) {
     if (!g.pair_id) continue;
     const i = memberIndex.get(g.member_id);
-    if (i === undefined) continue; // 已不在名冊上的成員 (舊版也顯示不出名字)
+    if (i === undefined) continue; // 顧問 / 待確認 / 已不在名冊上的人
     (byPair[g.pair_id] ??= []).push(i, g.grade);
   }
 
@@ -102,7 +109,8 @@ export default async function GymMembersPage({
       gymId={id}
       viewer={viewer}
       gymPairs={gymPairs ?? []}
-      grades={{ memberIds: memberList.map((m) => m.id), byPair }}
+      // memberIds 與上面的 memberIndex 是同一份 (正式成員), 不是 memberList
+      grades={{ memberIds: members.map((m) => m.id), byPair }}
       invite={invite ? { code: invite.code, advisorCode: invite.advisor_code } : undefined}
       // 待確認的申請 (0071) **只送給管理員** —— 只有他按得動那個勾勾/叉叉,
       // 而且沒必要讓全館看到誰在門外等。

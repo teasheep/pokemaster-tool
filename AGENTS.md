@@ -256,6 +256,34 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   端對端證明: `npm run qa:approval` (三個隔離帳號 + 真的 JWT 打 PostgREST ——
   證明的是「待確認的帳號一列都讀不到」, 那件事用眼睛看不出來, 他的畫面本來就是空的)。
   乾跑: `node scripts/dev/dryrun-0071.node.mjs` (BEGIN → 套 → 驗 → ROLLBACK)。
+- ⚠ **顧問的練度不屬於這一館** (0072, 2026-09-10 使用者:「理論上是看不到顧問的拍組的
+  才對吧? 顧問互相也不應該看得到對吧?」)。0028 定義顧問是「唯讀觀察者, 不佔 20 人名額,
+  排刀/券數/統計都不算」, 但那一版只把 `is_gym_editor` 加到 battle_logs / member_tickets /
+  stage_assignments —— **member_pairs / member_candies / member_type_focus 三張漏了**。
+  判斷收成一支 `member_counts_in_gym(p_member)`:「這一列算不算道館的一員」,
+  顧問 (0028) 與待確認 (0071) 都不算。三張表的 insert/update 與 `set_member_pair` 都吃它。
+  1. **RPC 要自己再擋一次**: `set_member_pair` 是 security definer, **RLS 對它無效** ——
+     policy 一條都攔不到它 (與拍檔石盤上限「兩條寫入路徑各夾一次」同一個道理)。
+  2. **顧問照舊讀得到全館** —— 那是這個角色存在的理由, 收掉就等於刪了顧問。
+     擋的只有「寫」與「他自己的練度出現在這一館」。
+  3. **`/pairs` 對顧問把 `gymSync.memberId` 設成 null** (不是整個 gymSync 給 null):
+     那是 `GymSyncInfo` 本來就有的「不同步」開關, 而 gymId 留著他才看得到側板的
+     「☆ 已是道館拍組」(那是全館的名單, 不是他的資料)。
+  4. **持有率的索引要用 `members` 不是 `memberList`** (`members/page.tsx`):
+     前科是分子用含顧問的那份、分母用不含顧問的那份 → 有機會出現「持有 20 / 19 人」,
+     而且側板的持有者清單會冒出一顆沒有頭像、名字是「?」的晶片 (memberById 查不到他)。
+     **這條今天就按得到**: 管理員把一位成員降級成顧問。
+  5. **降級不刪資料** —— 改回成員時練度要回得來 (與「未持有只是不給編, 不要清掉已經
+     存的值」同一個判斷)。所以 delete policy **刻意不收緊**: 管理員仍要清得掉舊列,
+     而且 `syncMemberPair` 在寶0 時走的就是 delete, 擋掉會讓「點回未持有」靜默失敗。
+  6. **點到顧問時不要畫一面空的卡牆** (使用者:「那個顯示是不是可以顯示得清楚一點」):
+     改成 `AdvisorPanel` 講清楚「這裡本來就不放他的東西」—— 空卡牆與「他什麼都沒有」
+     在畫面上長得一模一樣, 而意思相反。名冊那一列也要有顧問 badge
+     (手機的選擇 sheet 捲起來就看不到分區標題了)。
+  7. 改 policy 一律 **`drop policy if exists` 再 create**: permissive policy 是 **OR**
+     起來的, 名字打錯就變成「舊的寬鬆那條還在」, 新條件等於完全沒作用而且畫面零徵兆。
+  端對端證明: `npm run qa:advisor` (顧問讀得到 / 寫不進去 / 管理員也不能寫到他那一列 /
+  降級留資料但擋寫入 / 改回成員又能寫)。乾跑: `scripts/dev/dryrun-0072.node.mjs`。
 - **登入只有 Google 一條路, 但有兩個觸發** (2026-09-01): 按鈕 `GoogleSignInButton`
   (整頁導向 → `/auth/callback`) 與 Google One Tap `components/google-one-tap.tsx`
   (`signInWithIdToken` → `/auth/one-tap`)。One Tap 是**捷徑不是第二種登入方式**, 按鈕永遠要留著 ——

@@ -30,6 +30,7 @@
     "gym:code": "node scripts/new-gym-code.node.mjs",
     "qa:gymcode": "node scripts/gym-code-test.node.mjs",
     "qa:approval": "node scripts/gym-approval-test.node.mjs",
+    "qa:advisor": "node scripts/gym-advisor-test.node.mjs",
     "logo:font": "node scripts/fetch-logo-font.node.mjs",
     "logo:build": "node scripts/build-logo.node.mjs"
   },

@@ -223,6 +223,16 @@ export function MemberCard({
               管理
             </Badge>
           ) : null}
+          {/* 顧問在名冊上另外分區, 但手機的選擇 sheet 捲起來就看不到那個分區標題了 ——
+              列本身也要標, 不然「這個人為什麼沒有拍組」要靠猜 (0072) */}
+          {member.role === "advisor" ? (
+            <Badge
+              variant="outline"
+              className="border-violet-500/50 px-1 text-[10px] text-violet-700 max-sm:text-xs dark:text-violet-300"
+            >
+              顧問
+            </Badge>
+          ) : null}
           {member.bound === false ? (
             <Badge variant="outline" className="px-1 text-[10px] text-muted-foreground max-sm:text-xs">
               未綁定

@@ -578,6 +578,12 @@ export function MembersClient({
             />
         ) : !selected ? (
           <p className="text-sm text-muted-foreground">選擇一位成員檢視資料。</p>
+        ) : selected.role === "advisor" ? (
+          // 2026-09-10 使用者:「理論上是看不到顧問的拍組的才對吧? 顧問互相也不應該看得到對吧?
+          // 那個顯示是不是可以顯示得清楚一點」——
+          // 顧問在這一館本來就沒有練度資料 (0072), 畫一面空卡牆會讓人以為「他什麼都沒有」,
+          // 而正確的說法是「這裡本來就不放他的東西」。
+          <AdvisorPanel member={selected} canManage={viewer.isAdmin} />
         ) : (
           <Tabs value={view} onValueChange={(v) => setView(v === "resources" ? "resources" : "pairs")}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 lg:mb-4">
@@ -761,6 +767,46 @@ function Roster({
           ))}
         </>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * 點到顧問時右邊顯示的東西 (0072)。
+ *
+ * **不是「這個人沒有資料」而是「這裡不放他的資料」** —— 兩句話在畫面上長得一樣
+ * (都是空的), 但意思完全相反, 而使用者要的就是這個差別。
+ * 顧問看得到全館, 只是他自己的練度不進這一館: 不佔 20 人名額, 持有率、排刀、匯出都不算他。
+ */
+function AdvisorPanel({ member, canManage }: { member: MemberItem; canManage: boolean }) {
+  return (
+    <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4 sm:p-5">
+      <div className="flex items-center gap-3">
+        <MemberAvatar member={member} size="lg" />
+        <div className="min-w-0">
+          <p className="truncate text-lg font-semibold">{memberLabel(member)}</p>
+          <Badge
+            variant="secondary"
+            className="mt-0.5 bg-violet-500/15 text-violet-700 dark:text-violet-300"
+          >
+            顧問
+          </Badge>
+        </div>
+      </div>
+      <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+        <p>
+          顧問是<span className="font-medium text-foreground">唯讀的觀察者</span>
+          ：他看得到全館的練度、道館戰看板與道館紀錄，但不能改任何東西。
+        </p>
+        <p>
+          他<span className="font-medium text-foreground">不佔 20 人名額</span>
+          ，所以這一館沒有他的練度與背包資料 —— 持有率、隊伍與匯出都不會算他，其他顧問也看不到他的拍組。
+          他自己的收藏記在他的「拍組」分頁，不會同步到這裡。
+        </p>
+        {canManage ? (
+          <p>要讓他變成正式成員（並佔一個名額），用名冊上的鉛筆把角色改成「成員」。</p>
+        ) : null}
+      </div>
     </div>
   );
 }
