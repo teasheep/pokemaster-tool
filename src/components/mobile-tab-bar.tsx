@@ -1,6 +1,6 @@
 "use client";
 
-// 手機底部導覽列 — 全站三個分頁 (拍組 / 道館 / 我的資源) 放到拇指構得到的位置。
+// 手機底部導覽列 — 全站三個分頁 (拍組 / 道館 / 我的背包) 放到拇指構得到的位置。
 // 桌機不出現 (sm:hidden), 桌機的入口仍是 SiteHeader 那一排 — 分頁名稱、href、
 // 未登入只顯示「拍組」的規則都與 SiteHeader 一模一樣 (資訊架構固定, 不新增分頁)。
 //
@@ -11,7 +11,7 @@
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Candy, Shield, type LucideIcon } from "lucide-react";
+import { BookOpen, Backpack, Shield, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -28,7 +28,7 @@ type Tab = {
 const TABS: Tab[] = [
   { href: "/pairs", label: "拍組", Icon: BookOpen, guest: true, tour: "nav-pairs" },
   { href: "/gyms", label: "道館", Icon: Shield, tour: "nav-gyms" },
-  { href: "/resources", label: "我的資源", Icon: Candy, tour: "nav-resources" },
+  { href: "/resources", label: "我的背包", Icon: Backpack, tour: "nav-resources" },
 ];
 
 /**

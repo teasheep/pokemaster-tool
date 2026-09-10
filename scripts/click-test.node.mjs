@@ -153,7 +153,7 @@ try {
     check(page.url().includes("scope=all"), "道館切到「所有遊戲拍組」");
     await page.reload({ waitUntil: "networkidle" });
     await page.waitForTimeout(2500);
-    const cards = await page.locator('[class*="w-24"]').count();
+    const cards = await page.locator("[data-pair-cell]").count();
     check(cards > 300, "重新整理後仍是整本圖鑑", cards + " 張卡");
   }
 
@@ -174,7 +174,7 @@ try {
 
     await goto(`/gyms/${gymId}/members?member=${mate.id}`);
     await page.waitForTimeout(2500);
-    const card = page.locator("div.relative.w-24").first();
+    const card = page.locator("[data-pair-cell]").first();
     check(await card.count(), "選到同伴之後看得到道館拍組的卡");
     if (await card.count()) {
       // 左下角 = 寶數循環 (卡片 96px, 左下角那一格)

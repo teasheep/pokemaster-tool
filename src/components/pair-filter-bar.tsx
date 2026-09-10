@@ -7,7 +7,7 @@
 // 全部用 chips 點選 (同面向多選=或, 面向之間=且), 不用下拉勾選。
 
 import { useState } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,14 @@ import {
   TYPE_COLORS,
   TYPE_LABELS,
 } from "@/data/sync-pairs";
+import {
+  GENDER_LABELS,
+  GENDER_TAGS,
+  TAG_GROUPS,
+  TAG_LABELS,
+  THEME_ORDER,
+  THEME_LABELS,
+} from "@/data/pair-facets";
 import {
   EMPTY_PAIR_FILTERS,
   hasActiveFilters,
@@ -89,6 +97,45 @@ export function FacetGroup({ label, children }: { label: string; children: React
   );
 }
 
+/** 主題預設露幾顆 (兩排左右; 其餘按「還有 N 種」才展開) */
+const THEME_SHOWN = 16;
+
+/**
+ * 「還有 N 種 / 收合」——**不是篩選值, 所以不能長得像 chip**
+ * (2026-09-10 使用者:「全部 XX 種 跟 收合 應該要有不太一樣的 UI 不然不會發現」)。
+ * 差別做在三個地方: 虛線框、沒有實心底、前面掛一個會轉的箭頭 —— 一眼就看得出這顆是開關。
+ */
+function MoreChip({
+  open,
+  onClick,
+  label,
+}: {
+  open: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border border-dashed border-primary/50 bg-transparent",
+        "px-2.5 py-1 text-xs font-medium text-primary transition-all duration-150 active:scale-95",
+        "hover:border-primary hover:bg-primary/10",
+        "max-sm:min-h-11 max-sm:px-3 max-sm:py-2 max-sm:text-sm pointer-coarse:min-h-11"
+      )}
+    >
+      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+      {label}
+    </button>
+  );
+}
+
+/** 第二層面向目前選了幾個 (「更多面向」的數字 + 併進「篩選」按鈕的總數) */
+function moreCountOf(f: PairFilters): number {
+  return f.weaks.length + f.moves.length + f.themes.length + f.tags.length;
+}
+
 function toggleIn(list: string[], v: string): string[] {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 }
@@ -128,8 +175,12 @@ export function PairFilterBar({
     filters.regions.length +
     filters.stars.length +
     (filters.awakenOnly ? 1 : 0) +
+    moreCountOf(filters) +
     facetCount;
   const [advOpen, setAdvOpen] = useState(advCount > 0);
+  // 第二層面向 (上游抄過來的四個) 預設收著 —— 一次攤開 120 顆 chip 沒有人找得到東西
+  const [moreOpen, setMoreOpen] = useState(moreCountOf(filters) > 0);
+  const [allThemes, setAllThemes] = useState(false);
 
   return (
     <div className="space-y-2.5">
@@ -301,6 +352,105 @@ export function PairFilterBar({
             </Chip>
           </FacetGroup>
           {facets}
+
+          {/* ── 第二層: 上游 (pomasters) 那份資料才有的四個面向 ──
+              弱點 / 招式屬性 / 主題 / 標籤。**預設收著**: 攤開有一百多顆 chip,
+              常用的六個面向會被推到看不見的地方。開過就記在這一次的開合狀態裡。 */}
+          <div className="border-t pt-2">
+            <button
+              type="button"
+              onClick={() => setMoreOpen((v) => !v)}
+              className="flex w-full items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground pointer-coarse:min-h-11"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", moreOpen && "rotate-180")} />
+              更多面向：弱點 · 招式 · 主題 · 標籤
+              {moreCountOf(filters) > 0 && (
+                <span className="rounded-full bg-primary px-1.5 text-[11px] font-bold leading-4 text-primary-foreground">
+                  {moreCountOf(filters)}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {moreOpen && (
+            <div className="space-y-2">
+              {/* 弱點 = 這隻寶可夢怕什麼屬性 (道館戰在挑的就是這個) */}
+              <FacetGroup label="弱點">
+                {ALL_TYPES.map((t) => (
+                  <Chip
+                    key={t}
+                    active={filters.weaks.includes(t)}
+                    onClick={() => set({ weaks: toggleIn(filters.weaks, t) })}
+                    activeClass={TYPE_COLORS[t]}
+                    title={`弱點 ${TYPE_LABELS[t]}`}
+                  >
+                    <TypeIcon type={t} className="h-4 w-4" />
+                    <span className="whitespace-nowrap">{TYPE_LABELS[t]}</span>
+                  </Chip>
+                ))}
+              </FacetGroup>
+
+              {/* 招式屬性 = 這組拍組打得出哪些屬性的招 (不等於它自己的屬性) */}
+              <FacetGroup label="招式屬性">
+                {ALL_TYPES.map((t) => (
+                  <Chip
+                    key={t}
+                    active={filters.moves.includes(t)}
+                    onClick={() => set({ moves: toggleIn(filters.moves, t) })}
+                    activeClass={TYPE_COLORS[t]}
+                    title={`會 ${TYPE_LABELS[t]}屬性的招式`}
+                  >
+                    <TypeIcon type={t} className="h-4 w-4" />
+                    <span className="whitespace-nowrap">{TYPE_LABELS[t]}</span>
+                  </Chip>
+                ))}
+              </FacetGroup>
+
+              <FacetGroup label="訓練家">
+                {GENDER_TAGS.map((g) => (
+                  <Chip
+                    key={g}
+                    active={filters.tags.includes(g)}
+                    onClick={() => set({ tags: toggleIn(filters.tags, g) })}
+                  >
+                    {GENDER_LABELS[g]}
+                  </Chip>
+                ))}
+              </FacetGroup>
+
+              {/* 主題有 60 幾種 —— 預設只露前兩排, 其餘按「全部」才展開 */}
+              <FacetGroup label="主題">
+                {(allThemes ? THEME_ORDER : THEME_ORDER.slice(0, THEME_SHOWN)).map((t) => (
+                  <Chip
+                    key={t}
+                    active={filters.themes.includes(t)}
+                    onClick={() => set({ themes: toggleIn(filters.themes, t) })}
+                  >
+                    {THEME_LABELS[t]}
+                  </Chip>
+                ))}
+                <MoreChip
+                  open={allThemes}
+                  onClick={() => setAllThemes((v) => !v)}
+                  label={allThemes ? "收合" : `還有 ${THEME_ORDER.length - THEME_SHOWN} 種`}
+                />
+              </FacetGroup>
+
+              {TAG_GROUPS.map((g) => (
+                <FacetGroup key={g.label} label={g.label}>
+                  {g.tags.map((t) => (
+                    <Chip
+                      key={t}
+                      active={filters.tags.includes(t)}
+                      onClick={() => set({ tags: toggleIn(filters.tags, t) })}
+                    >
+                      {TAG_LABELS[t]}
+                    </Chip>
+                  ))}
+                </FacetGroup>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

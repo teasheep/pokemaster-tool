@@ -1,0 +1,21 @@
+{
+  "_note": [
+    "官方卡面與拍組分類資料的上游快照。**釘 commit sha, 不吃 main。**",
+    "理由: 對方三年改過 4 次結構且從不預告 (2026-07-01 把 js/*.js 換成 js/*.json,",
+    "07-29 直接刪掉舊檔 → 舊路徑現在是 404)。釘住 sha 才能保證今天跑跟上個月跑拿到同一份。",
+    "對方沒有 tag 也沒有 release, commit sha 是唯一釘得住的東西。",
+    "升級走 `node scripts/fetch-pomasters.mjs --bump` —— 那是一個有意識的動作, 會出現在 git diff 裡。"
+  ],
+  "repo": "pomasters/SyncPairsTracker",
+  "branch": "main",
+  "sha": "511aeb9132a48e3798ba57dba523b024d70c86a3",
+  "upstreamVersion": "v2.72.0",
+  "pinnedAt": "2026-09-09",
+  "license": "none",
+  "_licenseNote": [
+    "對方 repo 沒有 LICENSE 檔 (GitHub license API 回 404) = 預設保留所有權利。",
+    "卡面本身是 The Pokémon Company / Nintendo / Creatures / GAME FREAK / DeNA 的遊戲美術,",
+    "對方也不是權利人。我方的做法是「一次性讀進來反推規格, 產物由自己的素材重組」,",
+    "並在 README 具名致謝。要下架時只需刪 public 底下的產物 + 關掉開關。"
+  ]
+}

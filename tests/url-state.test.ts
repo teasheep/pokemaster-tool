@@ -59,6 +59,24 @@ describe("寫進網址的參數, server 端都要讀得回來", () => {
     expect(page).toContain("initialView");
   });
 
+  it("道館紀錄: 寫 member / kind / days / from / to, page.tsx 就要讀同樣那五個", () => {
+    // 2026-09-10 加回來的分頁 (2026-08-17 曾下架)。五個篩選都要留得住,
+    // 不然「看某個人上個月改了什麼」重整一次就跳回預設的近 30 天全員。
+    const client = read("src/app/gyms/[id]/activity/activity-client.tsx");
+    const page = read("src/app/gyms/[id]/activity/page.tsx");
+    expect(client, "activity-client 沒有同步網址").toContain("useUrlState");
+    for (const key of ["member", "kind", "days", "from", "to"]) {
+      expect(page, `道館紀錄的 page.tsx 沒讀 ${key}`).toMatch(
+        new RegExp(`searchParams[\\s\\S]{0,300}${key}\\?:`)
+      );
+    }
+    expect(page).toContain("initialDays");
+    // 入口要真的在導覽列上 (前科: 功能還在但 tabs 沒有 = 使用者找不到)
+    expect(read("src/app/gyms/[id]/gym-tabs.tsx")).toContain("/activity");
+    // 而且 next.config 不可以還把它轉導走
+    expect(read("next.config.ts")).not.toMatch(/source:\s*"\/gyms\/:id\/activity"/);
+  });
+
   it("初始值一律由 server 傳下來 — client 不可以自己讀 useSearchParams (會 hydration mismatch)", () => {
     for (const f of [
       "src/app/pairs/pairs-hub.tsx",
@@ -78,6 +96,17 @@ describe("寫進網址的參數, server 端都要讀得回來", () => {
     const directive = (p: string) => read(p).trimStart().startsWith('"use client"');
     expect(directive("src/lib/url-params.ts"), "url-params 不該標 use client").toBe(false);
     expect(directive("src/lib/use-url-state.ts"), "hook 檔要標 use client").toBe(true);
+    // 2026-09-10 又踩了一次: 道館紀錄的值域本來放在 activity-client.tsx (use client),
+    // server 的 page.tsx import 到的是 client reference 不是陣列 →
+    // 「allowed.includes is not a function」整頁掛掉。
+    expect(
+      directive("src/app/gyms/[id]/activity/activity-filters.ts"),
+      "activity-filters 不該標 use client (page.tsx 要 import 它的陣列)"
+    ).toBe(false);
+    expect(
+      read("src/app/gyms/[id]/activity/page.tsx"),
+      "道館紀錄的 page.tsx 從 client 檔 import 了值域"
+    ).toMatch(/ACTIVITY_KINDS[\s\S]{0,120}from "\.\/activity-filters"/);
     for (const f of ["src/app/pairs/page.tsx", "src/app/gyms/[id]/members/page.tsx"]) {
       expect(read(f), `${f} 直接 import 了 client 專用的 use-url-state`).not.toContain(
         "@/lib/use-url-state"

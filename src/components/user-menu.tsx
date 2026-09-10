@@ -42,6 +42,9 @@ export function UserMenu({ email }: { email: string }) {
         <Button
           variant="ghost"
           size="icon"
+          // 只有一顆頭像圓圈, 沒有文字 → 讀螢幕的人只聽得到「button」。
+          // QA 腳本也靠這個名字找它 (2026-09-10: gym-code-test 找不到而靜靜失敗)。
+          aria-label="帳號選單"
           className="rounded-full pointer-coarse:min-h-11 pointer-coarse:min-w-11"
         >
           <Avatar className="h-8 w-8">

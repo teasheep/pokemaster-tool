@@ -7,7 +7,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
-import { SyncPairDefs } from "@/components/sync-pair-defs";
 import { GoogleOneTapSlot } from "@/components/google-one-tap-slot";
 import { TourSlot } from "@/components/tour/tour-slot";
 import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
@@ -128,10 +127,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* 拍組卡的 <defs> 全站只畫一份 (每張卡自己畫 = /pairs 一頁多 8,385 個 DOM 節點)。
-              放這裡是因為只有 root layout 涵蓋得到所有情境 — 側板會 portal 到 document.body,
-              放在個別消費端既蓋不到、又會長出重複 id。 */}
-          <SyncPairDefs />
           {/* 導覽列/頁尾統一在這裡 — 子頁不要各自渲染, 否則 loading/error 頁會整條消失再長回來 */}
           <SiteHeader />
           {children}

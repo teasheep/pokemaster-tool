@@ -37,23 +37,24 @@ export function GymTabs({ gymId }: { gymId: string }) {
   //     ↑ 排最前 = 道館根路徑的預設頁 (使用者指定)
   //   道館戰 — 這次要打什麼、我打哪一關 (賽事一覽/建立賽事/單場看板)
   //   隊伍庫 — 每個屬性用哪三隻 (看板側板選隊用的是同一份 TeamLibrary)
-  // (道館攻略 / 紀錄 2026-08-17 暫時下架 — 只拔入口, 頁面與資料留著, 之後重做;
-  //  next.config 也把 /guides /activity 轉導回 members, 直接輸入網址也進不去)
+  //   道館紀錄 — 誰在什麼時候改了誰的什麼 (2026-09-10 使用者要求加回來)
+  // (道館攻略仍然下架 — 只拔入口, 頁面與資料留著, 之後重做; next.config 把 /guides 轉回 members)
   // (AI 串接改成個人的「資料連線」, 在頭像選單底下 — 金鑰跟人走不跟道館走)
   const tabs = [
     { href: `${base}/members`, label: "成員與拍組", match: [`${base}/pairs`], tour: "gym-tab-members" },
     { href: `${base}/battles`, label: "道館戰", tour: "gym-tab-battles" },
     { href: `${base}/teams`, label: "隊伍庫" },
+    { href: `${base}/activity`, label: "道館紀錄" },
   ];
 
   const isActive = (t: { href: string; match?: string[] }) =>
     pathname.startsWith(t.href) || (t.match ?? []).some((m) => pathname.startsWith(m));
 
   return (
-    // 手機: 三格等寬填滿整列 (grid-cols-3), 不橫捲 — 之前擠在切換器旁邊橫捲,
+    // 手機: 四格等寬填滿整列 (grid-cols-4), 不橫捲 — 之前擠在切換器旁邊橫捲,
     //       「隊伍庫」永遠在畫面外而且沒有可捲提示 (使用者實測抓包)。
     // 桌機: 維持原本的 flex + 橫捲。
-    <nav className="scrollbar-none grid grid-cols-3 sm:flex sm:flex-1 sm:gap-1 sm:overflow-x-auto">
+    <nav className="scrollbar-none grid grid-cols-4 sm:flex sm:flex-1 sm:gap-1 sm:overflow-x-auto">
       {tabs.map((t) => (
         <Link
           key={t.href}

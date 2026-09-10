@@ -31,6 +31,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { SyncPairType } from "@/lib/supabase/types";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import type { CollectionEntry, CollectionMap } from "@/lib/collection";
+import { useCoalescedWrite } from "@/lib/pairs/use-coalesced-write";
 import { syncMemberPair, type GymSyncInfo } from "@/lib/collection-sync";
 import { pairName, type PairSortKey } from "@/lib/pairs/name";
 import {
@@ -38,7 +39,7 @@ import {
   matchesPairFilters,
   type PairFilters,
 } from "@/lib/pairs/filter";
-import { cycleEntry, defaultEntry } from "@/lib/collection-entry";
+import { clampSyncGrid, cycleEntry, cyclePromotion, defaultEntry } from "@/lib/collection-entry";
 import { setGymPair } from "@/lib/gym/gym-pairs-client";
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
@@ -100,11 +101,9 @@ export function PairsHub({
   // 篩選延後處理: 打字/點選即時更新控制項, 600+ 卡重篩交給 React 排程
   const deferredFilters = useDeferredValue(filters);
   const [sortBy, setSortBy] = useState<PairSortKey>("release-desc");
-  // 兩條 transition 刻意分開:
-  //   startTransition = 練度寫入 (內含 supabase 的 await; React 19 會 pending 到 promise 完成)
-  //     → 它的 isPending 不能拿來做視覺, 不然每點一次寶數整牆就灰一下。
-  //   startViewTransition = 切子分頁 / 切持有開關 (三個 useMemo 要對 600+ 筆重算) — 這條才給 stale 用。
-  const [, startTransition] = useTransition();
+  // 只剩一條 transition: 切子分頁 / 切持有開關 (三個 useMemo 要對 600+ 筆重算), 它的 isPending 給 stale 用。
+  // (練度寫入以前也包一條 transition, 現在改成連點合併後在背景送 —— 見 useCoalescedWrite,
+  //  畫面本來就是樂觀更新, 不需要 React 幫它排程。)
   const [viewPending, startViewTransition] = useTransition();
   const [editDraft, setEditDraft] = useState<CollectionEntry | null>(null);
   /**
@@ -203,21 +202,26 @@ export function PairsHub({
   }, [rowByPairId]);
 
   /**
-   * 寫入一筆練度 (樂觀更新 + 背景 upsert)。
-   * owned 由寶數/超覺醒推導 — 寶0 = 沒有這隻拍組。
+   * 真正送出去的那一趟 —— 由 useCoalescedWrite 在連點停下來之後呼叫, 一個 pairId 只送最後一次。
+   *
+   * ⚠ **不要在這裡 `auth.getUser()`**: 那是一趟真的網路請求 (它會去 /auth/v1/user 驗 token),
+   * 每寫一次就多一趟跨太平洋的往返。使用者 id 只要拿一次就好, 之後放 ref;
+   * 就算 ref 裡的 id 是錯的也寫不進去 —— RLS 是以 request 的 JWT 判斷的, 不看我們送什麼。
    */
-  const persist = useCallback((entry: CollectionEntry, successMsg?: string) => {
+  const userIdRef = useRef<string | null>(null);
+  const flushEntry = useCallback(async (_pairId: string, entry: CollectionEntry) => {
     const isOwned = entry.potential > 0 || entry.superAwakening > 0;
-    setCollection((prev) => ({ ...prev, [entry.pairId]: { ...entry, owned: isOwned } }));
-    // 側板開著且是同一隻 → 同步面板內容 (卡片左下角點擊也會反映到面板)
-    setEditDraft((d) => (d && d.pairId === entry.pairId ? { ...entry, owned: isOwned } : d));
-    startTransition(async () => {
-      const supabase = createClient();
+    const supabase = createClient();
+    if (!userIdRef.current) {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) {
         toast.error("請先登入");
         return;
       }
+      userIdRef.current = u.user.id;
+    }
+    const u = { user: { id: userIdRef.current } };
+    {
       const { error } = await supabase.from("user_collection").upsert(
         {
           user_id: u.user.id,
@@ -228,6 +232,10 @@ export function PairsHub({
           potential: entry.potential,
           super_awakening: entry.superAwakening,
           ex_unlocked: entry.exUnlocked,
+          // 拍檔石盤的上限跟著寶數走, 這裡先夾一次 —— DB 端的 RPC 也會夾,
+          // 但這條路徑是直接 upsert user_collection 不經過 RPC, 沒夾就會寫進不合法的組合
+          sync_grid: clampSyncGrid(entry.syncGrid, entry.superAwakening > 0 ? 5 : entry.potential),
+          ex_role_unlocked: entry.exRoleUnlocked,
           ex_style_worn: entry.exStyleWorn,
           notes: entry.notes,
         },
@@ -237,16 +245,33 @@ export function PairsHub({
         toast.error("儲存失敗", { description: error.message });
         return;
       }
-      if (successMsg) toast.success(successMsg);
-      // 道館端同步: 排刀媒合/道館拍組頁讀的是 member_pairs, 不同步會看到舊資料
-      const pair = pairsById.get(entry.pairId);
-      if (pair)
-        void syncMemberPair(
-          supabase, gymSync, pair,
-          entry.potential, entry.superAwakening, entry.exStyleWorn, entry.level, entry.promotion
-        );
-    });
+    }
+    // 道館端同步: 排刀媒合/道館拍組頁讀的是 member_pairs, 不同步會看到舊資料
+    const pair = pairsById.get(entry.pairId);
+    if (pair)
+      await syncMemberPair(
+        supabase, gymSync, pair,
+        entry.potential, entry.superAwakening, entry.exStyleWorn, entry.level, entry.promotion,
+        entry.syncGrid, entry.exRoleUnlocked
+      );
   }, [gymSync, pairsById]);
+
+  // 連點合併: 同一張卡在 450ms 內連點只送最後一次 (見 lib/pairs/use-coalesced-write.ts)。
+  // 合併規則就是「後者整包取代」—— 這裡的 payload 是完整的 CollectionEntry, 不是欄位差異。
+  const scheduleWrite = useCoalescedWrite<CollectionEntry>(flushEntry, (_prev, next) => next);
+
+  /**
+   * 寫入一筆練度 (樂觀更新 + 合併後的背景 upsert)。
+   * owned 由寶數/超覺醒推導 — 寶0 = 沒有這隻拍組。
+   */
+  const persist = useCallback((entry: CollectionEntry, successMsg?: string) => {
+    const isOwned = entry.potential > 0 || entry.superAwakening > 0;
+    setCollection((prev) => ({ ...prev, [entry.pairId]: { ...entry, owned: isOwned } }));
+    // 側板開著且是同一隻 → 同步面板內容 (卡片左下角點擊也會反映到面板)
+    setEditDraft((d) => (d && d.pairId === entry.pairId ? { ...entry, owned: isOwned } : d));
+    if (successMsg) toast.success(successMsg);
+    scheduleWrite(entry.pairId, { ...entry, owned: isOwned });
+  }, [scheduleWrite]);
 
   /** 左下角計數點擊: 寶0→1→…→5 →(可超覺醒) 覺1→…→覺5 → 循環回寶0 (共用 cycleEntry) */
   const onCycleCount = useCallback(
@@ -270,6 +295,25 @@ export function PairsHub({
       if (row) onCycleCount(row);
     },
     [onCycleCount]
+  );
+
+  /**
+   * 右鍵 / 長按 = 升星 (2026-09-09 加, 見 lib/pairs/use-promote-gesture.ts)。
+   * 星數 (promotion) 與寶數/超覺醒是兩條不同的軸, 所以與 onCountCard 分開兩顆 handler,
+   * 不要混成一個 (AGENTS 記過那個前科)。exUnlocked 一定要跟著算出來的星數走。
+   */
+  const onPromoteCard = useCallback(
+    (key: string) => {
+      const row = rowsRef.current.get(key);
+      if (!row) return;
+      const next = cyclePromotion(
+        row.promotion,
+        row.pair.basePotential ?? 5,
+        row.pair.hasSixEx === true
+      );
+      persist({ ...row, promotion: next.promotion, exUnlocked: next.exUnlocked });
+    },
+    [persist]
   );
 
   const onExport = () => {
@@ -337,6 +381,8 @@ export function PairsHub({
           promotion: r.promotion,
           potential: r.potential,
           superAwakening: r.superAwakening,
+          syncGrid: r.syncGrid,
+          exRoleUnlocked: r.exRoleUnlocked,
           // 點擊 handler 不放在 item 上 — 交給 PairTypeGrid 的 onSelect/onCount (見下方)
         };
       }),
@@ -470,6 +516,7 @@ export function PairsHub({
             sortBy={sortBy}
             onSelect={signedIn ? onSelectCard : undefined}
             onCount={signedIn ? onCountCard : undefined}
+            onPromote={signedIn ? onPromoteCard : undefined}
             /* 這頁一次 645 張卡 = 全站最大的一份 HTML (訪客 1.5MB / 登入 2.4MB),
                Cloudflare 免費方案的 CPU 幾乎全花在把它編成 bytes → 隨機 Error 1102。
                SSR 只出首屏那 24 張, 其餘等 hydration 在瀏覽器補 (卡片外觀與互動完全不變)。 */

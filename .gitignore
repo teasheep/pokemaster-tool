@@ -101,3 +101,6 @@ pomatools 截圖參考.png
 
 # GitHub fine-grained PAT (設 Actions secrets 用)
 .gh-token
+
+# 官方卡面的 PNG 快取 (scripts/fetch-official-cards.mjs) — 線上只吃 public/reference/card/*.webp
+.cache/

@@ -37,14 +37,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - 技術: Next.js 16 App Router + Supabase (雲端) + @opennextjs/cloudflare + Tailwind 4 + vitest
 - **資訊架構 (使用者指定, 別改回去)**: 頂部只有兩個分頁 —
-  `/pairs` 拍組 (只有自己的資料) 與 `/gyms` 道館, 外加 `/resources` 我的資源 (糖果 + 屬性資源方向)。
-  道館底下目前 3 個分頁 (使用者指定的順序, 2026-08-17 起成員與拍組排最前 = 根路徑預設頁),
+  `/pairs` 拍組 (只有自己的資料) 與 `/gyms` 道館, 外加 `/resources` 我的背包 (道具 + 屬性資源方向)。
+  道館底下目前 4 個分頁 (使用者指定的順序, 2026-08-17 起成員與拍組排最前 = 根路徑預設頁),
   **分頁名 = 頁面 h1 = 該頁唯一職責, 三者要一起改**:
   成員與拍組 (名冊+角色 / 成員碼與顧問碼緊貼 h1 (`PageHeading beside`) / 名冊第一項「全館拍組」= ★名單+持有率 / 選成員 = 他的練度+糖果+紀錄) /
   道館戰 (`/gyms/[id]/battles` 賽事一覽+建立賽事+單場看板; 「全體屬性戰力」已暫時收掉, 之後要再加) /
-  隊伍庫 (每屬性用哪三隻; 看板側板選隊用同一份 `TeamLibrary`)。
-  道館攻略與紀錄 2026-08-17 暫時下架 (使用者要重做): 只拔入口 — tabs 移除 +
-  next.config 轉導 /guides /activity → members; 頁面程式與資料表都留著, 不要刪。
+  隊伍庫 (每屬性用哪三隻; 看板側板選隊用同一份 `TeamLibrary`) /
+  道館紀錄 (`/gyms/[id]/activity` 誰在什麼時候改了什麼)。
+  道館攻略仍然下架 (2026-08-17, 使用者要重做): 只拔入口 — tabs 沒有它 +
+  next.config 轉導 /guides → members; 頁面程式與資料表都留著, 不要刪。
+  **道館紀錄 2026-09-10 加回來了** (使用者:「之前做過的道館紀錄我覺得可以加回來了」) ——
+  當初拿掉是因為卡面是自己合成的、那面牆很醜, 換成官方成品卡之後那個理由不存在了。
+  三個篩選 (成員 / 類型 / 日期) 都同步進網址, 值域在 `activity/activity-filters.ts`。
+  ⚠ **那個值域檔不可以標 "use client"** —— page.tsx 要 import 它的陣列給 `pickParam` 用,
+  從標了 use client 的檔案 import 到的是 client reference 不是陣列, 症狀是
+  `allowed.includes is not a function` **整頁掛掉**, 而 tsc 與 lint 都不會擋
+  (2026-09-10 踩過, 與 0908 的 pickParam 同一個坑)。`tests/url-state.test.ts` 釘住。
   `/gyms/[id]` 根路徑 = 轉導到 members (next.config redirects, 不是 page redirect)。
   個人的東西在頭像選單: 個人設定 / 資料連線 (AI 唯讀金鑰)。
   **不要再長出新分頁**, 也**不要把既有分頁降級成別頁的側板** — 隊伍庫曾被收進看板側板,
@@ -67,15 +75,43 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   **這條軸的數值 = 0-10** (0038 起): 0=未持有, 1-5=寶, 6-10=超覺醒1-5 —
   `member_pairs.grade`、隊伍需求 `min_grade`、`GRADE_LABELS` 全部同一條;
   不要再把 6 當「籠統的超覺醒」(前科: 隊伍需求點寶數從寶5 直接跳超覺醒5)。
+  2026-09-10 加了兩條真的存在的軸: **拍檔石盤** (`sync_grid`, 0063) 與 **EX 體系**
+  (`ex_role_unlocked`, 0065) —— 規則見下面「拍檔石盤與 EX 體系是兩件事」。
 - **讀 Supabase 全量資料要分頁**: PostgREST 一次最多回 1000 列, `member_pairs` 這種表早就超過 —
   忘記 `.range()` 分頁會拿到「剛好 1000 列」的假象 (前科: 匯入比對被截斷, 差點誤判)。
   client 端用 `fetchAll` (`lib/gym/export-csv.ts`), 腳本自己寫 range 迴圈。
 - **卡片外框不因 6★EX 變化**; 星星只有兩種: 1-5★ 用 p5_N, 6★EX 用 pex_ex。
   EX 換裝立繪 UI 已拔除 (資料欄位與圖檔保留, 之後要做再開)。
-- **篩選只放「拍組本身的性質」** (屬性/角色/系列/地區/原始星級/可超覺醒)。
-  「我有沒有」「是不是道館指定」由分頁決定, 不要塞回篩選器; 可超覺醒是獨立面向, 不是星級。
-  地區依 `REGION_ORDER` (世代順序) 排, 系列不含 `upcoming` (那是上架時間不是系列)。
+- **篩選只放「拍組本身的性質」**。「我有沒有」「是不是道館指定」由分頁決定, 不要塞回篩選器;
+  可超覺醒是獨立面向, 不是星級。地區依 `REGION_ORDER` (世代順序) 排, 系列不含 `upcoming`
+  (那是上架時間不是系列)。面向分兩層 (2026-09-10 抄上游時定的):
+  **第一層常駐展開** 屬性 / 角色 / 系列 / 地區 / 原始星級 / 超覺醒 —— 這六個天天在用;
+  **第二層收在「更多面向」** 弱點 / 招式屬性 / 訓練家性別 / 主題 / 招式分類 / 機制 / 拍檔石盤 / 寶可夢,
+  資料來自上游 (見「資料管線」的 5b2)。**第二層預設收著**是刻意的 —— 一次攤開一百多顆 chip,
+  常用的那六個會被推到看不見的地方。
+  ⚠ **招式屬性不是拍組自己的屬性**: 我方原本的 `moveTypes` 658 筆全是單一值 = `type`,
+  拿來篩等於白篩; 2026-09-10 起由上游的 `MoveType*` 標籤覆寫, 有 146 筆真的與自身屬性不同。
+  ⚠ **每一個值都要有繁中名** (`src/data/pair-facets.ts` 的 THEME_LABELS / TAG_LABELS):
+  少一個就是畫面上冒出英文, 而它可能是六十幾顆裡的一顆。`tests/pair-facets.test.ts` 掃全份
+  catalog 擋這件事 —— 上游改版加了新標籤時它會變紅, 先補譯名再上線。
+  ⚠ **上游的標籤名是它自己的代號, 不要照翻** (2026-09-10 使用者抓到「心願區域」很怪):
+  `Wish Zone` 在它畫面上只寫 Zone = 官方的**領域**, `Region Circle` 只寫 Circle = 官方的**鬥陣**
+  (官方公告出現過「拳頭領域」「ＥＸ拳頭領域」「卡洛斯鬥陣（物理）」「關都鬥陣（特殊）」「精神場地」)。
+  `Song Key` 是點播機的**樂曲鑰匙** (拍組升到 6★EX 會給), 根本不是戰鬥機制;
+  `Grid*` 講的是**拍檔石盤被擴大** ("Has 3/5 exp." / "Retroactive expansion" / "Mega expansion"),
+  與格子的星級無關 —— 第一版把它翻成「拍檔石盤 3★格」是錯的。
+  查譯名一律以**官方 zh-TW 站的公告**為準 (pokemonmasters-game.com/zh-TW), 不要照英文直譯。
+  註: 官方把 sync grid 叫「拍檔石盤」、把 60/62/…/70 那個數字叫「力量」——
+  我們站上沿用使用者的說法「拍檔石盤」, 那是刻意的, 不要自己統一過去。
 - **拍組顯示名一律 `pairName()`** (`src/lib/pairs/name.ts`):「人名 & 寶可夢名」, 卡下兩行 `line-clamp-2`。
+  ⚠ **繁中名裡不可以有全形英數字** (2026-09-10 使用者:「有些是全形有些半形, 我想要統一半形」):
+  上游混用 (「琴音（２０２０夏季）」與「赤紅（2025週年慶）」並存, 連同一個角色 N 都有兩種寫法),
+  由管線 5b3 的 `normalize-pair-names.mjs` 統一轉半形。**全形括號不動** —— 那 168 筆本來就全是
+  全形, 沒有不一致。**不要改成顯示時才轉**: `pairName()` 的產出會被寫進
+  `member_pairs`/`gym_pairs` 的 `pair_label`, 而那兩張表的唯一鍵就是 label ——
+  資料庫裡留著全形那一份的話, 下次 upsert 對不上舊列, 同一位成員同一張卡會**默默長出第二列**
+  (持有率與排刀全部多算, 沒有任何徵兆)。已寫進資料庫的那 360 + 21 列由 0070 一次改掉。
+  `tests/pair-name-width.test.ts` 釘住「catalog 裡一個都不剩」與「那一步還在管線裡」。
 - **成員顯示名一律 `memberLabel()`** (`src/components/gym/member-card.tsx`):**「社群名(遊戲名)」**
   (2026-09-09 成員意見:「大家比較習慣用 LINE 社群名字稱呼彼此, 建議社群的名字放在前面」——
   括號裡那個是拿來對上遊戲帳號的, 平常認人靠前面那個)。沒填社群名就只顯示遊戲名,
@@ -84,8 +120,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   兩個畫面叫兩個名字」。名冊上的「（我）」走 `MemberCard` 的 `me` prop,
   **不要接進 displayName** (那會讓括號裡變成「Eric（我）」, 而那不是他的遊戲名)。
 - **頭像圓圈可以指定文字** (`gym_members.badge_text`, 0062, 1-3 字, 成員意見:
-  「看到圈圈就可以馬上知道是哪一位會友」): 管理員在「編輯成員」裡設, 沒設就取**社群名**
-  的第一個字 (英文取前兩個字母)。**有上傳頭貼的人看不到圓圈** (圖優先)。
+  「看到圈圈就可以馬上知道是哪一位會友」): 管理員在「編輯成員」裡設, **本人也改得動自己那一列**
+  (2026-09-10 使用者:「讓使用者自己改」—— RLS 的 `gym_members_update_self` 本來就允許,
+  缺的只是名冊上那顆鉛筆)。沒設就取**社群名**的第一個字 (英文取前兩個字母)。
+  ⚠ **一般成員的那個對話框只露圓圈文字與出沒時段**: 名字是個人資料 (profiles, 個人設定改,
+  「名字跟人走」), 角色被 RLS 的 with check 釘死 (0028) —— 畫出來只會讓他存檔時撞 RLS。**有上傳頭貼的人看不到圓圈** (圖優先)。
   放 `gym_members` 不放 `profiles` 是刻意的 —— 這不是身分 (那條是「名字跟人走」),
   是「這一館怎麼認他」, 而且提出的情境就是管理員替全館各挑一個好認的字。
   長度上限**資料庫也要擋** (漏掉的症狀是某一列的圓圈長得跟別人不一樣, 沒有人會回報)。
@@ -98,8 +137,51 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   防呆包在 `saveGrade` 這**唯一的寫入入口**外面, 樂觀更新也在裡面 ——
   所以按「取消」時畫面不會先變再彈回去。`npm run qa:click` 有四條在驗這個 (跳出來/
   取消真的沒寫入/確定寫得進去/勾了就不再問)。
+- ⚠ **連點的寫入要合併, 不要一下一次 API** (`lib/pairs/use-coalesced-write.ts`, 2026-09-10
+  使用者:「寶數+1 就要等一下下, 要按到寶5 按5下, 要打5次API」): 同一張卡在 450ms 內連點只送
+  **最後一次**的值 —— 中間的過程狀態馬上就被蓋掉, 送出去是純白工, 而且五趟跨太平洋的往返
+  會互相排隊, 那就是「等一下下」的來源。實測連點五下: **20 次請求 → 2 次** (user_collection
+  一次 + member_pairs 鏡像一次), 最後存進去的值正確。
+  三件配套:
+  1. **畫面照舊是樂觀更新** —— 合併的是網路那一段, 點下去的反應一個 frame 都不能等。
+  2. **payload 用 merge 不是覆蓋** —— 側板改等級與左下角改寶數可能落在同一個視窗裡,
+     覆蓋的話先改的欄位會被吃掉 (RPC 收到 null = 不要動 = 那次修改消失)。
+  3. **卸載 / 分頁被藏起來 / 關分頁前一律立刻沖出去**, 不然點完就切走會掉資料。
+  ⚠ 另外**不要在每次寫入前 `auth.getUser()`** —— 那是一趟真的網路請求 (會去 /auth/v1/user 驗
+  token), 等於每寫一次就多一趟往返。id 拿一次放 ref 就好; 就算 ref 裡的值被竄改也寫不進去,
+  RLS 看的是 request 的 JWT 不是我們送的欄位。
+  ⚠ 管理員代改那條 (`members-client` 的 writeGrade) **成功之後不要重抓** ——
+  樂觀更新已經是正確的值, 每點一次就重抓整份 member_pairs 等於再排一串往返。只有失敗才重抓 (回滾)。
 - **卡片互動標準**: 點卡片 (含灰卡) = 開編輯側板; 點左下角 = 寶數循環 (寶1→5→超覺1→5→歸零)。
-  寶0 = 整卡反灰, 沒有「寶0 持有」狀態。可點的左下角要有 hover 光暈提示。
+  寶0 = 整卡反灰, 沒有「寶0 持有」狀態。
+  **可點的左下角靠「六角本身放大」當提示** (2026-09-10 使用者指定), 不要在它後面透出一顆白色圓
+  —— 那個形狀跟遊戲裡的六角對不起來, 看起來像多疊了一層東西。觸控裝置沒有 hover,
+  所以 `pointer-coarse` 常駐放大一點點, 不然完全沒有「這裡可以點」的線索。
+  ⚠ **放大會超出畫布, 而要開 overflow 的是兩層不是一層**: 六角本來就貼著左下緣, 放大之後
+  超出 viewBox (0 0 128 128)。外層那顆 div/button 的 `overflow-hidden` 要拿掉, **最外層的
+  `<svg>` 自己也要 `overflow-visible`** —— UA 樣式表對 outermost svg 是 overflow:hidden,
+  只改外面那層完全沒有效果 (2026-09-10 連續回報兩次「左下會被裁掉」, 第一次只改了外層)。
+  hover 時那張卡要 `z-20`, 不然溢出的那一角會被右邊/下面那張卡蓋住。
+  ⚠ **沒有側板可開的地方不要把卡片渲染成可點的東西** (2026-09-10 使用者:「隊伍那邊沒有側板,
+  使用者點了沒反應就覺得奇怪」): 隊伍庫的拍組只有管理員點得動 (開就地編輯器), 一般成員那份
+  現在是純 `div` 不是 `button`。
+  管理員那顆要 `w-fit`: 裡面的 `overflow-x-auto` 會撐滿整列, 不加的話只選一隻拍組時
+  hover 的底色會亮出兩張卡的空位 (2026-09-10 使用者抓到)。手機仍然整條佔滿。
+- **要求練度一律用下拉選, 不要只能循環** (`GradeSelect`, `components/gym/pair-picker.tsx`,
+  2026-09-10 使用者:「隊伍庫的設定隊伍拍組的寶數很難按, 有時候要點很多下, 操作不直觀」):
+  循環只有 +1 一個方向, 從超覺醒5 退回寶3 要點八下, 而唯一的把手是卡片左下角那顆 30px 的六角。
+  站上其他地方可以只靠循環, 是因為**旁邊就有側板下拉**當第二條路; 隊伍這裡沒有側板。
+  卡片左下角的循環照舊留著 (全站手勢一致), 下拉是給「我就是要寶3」的人用的。
+  空槽位的虛線框要跟**一張卡一樣大而且是正方形** —— 拍組卡是方的, 一個比卡片還大的虛線
+  長方形擺在旁邊看起來像壞掉。
+- **未持有 (寶0) 時只有寶數那一格能動** (2026-09-10 使用者:「未持有是不是就不該讓他設定
+  星數那些, 不然存著也怪怪的」): 側板的星數 / 等級 / 拍檔石盤 / EX 體系一律 disabled,
+  卡牆的右鍵長按升星也不掛在灰卡上 (右鍵回到瀏覽器原本的選單, 不會變成「按了沒反應」)。
+  沒有這隻拍組卻記著「6★EX Lv200 滿盤」是遊戲裡不存在的狀態, 而且畫面照樣渲染得出來。
+  ⚠ **只是不給編, 不要清掉已經存的值** —— 那些值刻意留著, 之後抽到同一張卡再點回寶1,
+  星數與等級就回來了。清掉的話就是 2026-09-08 那個前科的翻版 (「未持有再改回寶3,
+  真正的 Lv200 / 6★EX 被預設值洗掉, 資料真的沒了」)。側板底下那一行就是在講這件事。
+  「一鍵升滿」在未持有時**照樣可以按** —— 它本來就包含「把這張卡點成持有」。
 - **拍組領域禁用「移除」**: 不持有 = 寶0 (循環歸零 / 側板選寶0), 全站不要再有刪除收藏、
   從名單移除之類的第二條路 — 語意重複而且結果不同 (刪列 vs grade=0) 已經害過一次。
   `syncMemberPair` / `set_member_pair` 在 grade=0 時一律刪 member_pairs 列, 不留幽靈列。
@@ -397,7 +479,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   理由是「別人的星數與等級讀不到」; 補了 `member_pairs` 的 level (0057) 與 promotion (0059)
   兩個鏡像之後那個理由消失了, 旗標就整個拿掉。**不要再加回去** (使用者三次指定同一件事:
   「統一一下」「道館看得到, 只是要點進去才看得到」「把道館變成管理員也可以設就好, 盡可能統一」)。
-  星數只是**不畫在卡牆上**, 那是長相不是資料 —— 見上面「卡面畫幾星與記錄他幾星是兩件事」。
+  星數畫不畫在卡牆上看「這面牆代表誰」(2026-09-10 起) —— 見下面那條。
+  ⚠ **新增一條練度軸就要回 `members-client.tsx` 的側板 `onChange` 多一行**:
+  那裡刻意只送「這次真的改動的欄位」(RPC 的 null = 不要動), 少一行的症狀是
+  **側板改得動、卻存不進去** —— 樂觀更新讓畫面先變, 重抓之後才彈回去, 使用者只會覺得
+  「怎麼改不回來」(2026-09-10 前科: 0063 的拍檔石盤與 0065 的 EX 體系都漏了)。
   另外兩件事: `editable={canEdit}` 讓顧問與「看別人的一般成員」看得到但動不了
   (不是換一套唯讀版面); 寫入照舊只有一條路 —— 左下角循環與側板下拉都走同一支 `saveGrade`
   (內部是 `set_member_pair`), **不要**在道館頁直接寫 `user_collection` (RLS 會擋) 或
@@ -444,16 +530,49 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **成員練度的寫入路徑只有一條**: 自己改走 `/pairs` (user_collection → syncMemberPair);
   管理員代改走 `set_member_pair` RPC (0030/0031) — 它會在成員已綁定帳號時**一併更新
   他的 user_collection**, 否則他下次自己一改就把代改的值蓋回去 (舊版就是這樣默默丟資料)。
-- **「卡面畫幾星」與「記錄他幾星」是兩件事, 不要混** (2026-09-07 使用者澄清:
-  「之前的規則指的是長相, 但跟數值可以先分開 —— 可以記錄每個人幾星, 但只顯示在內頁,
-  不影響拍組的圖鑑畫面」):
-  - **卡面 (圖鑑畫面)**: 星級一律 `basePotential` (原始星級)。**道館頁的卡牆不准把個人星數
-    餵進 `GridItem.promotion`** —— 那會讓整面牆的星星變成某個人的升星。
-    `/pairs`「我的拍組」是唯一的例外 (那面牆本來就是自己的資料)。點亮不會自動 6★EX。
-  - **內頁 (側板)**: 照實顯示並且可以編輯這個人的星數與等級。`member_pairs` 有
+- **卡牆畫不畫個人星數, 看「這面牆代表誰」** (2026-09-10 使用者指定「把顯示原始星級的限制
+  完全拿掉」)。⚠ **這條 2026-09-07 到 09-09 之間是反過來的** ——
+  當時規定「卡牆一律畫 `basePotential`」, 理由是那時候卡片是我們自己合成的,
+  6★EX 那張常常跑掉或歪掉 (使用者:「你之前做的 6 星圖很常跑掉或歪掉」)。
+  卡面換成官方成品卡之後星星是官方畫好烤在圖裡的, **那個理由整個不存在了**。
+  現在的判準:
+  - **一面牆 = 一個人** → 畫他的星數。`/pairs`「我的拍組」、`/share/[token]`、
+    道館的**成員明細**卡牆 (`members-client.tsx` 的 `items`) 三處都要傳 `GridItem.promotion`。
+  - **一面牆 = 一群人** → 不畫。只有「全館拍組」(`gyms/[id]/pairs/pairs-client.tsx`) 屬於這類,
+    而且那邊本來也沒有「誰」可以拿 —— 它回答的是「這張卡誰有、各是幾寶」。
+  - **內頁 (側板)** 照舊: 照實顯示並可編輯這個人的星數與等級。`member_pairs` 有
     `promotion` (0059) 與 `level` (0057) 兩個鏡像, 所以兩個側板是**同一顆元件、
     完全一樣的欄位** —— `PairEditPanel` 不再有任何「道館版」旗標, 別再加回去。
-  `tests/member-pair-axis.test.ts` 兩邊都釘住 (卡牆那條沒有徵兆, 只是星星悄悄變了)。
+  - 點亮 (寶0→寶1) 仍然**不會**自動 6★EX —— 那是兩條不同的軸。
+  `tests/member-pair-axis.test.ts` 兩邊都釘住 (兩種壞法都沒有徵兆, 只是星星悄悄變了或悄悄不見)。
+- **側板有一顆「一鍵升滿」** (`pair-edit-panel.tsx`, 2026-09-10 使用者指定「把所有目前有的
+  選項都升滿」)。**上限一律從各自的下拉那一組來源算**, 不要寫死數字:
+  寶數/超覺醒吃 `maxGrade` (可超覺醒到覺5 = 10, 否則寶5)、星數吃 `starOptions` 的最後一格
+  (可 6★EX 到 6, 否則原始星級到 5)、等級吃 `LEVEL_OPTIONS` 的最後一格、
+  拍檔石盤吃 `maxSyncGrid(5)` (升滿之後寶數必定是滿的, 所以上限一律用滿寶算)、
+  **EX 體系只有 `pair.hasExRole` 的拍組才設 true** (硬塞會與 catalog 打架)。
+  `exUnlocked` 跟著算出來的星數走 (與星數下拉逐字相同)。已經全滿就 disabled ——
+  按下去什麼都沒發生會被當成壞掉。唯讀 (`editable=false`) 時不顯示這顆。
+  ⚠ **新增一條練度軸就要回來加一條**, 否則「全滿」會留下沒滿的欄位 (使用者 2026-09-10
+  就抓到過一次: 第一版漏了 EX 體系與拍檔石盤)。
+- **拍檔石盤與 EX 體系是兩件事, 不要混** (0063/0065, 2026-09-10 使用者指定):
+  **拍檔石盤** (同步能力盤的能量上限) 六段 60/62/64/66/68/70, 存索引 0-5,
+  **上限 = 索引 = 寶數** (使用者確認的遊戲規則) —— 這條在**兩條寫入路徑各要有一份**
+  (`set_member_pair` 的 `v_grid_cap` 與 `syncMemberPair` 的 clamp), 兩條路可以各自被用到;
+  `tests/sync-grid.test.ts` 連 SQL 那一份一起釘住。
+  **EX 體系** (`ex_role_unlocked`) 是用體系蛋糕捲解鎖的, 與 `ex_unlocked` (= 6★EX = 星數 6)
+  完全無關, 只有 `pair.hasExRole` 的拍組有。
+  **解鎖了就要看得到**: 卡片左緣的官方體系徽章 (烤在圖裡的 x7..29 / y45..59) **正下方**
+  再畫一顆 `/reference/ui/${pair.exRole}.webp`, 由 `SyncPairCard` 的 `exRoleUnlocked` 控制
+  (那是使用者資料; 舊的全域開關 `showExRole` 全站零呼叫端已移除)。不要改畫在右邊 ——
+  右緣中段是官方的同步圖示、下面是寶可夢圈, 兩邊都會撞。
+  側板那一格是**半格** (與等級/拍檔石盤同一片兩欄格線), 標題直接寫「EX 體系（技術）」,
+  內容只有圖示 + 已解鎖/未解鎖 (2026-09-10 使用者:「不要那麼多廢話」) —— 不要再加說明文字。
+  卡牆上的拍檔石盤徽章走 `SyncGridTag` (`sync-pair-card.tsx`), 用**官方那六張圖**
+  (`/reference/ui/grid_60…grid_70.webp`, 60-68 青色、70 橘色) 不要自己配色;
+  **索引 0 (=60) 不畫** —— 每張卡的起點都是 60, 畫了整面牆都掛一顆就不帶資訊了。
+  徽章放在**名稱那一行**不放卡面上: 官方卡面的左下/下緣/右下都已經有東西, 疊上去一定撞。
+  `tests/sync-grid.test.ts` 釘住上限與循環。
 - **系列標籤每拍組唯一** (`SERIES_LABELS`); 判定在 `scripts/patch-pomatools-meta.mjs`, seasonal 必須先於 limited。
   徽章會蓋掉 series (有 11 隻掛大師徽章實為 BP 兌換) → 另存 `acquisitions[]` 全展開, 篩選兩邊都吃。
 - **主角 (Player) 拍組**由 `add-protagonist-pairs.mjs` 補 (管線 4d, 在 meta patch 之後);
@@ -494,16 +613,20 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   不得輸出 email / auth uid; 這條路由必須在 proxy.ts 的 PUBLIC_ROUTES (它自己用金鑰授權)。
 - **工具頁的文案**: 指引用 UI 完成 (可複製的指令、分頁、可展開的結構), 不要寫成教學文;
   名稱要像工具而不是口語 (「資料連線」而不是「給 AI 用的資料串接」)。
-- **EX 裝 (目前 UI 已下架)**: 立繪呈現不對, 使用者要求先拔掉; 資料 (`exStyleWorn`/
-  `exStyleImagePath`) 與圖檔都留著。要重啟時: 立繪路徑一律吃 catalog `exStyleImagePath`
-  (不要用 trainerId 拼路徑 — 同名多變體會拼錯), `exStyleWorn` 依附 6★EX。
+- **EX 裝: 不會重啟了** (2026-09-10 使用者決定)。當初拔掉的理由是「立繪呈現不對」,
+  而那是我方自己合成卡片時代的問題 —— 現在卡面是官方成品卡, **6★EX 的卡本來就是官方在
+  6★EX 時的長相**, 再疊一個我方的 EX 裝標記等於同一件事講兩次。
+  資料欄位 (`exStyleWorn` / `exStyleImagePath`) 與 `public/reference/trainer-ex/` 的圖檔
+  都留著不刪 (可重新產生的成本比留著高), 但**不要再為它長 UI**。
+  `SyncPairCard` 的 `exStyle` prop 全站零呼叫端, 留著只為相容。
 - **雙表同步**: `user_collection` 任何寫入都要經 `syncMemberPair()` (`src/lib/collection-sync.ts`) 同步
   `member_pairs`, 否則排刀/道館拍組頁看到舊資料。新增 `CollectionEntry` 欄位時三處都要接: collection.ts
   讀取、兩個 client 的 upsert、syncMemberPair。
-- **`/resources` 是「資源」不是「糖果頁」** (2026-09-06 使用者指定): 三塊 —
-  糖果庫存 (有幾顆) + **想投入資源的屬性** + **已投入較多資源的屬性**,
+- **`/resources` 是「背包」不是「糖果頁」** (2026-09-06 使用者指定「資源」, 2026-09-10 改叫
+  「我的背包」並換上背包 icon (`Backpack`, 原本是 `Candy`)): 三塊 —
+  道具 (有幾個) + **想投入資源的屬性** + **已投入較多資源的屬性**,
   後兩塊是複選 18 屬性 (`member_type_focus`, 0056), 用途是「之後方便安排」。
-  六件不要改壞的事:
+  七件不要改壞的事:
   1. **兩塊不互斥** — 已經練得深、還想再練是常態, 不要做成單選或互相排除。
   2. **不要塞進 `member_candies`**: 那張表是「有幾顆」(數量), 這裡是「哪些屬性」(集合)。
      混在一起 count 欄位永遠是雜訊, 而且排刀的「吃糖可達」會讀到不該讀的列。
@@ -519,6 +642,19 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      共用它 — 兩邊的文案與版面不要各長各的。**唯讀時不要畫 18 格灰卡**, 看別人只需要看選了什麼。
   6. **刻意不記進 `gym_activity`**: 那份是「成員身上發生的事」, 這兩塊是隨時會改的偏好,
      記了只會把真正的異動洗掉。
+  7. **第一塊叫「道具」不叫「糖果」** (2026-09-10, 使用者指定抄 pomasters 背包分頁的版面;
+     頁面本身叫「我的背包」, 所以這一塊不再重複那兩個字):
+     裡面除了 7 種糖, 還有 0064 的 5 種**體系蛋糕捲**與**5★ 成長潛力券** —— 那些不是糖,
+     所以標題與單位都跟著改 (「共 N 個」不是「共 N 顆」), 旁邊掛遊戲內的道具袋 icon。
+     分組寫在 `candy.tsx` 的 `CANDY_GROUPS` (糖果 / 體系與潛力), `CANDY_TYPES` 是它攤平的全集;
+     `/resources` 與道館成員頁的「資源」分頁**用同一份分組**, 不要各排各的。
+     ⚠ 加新道具是**三件事同一個 commit**: migration 放寬 `member_candies` 的 check +
+     `CANDY_GROUPS`/`CANDY_LABELS` + 圖放進 `public/reference/ui/candy/`。
+     少了 migration 就是「按 ＋ 只會 toast 更新失敗」, 少了圖就是破圖 (本機看不出來, 圖還在)。
+     `tests/bag-items.test.ts` 釘住這三件, 連 `skeletons.tsx` 手抄的格數也一起釘
+     (那個檔沒有 "use client", 不能 import candy.tsx —— loading.tsx 是 server 元件)。
+     **0036 那 5 種還欠著** (potential_cookie / potential_scroll / champion_spirit /
+     legendary_spirit / skill_feather): check 2026-08 就加了, 但沒有圖所以至今沒上畫面。
 - ⚠ **migration 裡的 `grant` 不代表「只有這些權限」** (2026-09-06 實測, 與 `security definer`
   那條是同一個坑的另一面): Supabase 對 public schema 的 default privileges 已經把七種權限
   (含 **UPDATE / TRUNCATE**) 都授給 `anon` 與 `authenticated` —— **全站每一張表都是**
@@ -562,11 +698,34 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **版面寬度一律 `PageShell`** (`components/page-shell.tsx`; wide/prose/form 三種) —
   SiteHeader/SiteFooter 在 root layout, 道館子頁的容器在 `gyms/[id]/layout.tsx`,
   子頁只回傳內容 + `PageHeading`。頁面自己包 `container`/`max-w-*` = 切分頁時寬度跳動 (前科)。
-- **變化紀錄只記「成員身上發生的事」** (pair/candy/ticket/battle_log)。管理員的設定動作
-  (道館名單、隊伍) 不記錄 (0030 已 drop trigger); 文案每種 kind 各自造句, 不要共用一個
+- **道館紀錄記「成員身上發生的事」+ 道館拍組名單** (pair/candy/ticket/battle_log/gym_pair)。
+  **gym_pair 是 0068 加回來的** (0030 曾停掉, 理由是它會畫成「在名單 → 移除」這種讀不懂的卡 ——
+  那是畫面的問題不是資料的問題, 所以這次是補一句它自己的文案再把 trigger 開回來)。
+  member_id 一律 null = 道館層級 → RLS 只有管理員看得到, 這是刻意的。
+  **隊伍 (team) 沒有加回來**: 那是「這一館現在的設定」, 沒有人會回頭查誰改過隊名。
+  **畫面是兩層** (2026-09-10 使用者:「看不出來是誰改誰的… 不需要一定把所有資訊攤平」):
+  第一層一列講完「誰 改了 誰 的 什麼 · 幾件」, 點開才是那幾張卡。
+  操作者本來就記在 `actor_id` (0026, auth.uid), 只是以前沒撈也沒畫 ——
+  要靠成員的 `user_id` 回查是誰, 所以 page.tsx 傳成員清單時要帶 userId。
+  **改了又改回來的不列出來** (2026-09-10 使用者:「有時候誤點然後馬上改回來… 好像就不需要顯示」):
+  併完之後起點與終點一樣就收起來, 底下留一行「另有 N 筆改了又改回來 — 顯示」——
+  **資料不刪只是收起來**, 要查「他到底點了什麼」按一下就攤開。
+  文案每種 kind 各自造句, 不要共用一個
   「沒有 new_value 就印紅字『移除』」的分支 — 那會讓五種不同的事長得一模一樣。
+  **日期預設「近 30 天」不是全部** (2026-09-10): 20 個人天天在改, 撈全部等於第一頁就是
+  這個月的洗版, 要按好幾次「載入更多」才看得到上個月。日期與類型都用 chips (只有四個選項,
+  下拉多一次點擊), 成員維持下拉且**只有管理員看得到** (一般成員的 RLS 本來就只回自己的列)。
 - **篩選一律用共用 `PairFilterBar`** (層級式: 搜尋+屬性 chips 常駐, 其餘收「進階篩選」;
   chips 多選, 同面向=或、面向間=且), 純邏輯在 `lib/pairs/filter.ts` — 不要再自刻篩選列。
+- **卡牆的排法手機與桌機不一樣** (2026-09-10 使用者:「手機版的拍組間隔可以再小一點…
+  盡量平均分布, 不要都靠左然後右邊空很大一塊」): 手機**一列四張、間距 4px、整列置中**,
+  桌機維持左對齊 / 間距 10px / 一列 13 張。數字是照參考站 (pomasters) 的 `css/mobile.css` 抄的
+  (`#syncPairs { gap: 4px }` + `.syncPair { max-width: 24% }`, 桌機那份本來就有 justify-content: center)。
+  手機那一列的卡寬是 `w-[24%] max-w-24` —— **上限要留著**, 不然平板會把卡拉得比桌機還大。
+  卡片本身跟著格子走 (`h-auto w-full`): SVG 有 viewBox, 只鎖寬度不給 h-auto 會照
+  preserveAspectRatio 留出上下白邊。
+  ⚠ **`components/skeletons.tsx` 的 `PairWallSkeleton` 要逐字跟著改** —— 骨架與真實卡牆
+  不同構的話, 真卡長出來的那一刻整片會重排 (那正是骨架要避免的事)。
 - **卡片重圖一律延遲載入** (2026-08-19): SVG 的 `<image>` **不吃 `loading="lazy"`**, 所以走
   `lib/pairs/use-near-viewport.ts` (**一個 root 共用一顆 IntersectionObserver**, 進場即
   unobserve)。只延後「每張卡獨有的重圖」= 訓練家立繪 + 寶可夢圖; 星星/TYPE_/ROLE_/pairKind/
@@ -574,14 +733,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   不是空字串** (空字串在部分瀏覽器 = 請求當前頁)。已載入就黏住不收回 (名次會隨篩選/排序變)。
   一定在畫面上的卡 (側板預覽 / 隊伍卡 / 已選槽位) 傳 `eager`; 自己捲的框 (PairPicker) 傳
   `scrollRoot`, 否則 rootMargin 擴張的是 viewport 不是那個框, 框內只會 pop-in。
-  卡牆的 `eagerCount` 是**張數不是列數** (桌機 13 張/列、手機 3 張/列) — 調大等於在手機上
+  卡牆的 `eagerCount` 是**張數不是列數** (桌機 13 張/列、手機 4 張/列) — 調大等於在手機上
   先下載好幾個螢幕的圖。實測 /pairs 全圖鑑: 981 個重圖請求 / 14.7MB → 桌機 208 個 / 2.75MB、
   手機 93 個 / 1.04MB。
-- **卡片的 `<defs>` 只有一份** (`components/sync-pair-defs.tsx`, 在 root layout 渲染一次):
-  10 個固定 id (spc-clip-card / spc-clip-poke-circle|hex / spc-frame-3|4|5 / spc-bg-3|4|5 /
-  spc-bg-ex)。**外框漸層只有 3 種** — 6★EX 不變框 (與「卡片外框不因 6★EX 變化」同一條);
-  clipPath 的六角是 r=22, 卡面上直接畫的那個六角是 r=24, 兩者不同不要混。SidePanel portal
-  到 document.body 仍在同一份 document, `url(#id)` 參照得到。
+- **卡片的 `<defs>` 已經整個刪掉** (2026-09-10)。`components/sync-pair-defs.tsx` 與那 10 個
+  固定 id (spc-clip-card / spc-clip-poke-circle|hex / spc-frame-3|4|5 / spc-bg-3|4|5 /
+  spc-bg-ex) 在卡面換成官方成品卡之後**全站零引用** —— 外框、底色、寶可夢圈的遮罩全都
+  烤在官方圖裡了, 但那份 defs 還在每一頁的 root layout 渲染一次。
+  要再做 SVG 卡片時**不要直接復活它** —— 先確認新的畫法真的需要共用 defs
+  (當初抽出來的理由是「每張卡自己畫 = /pairs 一頁多 8,385 個 DOM 節點」, 那個理由只在
+  「每張卡都是自繪 SVG」的前提下成立)。
 - **等待畫面一律骨架不是轉圈圈** (`components/skeletons.tsx` + globals.css 的
   `@utility skeleton`): 骨架要與真實版面**同構** (尺寸來源都記在 skeletons.tsx 檔頭),
   換頁時內容長出來才不會重排。骨架卡是 rounded-xl 灰塊, **不要去仿 SyncPairCard 的 SVG**
@@ -822,6 +983,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **`RELEASED_OVERRIDES`**: pomatools 落後期間, 已實裝新拍組依官方新聞手動指定 (收錄後可移除)。
 - 形態修飾詞前後都可能出現 (Alolan Raichu / Lycanroc Midday) → 雙向包含比對取最長重疊。
 - wiki 日期 fallback 的欄位在 `wiki.roster` (不是 `wiki.sixEx`)。
+- **上游 (pomasters/SyncPairsTracker) 的篩選面向由 `patch-upstream-facets.mjs` 併進 catalog**
+  (管線 5b2, `npm run data:facets`): `weakType` / `themes` / `tags` / 覆寫 `moveTypes`。
+  join 走 `official-card-map.json` 的 entries (654/654 零歧義) 用檔名回頭找上游那一筆 ——
+  **不要再寫第二套名稱比對**。它**只讀本機檔不連網**: 鏡像要不要更新是另一個決定
+  (`src/data/upstream-pin.json` 釘了 sha, `npm run data:pomasters` 才會動它)。
+  與既有面向重複的值在腳本那一層就丟掉 (屬性/地區/系列/取得管道), 不要在 pair-facets.ts 復活。
 - 稽核工具: 對 catalog↔pomatools↔wiki 做日期交叉與反向漏配掃描 (歷史版本在 scratchpad/series-audit.mjs);
   反向清單中的進化型列與 Player 主角拍組是 by design 不收。
 

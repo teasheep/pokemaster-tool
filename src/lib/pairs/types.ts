@@ -27,14 +27,22 @@ export type PairRecord = {
   exRole?: string | null;
   change?: string;            // ALTR / MEGA / SYNC / TERA / EVOL / NONE
   forms?: PairForm[];
+  /** 招式屬性 (小寫屬性名, 可多個) —— 2026-09-10 起由上游的 MoveType* 標籤覆寫。
+   *  舊版這裡其實只是「拍組自己的屬性」(658 筆全是單一值), 拿來篩選等於白篩。 */
   moveTypes?: string[];
+  /** 這隻寶可夢的弱點屬性 (小寫, 單一) —— 上游 pokemonWeak */
+  weakType?: string | null;
+  /** 主題: 角色/造型/身分 (冠軍、道館館主、美極套裝…), 繁中名見 data/pair-facets.ts */
+  themes?: string[];
+  /** 標籤: 戰鬥機制與寶可夢分類 (天候、屬性抵抗、傳說、御三家…) + 訓練家性別 */
+  tags?: string[];
   pairKind?: string;
   hasSixEx?: boolean;
   hasExRole?: boolean;
   hasAwakening?: boolean;
   hasExStyle?: boolean;
   exStyleImagePath?: string | null;
-  /** 上架日期 (ISO yyyy-mm-dd; 來源 pomatools date, 對不到的為 null) */
+  /** **初上線日** (ISO yyyy-mm-dd) — 拍組第一次在遊戲裡登場, 復刻與二次開放不算。對不到的為 null。 */
   releaseDate?: string | null;
   /** 系列標籤 (每拍組唯一): arc/exmaster/master/fair/limited/... 見 SERIES_LABELS */
   series?: string;
@@ -75,6 +83,7 @@ export const CLIENT_PAIR_FIELDS = [
   "trainerName", "pokemonName", "trainerNameZh", "pokemonNameZh",
   "type", "region", "basePotential",
   "roleAsset", "exRole", "change", "moveTypes", "pairKind",
+  "weakType", "themes", "tags",
   "hasSixEx", "hasExRole", "hasAwakening",
   "releaseDate", "series", "acquisitions",
 ] as const;

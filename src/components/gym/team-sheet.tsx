@@ -85,14 +85,22 @@ export function TeamPairs({
   pairs,
   catalog,
   size = "sm",
+  slots = 3,
 }: {
   pairs: TeamPairRow[];
   catalog: ClientPairRecord[];
   size?: "sm" | "md";
+  /**
+   * 一隊有幾格 —— **沒選滿也把空格畫出來** (2026-09-10 使用者:「應該要是三隻寬,
+   * 或保留另兩隻可以加入的虛線框」)。空格畫出來有兩個好處: 一眼看得出這隊只選了一隻,
+   * 而且每一隊的寬度一樣, 卡片不會因為選的數量不同而左右跳。
+   */
+  slots?: number;
 }) {
   const byId = useMemo(() => new Map(catalog.map((p) => [p.pairId, p])), [catalog]);
   /** 名稱欄寬 = 卡片寬 (sm=96px / md=128px), 兩行才會剛好包住卡片 */
   const colWidth = size === "sm" ? "w-24" : "w-32";
+  const empty = Math.max(0, slots - pairs.length);
   return (
     // 窄螢幕 (360px) 放不下 3 張卡 → 橫向捲動, 不裁掉第三隻
     <div className="flex gap-2 overflow-x-auto">
@@ -132,6 +140,23 @@ export function TeamPairs({
             </div>
           );
         })}
+      {/* 還沒選的格子 —— 與 PairPicker 的空位同一個長相 (正方形虛線, 一張卡大小) */}
+      {Array.from({ length: empty }).map((_, i) => (
+        <div key={`empty-${i}`} className={cn("flex shrink-0 flex-col items-center gap-0.5", colWidth)}>
+          <div
+            className={cn(
+              "flex aspect-square w-full items-center justify-center rounded-xl border-2 border-dashed text-muted-foreground/60",
+              colWidth
+            )}
+            aria-hidden
+          >
+            <Plus className="h-4 w-4" />
+          </div>
+          <span className={cn("h-[2.5em] text-center text-[10px] leading-tight text-muted-foreground/60 max-sm:text-xs", colWidth)}>
+            未選
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -548,24 +573,43 @@ export function TeamLibrary({
                       ) : (
                         // 拍組在左、資訊欄 (可打/說明) 填右側 — 窄卡自動換行回到下方
                         <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                          <button
-                            type="button"
-                            onClick={isAdmin ? () => setOpenPairs(t.id) : undefined}
-                            className={cn(
-                              // 手機: 整條佔滿卡片寬 (三張卡本來就在裡面橫捲), 拇指按哪裡都算
-                              "shrink-0 rounded-lg text-left max-sm:w-full",
-                              isAdmin && "transition-colors hover:bg-accent/40"
-                            )}
-                            title={isAdmin ? "點一下換拍組" : undefined}
-                          >
-                            {pairsOf(t.id).length > 0 ? (
-                              <TeamPairs pairs={pairsOf(t.id)} catalog={mergedCatalog} />
-                            ) : (
-                              <span className="block px-6 py-3 text-center text-xs text-muted-foreground max-sm:min-h-11 max-sm:py-3.5 max-sm:text-sm">
-                                {isAdmin ? "點一下選拍組" : "還沒選拍組"}
-                              </span>
-                            )}
-                          </button>
+                          {/* 管理員才點得動 —— **不是管理員就不要渲染成 button**:
+                              長得像可以點、按下去卻什麼都沒有, 使用者只會覺得站壞了
+                              (2026-09-10 使用者:「隊伍那邊沒有側板, 使用者點了沒反應就覺得奇怪」)。
+                              管理員那顆另外掛一行「換拍組」的字, 不要只靠 title —— 手機沒有 hover。 */}
+                          {isAdmin ? (
+                            <button
+                              type="button"
+                              onClick={() => setOpenPairs(t.id)}
+                              title="點一下換拍組 / 改要求練度"
+                              className={cn(
+                                // 手機: 整條佔滿卡片寬 (三張卡本來就在裡面橫捲), 拇指按哪裡都算
+                                // w-fit: 這顆按鈕包的是幾張卡就多寬 —— 不加的話裡面的
+                                // overflow-x-auto 會撐滿整列, 只選一隻時 hover 的底色
+                                // 會亮出兩張卡的空位 (2026-09-10 使用者抓到)。
+                                // 手機仍然整條佔滿 (三張卡在裡面橫捲, 拇指按哪裡都算)。
+                                "w-fit shrink-0 rounded-lg text-left transition-colors hover:bg-accent/40 max-sm:w-full"
+                              )}
+                            >
+                              {pairsOf(t.id).length > 0 ? (
+                                <TeamPairs pairs={pairsOf(t.id)} catalog={mergedCatalog} />
+                              ) : (
+                                <span className="block px-6 py-3 text-center text-xs text-muted-foreground max-sm:min-h-11 max-sm:py-3.5 max-sm:text-sm">
+                                  點一下選拍組
+                                </span>
+                              )}
+                            </button>
+                          ) : (
+                            <div className="shrink-0 max-sm:w-full">
+                              {pairsOf(t.id).length > 0 ? (
+                                <TeamPairs pairs={pairsOf(t.id)} catalog={mergedCatalog} />
+                              ) : (
+                                <span className="block px-6 py-3 text-center text-xs text-muted-foreground max-sm:py-3.5 max-sm:text-sm">
+                                  還沒選拍組
+                                </span>
+                              )}
+                            </div>
+                          )}
 
                           <div className="flex min-w-[10rem] flex-1 flex-col gap-1.5 py-0.5">
                             {/* 誰有誰沒有 — 與看板同一個三列元件 (只看符合度, 不看票) */}

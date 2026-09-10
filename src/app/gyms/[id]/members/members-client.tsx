@@ -35,8 +35,9 @@ import {
 import { MemberAvatar, MemberCard, memberLabel } from "@/components/gym/member-card";
 import { useEditOthersGuard } from "@/components/gym/edit-others-guard";
 import { PageHeading } from "@/components/page-shell";
+import { useCoalescedWrite } from "@/lib/pairs/use-coalesced-write";
 import { CandyBarSkeleton, PairWallSkeleton } from "@/components/skeletons";
-import { CandyBar, useMyCandies } from "@/components/gym/candy";
+import { CANDY_GROUPS, CandyBar, useMyCandies } from "@/components/gym/candy";
 import {
   TYPE_FOCUS_KINDS,
   TypeFocusBlock,
@@ -59,7 +60,7 @@ import { cn } from "@/lib/utils";
 import { buildMembersCsv, downloadCsv } from "@/lib/gym/export-csv";
 import { useUrlState } from "@/lib/use-url-state";
 import type { CollectionEntry } from "@/lib/collection";
-import { cycleEntry, defaultEntry } from "@/lib/collection-entry";
+import { cycleEntry, cyclePromotion, defaultEntry } from "@/lib/collection-entry";
 import { createClient } from "@/lib/supabase/client";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import { pairLabel, pairName } from "@/lib/pairs/name";
@@ -84,10 +85,17 @@ type PairRow = {
   pair_id: string | null;
   grade: number;
   super_awakening: number;
-  /** 個人練度的鏡像 (0057 level / 0059 promotion) — 只顯示在側板, 卡牆一律用原始星級 */
+  /**
+   * 個人練度的四個鏡像 (0057 level / 0059 promotion / 0063 sync_grid / 0065 ex_role_unlocked)。
+   * `user_collection` 是 own-rows only, 道館端讀不到 → member_pairs 要有這幾份鏡像。
+   * null 一律代表「沒設定過」, 畫面退回預設 (星數退回原始星級)。
+   */
   level: number;
-  /** null = 沒設定過 → 畫面退回這隻拍組的原始星級 */
   promotion: number | null;
+  /** 拍檔石盤段數索引 0-5 → 60/62/64/66/68/70 */
+  sync_grid: number | null;
+  /** EX 體系有沒有解鎖 (與 6★EX 是兩件事) */
+  ex_role_unlocked: boolean | null;
 };
 
 type Props = {
@@ -316,7 +324,7 @@ export function MembersClient({
       const [pairsRes] = await Promise.all([
         supabase
           .from("member_pairs")
-          .select("id, pair_label, pair_id, grade, super_awakening, level, promotion")
+          .select("id, pair_label, pair_id, grade, super_awakening, level, promotion, sync_grid, ex_role_unlocked")
           .eq("member_id", memberId)
           .order("grade", { ascending: false })
           .order("pair_label"),
@@ -363,7 +371,7 @@ export function MembersClient({
       grade: number,
       superAwakening: number,
       /** 沒傳 = 這次沒動 (左下角循環), 保留原值 —— 與 RPC 的 p_level / p_promotion 同一個約定 */
-      extra?: { level?: number; promotion?: number }
+      extra?: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean }
     ) => {
       setPairs((prev) => {
         const i = prev.findIndex((p) => p.pair_id === pairId);
@@ -382,6 +390,8 @@ export function MembersClient({
               // 新列沒傳時 RPC 寫的是 1 / null, 這裡跟著
               level: extra?.level ?? 1,
               promotion: extra?.promotion ?? null,
+              sync_grid: extra?.syncGrid ?? null,
+              ex_role_unlocked: extra?.exRoleUnlocked ?? null,
             },
           ];
         }
@@ -393,6 +403,8 @@ export function MembersClient({
           // 沒傳 = 這次沒動, 保留原值 (與 RPC 的 coalesce 同一個語意)
           level: extra?.level ?? next[i]!.level,
           promotion: extra?.promotion ?? next[i]!.promotion,
+          sync_grid: extra?.syncGrid ?? next[i]!.sync_grid,
+          ex_role_unlocked: extra?.exRoleUnlocked ?? next[i]!.ex_role_unlocked,
         };
         return next;
       });
@@ -428,6 +440,7 @@ export function MembersClient({
         <MemberEditDialog
           member={editing}
           isSelf={editing.id === viewer.memberId}
+          canManage={viewer.isAdmin}
           onClose={() => setEditing(null)}
           onSaved={() => router.refresh()}
         />
@@ -720,10 +733,13 @@ function MemberRow({
         me={isMe}
         onClick={onSelect}
       />
-      {canManage ? (
+      {/* 管理員可以改每一位; **一般成員可以改自己那一列** (2026-09-10 使用者:
+          「頭貼的文字可以多一欄自定義, 讓使用者自己改」)。RLS 的 gym_members_update_self
+          本來就允許改自己 (0028, 且 with check 釘住 role 不准變), 缺的只是入口。 */}
+      {canManage || isMe ? (
         <button
           onClick={onEdit}
-          title="編輯這位成員的資料"
+          title={canManage ? "編輯這位成員的資料" : "改我的頭像文字與出沒時段"}
           className="absolute right-1 top-1 inline-flex items-center justify-center rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-background hover:text-foreground group-hover:opacity-100 pointer-coarse:h-11 pointer-coarse:w-11 pointer-coarse:opacity-100"
         >
           <Pencil className="h-3.5 w-3.5" />
@@ -740,11 +756,14 @@ function MemberRow({
 function MemberEditDialog({
   member,
   isSelf,
+  canManage = true,
   onClose,
   onSaved,
 }: {
   member: MemberItem;
   isSelf: boolean;
+  /** 管理員才看得到名字與角色 —— 一般成員改自己時只露圓圈文字與出沒時段 (見下面的註解) */
+  canManage?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -769,12 +788,18 @@ function MemberEditDialog({
     const { error } = await supabase
       .from("gym_members")
       .update({
-        display_name: name,
-        line_name: lineName.trim() || null,
+        // 一般成員改自己時**只送這一館的顯示方式** —— 名字與角色他本來就動不了
+        // (名字跟人走在 profiles; 角色被 RLS 的 with check 釘死), 送了只會撞 RLS。
+        ...(canManage
+          ? {
+              display_name: name,
+              line_name: lineName.trim() || null,
+              role: role as "admin" | "member" | "advisor",
+            }
+          : {}),
         availability: availability.trim() || null,
         // 空白 = 沒設 → 圓圈退回從社群名取字 (0062 的 check 只允許 1-3 字)
         badge_text: badgeText.trim() || null,
-        role: role as "admin" | "member" | "advisor",
       })
       .eq("id", member.id);
     setBusy(false);
@@ -816,22 +841,34 @@ function MemberEditDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>編輯成員</DialogTitle>
+          <DialogTitle>{canManage ? "編輯成員" : "我在這一館的顯示方式"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">遊戲名</Label>
-            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={20} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">社群名 (LINE)</Label>
-            <Input
-              value={lineName}
-              onChange={(e) => setLineName(e.target.value)}
-              maxLength={30}
-              placeholder="與遊戲名相同可留空"
-            />
-          </div>
+          {/* 名字**只有管理員在這裡改** —— 一般成員的遊戲名/社群名是個人資料 (profiles),
+              入口在「頭像選單 → 個人設定」。同一件事兩個入口就會出現「我在這裡改了,
+              另一個畫面卻沒變」(AGENTS: 名字跟人走)。這個對話框對一般成員只負責
+              「這一館怎麼認我」那兩格。 */}
+          {canManage ? (
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">遊戲名</Label>
+                <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={20} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">社群名 (LINE)</Label>
+                <Input
+                  value={lineName}
+                  onChange={(e) => setLineName(e.target.value)}
+                  maxLength={30}
+                  placeholder="與遊戲名相同可留空"
+                />
+              </div>
+            </>
+          ) : (
+            <p className="rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+              名字要改請到「頭像選單 → 個人設定」—— 名字跟人走, 改一次全站都會變。
+            </p>
+          )}
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">頭像文字</Label>
             <div className="flex items-center gap-2">
@@ -865,19 +902,23 @@ function MemberEditDialog({
               placeholder="例: 平日 12-14, 22-24 / 夜班 00-08"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">角色</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">成員</SelectItem>
-                <SelectItem value="advisor">顧問 (唯讀, 不佔名額)</SelectItem>
-                <SelectItem value="admin">管理員</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* 角色只有管理員動得了 —— RLS 的 gym_members_update_self 明文要求
+              role 必須維持現況 (0028), 對一般成員畫這一格只會讓他存檔時撞 RLS。 */}
+          {canManage ? (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">角色</Label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">成員</SelectItem>
+                  <SelectItem value="advisor">顧問 (唯讀, 不佔名額)</SelectItem>
+                  <SelectItem value="admin">管理員</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
         </div>
         <DialogFooter className="gap-2 sm:justify-between">
           {/* 手機: 兩顆各自佔滿一列並撐到 44px (DialogFooter 本身已是 flex-col-reverse) */}
@@ -927,17 +968,31 @@ function ResourcePanel({
     // deps 只認 memberId — 兩個 hook 的 load 每次 render 都是新函式, 放進 deps 會無限重抓。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId]);
+  // 先綁成 const: 直接在 map 裡讀 candies.counts 的話, 外層那個 null 檢查不會跟進閉包
+  const counts = candies.counts;
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="mb-2 text-base font-semibold">糖果</h3>
-        {/* 未到位時畫同尺寸的骨架 (七顆糖), 資料一到直接換上, 不會整排重排 */}
-        {candies.counts ? (
-          <CandyBar
-            counts={candies.counts}
-            onChange={canEdit ? (type, next) => guard(() => candies.change(type, next)) : undefined}
-            editable={canEdit}
-          />
+        <h3 className="mb-2 text-base font-semibold">背包</h3>
+        {/* 未到位時畫同尺寸的骨架, 資料一到直接換上, 不會整排重排。
+            分組 (糖果 / 體系與潛力) 與 /resources 同一份 CANDY_GROUPS —— 同一個人的同一份
+            庫存在兩個畫面要長得一樣。 */}
+        {counts ? (
+          <div className="space-y-3">
+            {CANDY_GROUPS.map((g) => (
+              <div key={g.key} className="space-y-1.5">
+                <div className="text-xs font-medium text-muted-foreground">{g.label}</div>
+                <CandyBar
+                  counts={counts}
+                  onChange={
+                    canEdit ? (type, next) => guard(() => candies.change(type, next)) : undefined
+                  }
+                  editable={canEdit}
+                  types={g.types}
+                />
+              </div>
+            ))}
+          </div>
         ) : (
           <CandyBarSkeleton />
         )}
@@ -1078,7 +1133,7 @@ function PairsPanel({
     label: string,
     grade: number,
     superAwakening: number,
-    extra?: { level?: number; promotion?: number }
+    extra?: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean }
   ) => void;
   /** 改別人的資料要先確認一次 (components/gym/edit-others-guard.tsx) */
   guard: (action: () => void) => void;
@@ -1202,6 +1257,14 @@ function PairsPanel({
         owned: grade > 0,
         potential: grade >= 6 ? 5 : grade,
         superAwakening: sa,
+        // 個人星數 (2026-09-10 使用者指定拿掉「卡牆一律原始星級」的限制)。
+        // 那條規則當初的理由是「自己合成的 6★EX 卡常常跑掉或歪掉」—— 換成官方成品卡之後
+        // 那個理由不存在了。**這一面牆是「這一位成員的收藏」**, 顯示他的星數本來就是對的;
+        // 混多人的牆 (全館拍組) 才是不能顯示的那一種, 而那邊也沒有「誰」可以拿。
+        // null = 沒設定過 → 卡片自己退回原始星級 (SyncPairCard 的 promo 有夾下限)。
+        promotion: row?.promotion ?? undefined,
+        syncGrid: row?.sync_grid ?? 0,
+        exRoleUnlocked: row?.ex_role_unlocked ?? false,
         corner:
           scope === "all" && gymSet.has(rec.pairId) ? (
             <span className="text-sm text-amber-400" title="已是道館拍組">
@@ -1234,8 +1297,9 @@ function PairsPanel({
 
   /**
    * 這位成員的練度 → 側板要的 CollectionEntry。
-   * **只有寶數/超覺醒是真資料** —— member_pairs 沒有星數與等級, 其餘欄位是 defaultEntry
-   * 的預設值, 所以側板一律開 `gradeOnly` 把那兩個下拉收起來 (畫出來就是在說謊)。
+   * member_pairs 現在有四個鏡像欄位: level (0057) / promotion (0059) /
+   * sync_grid (0063) / ex_role_unlocked (0065), 所以側板的每一格都是真資料,
+   * 不再需要「道館版」旗標把哪幾格收起來。null 一律代表「沒設定過」→ 退回 defaultEntry 的值。
    */
   const entryOf = useCallback(
     (rec: ClientPairRecord): CollectionEntry => {
@@ -1252,6 +1316,8 @@ function PairsPanel({
         level: row?.level ?? 1,
         // 星數是 0059 補的鏡像; null = 沒設定過 → 退回這隻拍組的原始星級 (defaultEntry 給的)
         ...(row?.promotion != null ? { promotion: row.promotion } : {}),
+        syncGrid: row?.sync_grid ?? 0,
+        exRoleUnlocked: row?.ex_role_unlocked ?? false,
       };
     },
     [rowByPairId]
@@ -1262,8 +1328,52 @@ function PairsPanel({
    * 走 set_member_pair RPC: 成員已綁定帳號時會一併更新他的個人收藏,
    * 否則他下次自己一改就會把這裡填的值蓋回去 (舊版就是這樣默默丟資料的)。
    */
-  const writeGrade = useCallback(
+  const flushGrade = useCallback(
     async (
+      pairId: string,
+      job: {
+        label: string;
+        potential: number;
+        superAwakening: number;
+        extra: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean };
+      }
+    ) => {
+      const { error } = await supabase.rpc("set_member_pair", {
+        p_member: memberId,
+        p_pair_id: pairId,
+        p_pair_label: job.label,
+        // 一定要拆成 (potential, superAwakening) 再送 —— RPC 會把 p_potential 夾到 0..5,
+        // 直接把 0-10 的 grade 塞進去的話「超覺醒3」會靜靜變成「寶5」(0038:41-42)
+        p_potential: job.potential,
+        p_super_awakening: job.superAwakening,
+        // null = 不要動 (見 saveGrade 的 extra 參數)
+        p_level: job.extra.level ?? null,
+        p_promotion: job.extra.promotion ?? null,
+        p_sync_grid: job.extra.syncGrid ?? null,
+        p_ex_role_unlocked: job.extra.exRoleUnlocked ?? null,
+      });
+      if (error) {
+        toast.error("更新失敗", { description: error.message });
+        onChanged(); // 重抓 = 回滾 (伺服器才是真相)
+      }
+      // 成功就**不重抓** —— 樂觀更新已經是正確的值, 而每點一次就重抓整份 member_pairs
+      // 等於在使用者連點時排一串跨太平洋的往返, 那正是「按一下要等一下下」的來源。
+    },
+    [supabase, memberId, onChanged]
+  );
+
+  /**
+   * 連點合併: 同一張卡 450ms 內連點只送最後一次 (見 lib/pairs/use-coalesced-write.ts)。
+   * **extra 要用合併不是覆蓋** —— 側板改等級與左下角改寶數可能落在同一個視窗裡,
+   * 覆蓋的話先改的那個欄位會被吃掉 (RPC 收到 null = 不要動 = 那次修改消失)。
+   */
+  const scheduleGrade = useCoalescedWrite(flushGrade, (prev, next) => ({
+    ...next,
+    extra: { ...prev.extra, ...next.extra },
+  }));
+
+  const writeGrade = useCallback(
+    (
       rec: ClientPairRecord,
       next: { potential: number; superAwakening: number },
       /**
@@ -1271,31 +1381,19 @@ function PairsPanel({
        * (0058 / 0059)。左下角的寶數循環不知道 (也不該知道) 這兩個值, 一律不傳;
        * 傳了 defaultEntry 的預設值就會把人家設好的 Lv200 / 6★EX 洗掉。
        */
-      extra?: { level?: number; promotion?: number }
+      extra?: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean }
     ) => {
       // 這條軸的編碼與全站一致: 0=未持有, 1-5=寶, 6-10=超覺醒 (RPC 自己會照 sa 算 grade)
       const grade = next.superAwakening > 0 ? 5 + next.superAwakening : next.potential;
       onOptimistic(rec.pairId, pairLabel(rec), grade, next.superAwakening, extra);
-      const { error } = await supabase.rpc("set_member_pair", {
-        p_member: memberId,
-        p_pair_id: rec.pairId,
-        p_pair_label: pairLabel(rec),
-        // 一定要拆成 (potential, superAwakening) 再送 —— RPC 會把 p_potential 夾到 0..5,
-        // 直接把 0-10 的 grade 塞進去的話「超覺醒3」會靜靜變成「寶5」(0038:41-42)
-        p_potential: next.potential,
-        p_super_awakening: next.superAwakening,
-        // null = 不要動 (見上面的 extra 參數)
-        p_level: extra?.level ?? null,
-        p_promotion: extra?.promotion ?? null,
+      scheduleGrade(rec.pairId, {
+        label: pairLabel(rec),
+        potential: next.potential,
+        superAwakening: next.superAwakening,
+        extra: extra ?? {},
       });
-      if (error) {
-        toast.error("更新失敗", { description: error.message });
-        onChanged(); // 重抓 = 回滾 (伺服器才是真相)
-        return;
-      }
-      onChanged();
     },
-    [supabase, memberId, onChanged, onOptimistic]
+    [onOptimistic, scheduleGrade]
   );
 
   /**
@@ -1307,7 +1405,7 @@ function PairsPanel({
     (
       rec: ClientPairRecord,
       next: { potential: number; superAwakening: number },
-      extra?: { level?: number; promotion?: number }
+      extra?: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean }
     ) => {
       guard(() => void writeGrade(rec, next, extra));
     },
@@ -1335,6 +1433,31 @@ function PairsPanel({
       const sa = row ? (row.super_awakening > 0 ? row.super_awakening : grade >= 6 ? 5 : 0) : 0;
       const entry = { ...defaultEntry(rec), potential: grade >= 6 ? 5 : grade, superAwakening: sa };
       void saveGrade(rec, cycleEntry(entry, rec.hasAwakening === true));
+    },
+    [pairById, saveGrade]
+  );
+
+  /**
+   * 右鍵 / 長按 = 升星 (2026-09-09 加, 見 lib/pairs/use-promote-gesture.ts)。
+   *
+   * 與左下角的寶數循環刻意**分成兩顆 handler**: 星數 (promotion) 與寶數/超覺醒 (grade)
+   * 是兩條不同的軸, 混在一起就是 AGENTS 記過的那個前科。
+   * 這裡只傳 `promotion`, 不傳 level —— RPC 的 null 是「不要動」, 傳了會把人家設好的等級洗掉。
+   * 寶數/超覺醒照原值再送一次 (RPC 需要它們才算得出 grade), 所以要從 rowsRef 取現值。
+   */
+  const onPromoteCard = useCallback(
+    (key: string) => {
+      const rec = pairById.get(key);
+      if (!rec) return;
+      const row = rowsRef.current.get(key);
+      const grade = row?.grade ?? 0;
+      const sa = row ? (row.super_awakening > 0 ? row.super_awakening : grade >= 6 ? 5 : 0) : 0;
+      const { promotion } = cyclePromotion(
+        row?.promotion ?? rec.basePotential ?? 5,
+        rec.basePotential ?? 5,
+        rec.hasSixEx === true
+      );
+      saveGrade(rec, { potential: grade >= 6 ? 5 : grade, superAwakening: sa }, { promotion });
     },
     [pairById, saveGrade]
   );
@@ -1442,6 +1565,7 @@ function PairsPanel({
             emptyText="沒有符合的拍組"
             onSelect={onSelectCard}
             onCount={canEdit ? onCountCard : undefined}
+            onPromote={canEdit ? onPromoteCard : undefined}
           />
         </div>
       )}
@@ -1478,6 +1602,13 @@ function PairsPanel({
                 void saveGrade(panelPair, next, {
                   level: next.level !== cur.level ? next.level : undefined,
                   promotion: next.promotion !== cur.promotion ? next.promotion : undefined,
+                  // ⚠ 新增一條練度軸就要在這裡多一行, 否則側板改得動、卻存不進去。
+                  // 前科 (2026-09-10 使用者:「我也改不回60」): 0063/0065 加了拍檔石盤與
+                  // EX 體系, 這裡沒跟著加 → RPC 收到 null = 不要動, 下拉怎麼選都白選,
+                  // 而且**完全沒有徵兆** (樂觀更新讓畫面先變, 重抓之後才彈回去)。
+                  syncGrid: next.syncGrid !== cur.syncGrid ? next.syncGrid : undefined,
+                  exRoleUnlocked:
+                    next.exRoleUnlocked !== cur.exRoleUnlocked ? next.exRoleUnlocked : undefined,
                 });
               }}
               // 左下角循環: 與卡牆同一個手勢、同一條寫入路徑

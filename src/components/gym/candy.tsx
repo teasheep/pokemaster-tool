@@ -19,23 +19,44 @@ import { createClient } from "@/lib/supabase/client";
 import type { SyncPairRole } from "@/lib/supabase/types";
 
 export type CandyType =
+  // 糖果 (0015)
   | "universal"
   | "strike"
   | "tech"
   | "support"
   | "sprint"
   | "field"
-  | "superawakening";
+  | "superawakening"
+  // 體系蛋糕捲與成長潛力券 (0064)
+  | "cake_strike"
+  | "cake_tech"
+  | "cake_support"
+  | "cake_sprint"
+  | "cake_field"
+  | "power_up";
 
-export const CANDY_TYPES: CandyType[] = [
-  "universal",
-  "strike",
-  "tech",
-  "support",
-  "sprint",
-  "field",
-  "superawakening",
+/**
+ * 背包的分組 —— 照 pomasters 背包分頁的分類 (2026-09-09 使用者指定抄那個版面)。
+ *
+ * 分組只影響**畫面**: 資料層仍然是同一張 member_candies (candy_type 的值域見 0064 的 check),
+ * 所以總數、活動紀錄、compact 版都照舊吃 CANDY_TYPES 這一份攤平的清單。
+ * 組內順序與角色糖一致 (攻擊/技術/輔助/速戰/場地), 五種蛋糕捲的顏色就是那五個角色。
+ */
+export const CANDY_GROUPS: { key: string; label: string; types: CandyType[] }[] = [
+  {
+    key: "candy",
+    label: "糖果",
+    types: ["universal", "strike", "tech", "support", "sprint", "field", "superawakening"],
+  },
+  {
+    key: "role",
+    label: "體系與潛力",
+    types: ["cake_strike", "cake_tech", "cake_support", "cake_sprint", "cake_field", "power_up"],
+  },
 ];
+
+/** 攤平的全集 (總數、compact 版、活動紀錄的對照都吃這一份) */
+export const CANDY_TYPES: CandyType[] = CANDY_GROUPS.flatMap((g) => g.types);
 
 export const CANDY_LABELS: Record<CandyType, string> = {
   universal: "通用糖 (黃糖)",
@@ -45,7 +66,24 @@ export const CANDY_LABELS: Record<CandyType, string> = {
   sprint: "速戰糖",
   field: "場地糖",
   superawakening: "棒棒糖 (超覺醒)",
+  // 名稱由使用者提供 (2026-09-09): 蛋糕捲依顏色區分, 顏色 → 角色的對應是從官方圖取樣的,
+  // 與既有角色糖的配色完全一致 (紅 #ff2b4f 攻擊 / 綠 #05b294 技術 / 藍 #0096ea 輔助 /
+  // 橙 #ef7a12 速戰 / 紫 #a72bee 場地)。
+  cake_strike: "體系蛋糕捲 (紅)",
+  cake_tech: "體系蛋糕捲 (綠)",
+  cake_support: "體系蛋糕捲 (藍)",
+  cake_sprint: "體系蛋糕捲 (橙)",
+  cake_field: "體系蛋糕捲 (紫)",
+  power_up: "5★ 成長潛力券",
 };
+
+/**
+ * ⏸ **還欠一組**: 0036 那 5 種 (potential_cookie / potential_scroll / champion_spirit /
+ * legendary_spirit / skill_feather) 的 check 約束 2026-08 就加了, 但到今天為止
+ * **從來沒有出現在畫面上** —— 因為 public/reference/ui/candy/ 底下還沒有它們的圖。
+ * 要上線就是: 找圖 → 放進 CANDY_GROUPS 的某一組 → 補 CANDY_LABELS。
+ * 資料層不用再動 (0064 的 check 已經含這 5 種)。
+ */
 
 export function candyLabel(t: CandyType): string {
   return CANDY_LABELS[t];
@@ -78,6 +116,43 @@ export function CandyIcon({
   );
 }
 
+/**
+ * 遊戲內道具袋的金色圓盤底座 (`item_bg_gold`) —— 糖果圖疊在它上面就是背包裡那一格的長相。
+ * 2026-09-09 使用者指定抄 pomasters 的背包分頁版面。
+ *
+ * 底座**只是裝飾**, 所以 aria-hidden 且不進無障礙樹; 真正的名稱在 CandyIcon 的 alt。
+ * 數量 0 時整格淡化 (與對方的 `.noItem` 同一個做法) —— 一眼看得出哪些還沒有。
+ */
+export function CandyPlate({
+  type,
+  size = 56,
+  dim = false,
+  className,
+}: {
+  type: CandyType;
+  size?: number;
+  dim?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn("relative inline-flex shrink-0 items-center justify-center", dim && "opacity-40", className)}
+      style={{ width: size, height: size }}
+    >
+      <img
+        src="/reference/ui/item_plate.webp"
+        alt=""
+        aria-hidden
+        width={size}
+        height={size}
+        draggable={false}
+        className="absolute inset-0 select-none object-contain"
+      />
+      <CandyIcon type={type} size={Math.round(size * 0.82)} className="relative" />
+    </span>
+  );
+}
+
 export type CandyCounts = Partial<Record<CandyType, number>>;
 
 /**
@@ -90,13 +165,16 @@ export function CandyBar({
   onChange,
   editable = true,
   compact = false,
+  types = CANDY_TYPES,
 }: {
   counts: CandyCounts;
   onChange?: (type: CandyType, next: number) => void;
   editable?: boolean;
   compact?: boolean;
+  /** 只畫這幾種 (背包分組用)。不給就是全部 —— 看別人的庫存與 compact 版都吃全集。 */
+  types?: CandyType[];
 }) {
-  const shown = compact ? CANDY_TYPES.filter((t) => (counts[t] ?? 0) > 0) : CANDY_TYPES;
+  const shown = compact ? types.filter((t) => (counts[t] ?? 0) > 0) : types;
   if (compact && shown.length === 0) return null;
 
   if (compact || !editable) {
@@ -164,7 +242,7 @@ export function CandyBar({
                 n > 0 ? "shadow-sm" : "opacity-60"
               )}
             >
-              <CandyIcon type={t} size={44} className="shrink-0" />
+              <CandyPlate type={t} size={48} dim={n === 0} className="shrink-0" />
               <span className="min-w-0 flex-1 text-sm font-medium leading-tight">
                 {CANDY_LABELS[t]}
               </span>
@@ -234,7 +312,7 @@ export function CandyBar({
                 −
               </button>
               <span className="flex flex-col items-center px-0.5">
-                <CandyIcon type={t} size={56} />
+                <CandyPlate type={t} size={60} dim={n === 0} />
                 <span
                   className={cn(
                     "tabular-nums text-lg font-bold leading-tight",

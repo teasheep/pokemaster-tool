@@ -393,4 +393,23 @@ describe("cornerRect", () => {
     expect(box.width).toBe(44);
     expect(box.height).toBe(44);
   });
+
+  it("**教學結束前要先丟掉還在等的合併寫入**", () => {
+    // 2026-09-10 差點破的紅線: 連點合併之後那一趟 fetch 是延後才發的,
+    // closeTour() 先解除攔截的話, 計時器醒來時就真的寫進資料庫了
+    // (而且 swallowedWrites() 是 0, 連重新載入清樂觀更新都不會做)。
+    const store = fs.readFileSync(
+      path.join(process.cwd(), "src/components/tour/tour-store.ts"),
+      "utf8"
+    );
+    expect(store, "closeTour 沒有丟掉還在等的寫入").toContain("dropPendingCoalescedWrites()");
+    // 順序: drop 一定要在解除攔截之前
+    const dropAt = store.indexOf("dropPendingCoalescedWrites()");
+    const unblockAt = store.indexOf("setTourWritesBlocked(false)");
+    expect(dropAt, "drop 必須排在 setTourWritesBlocked(false) 之前").toBeLessThan(unblockAt);
+    // 而且那支函式要真的存在
+    expect(
+      fs.readFileSync(path.join(process.cwd(), "src/lib/pairs/use-coalesced-write.ts"), "utf8")
+    ).toContain("export function dropPendingCoalescedWrites");
+  });
 });

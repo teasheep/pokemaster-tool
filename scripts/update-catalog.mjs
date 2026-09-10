@@ -126,6 +126,14 @@ const META_STAGES = [
   { name: "5. 多來源交叉驗證 (pomatools+wiki+serebii)", script: "reconcile-db.mjs", extra: [], soft: false },
   // 最後才改名 — 前面每一階段都是用名字比對來源的, 早改會對不到 (前科: 四季鹿掉了 acquisitions)
   { name: "5b. 同名拍組補形態名", script: "disambiguate-pair-names.mjs", extra: [], soft: true },
+  // 上游 (pomasters) 的篩選面向: 弱點 / 主題 / 標籤 / 真正的招式屬性。
+  // **只讀本機檔** (src/data/pomasters/*.json 與 official-card-map.json), 不連網 ——
+  // 鏡像要不要更新是另一個決定 (見 src/data/upstream-pin.json 的 sha 釘選, npm run data:pomasters)。
+  // 排在 catalog 定案之後、5d 之前: 它會多寫四個欄位, 少跑就是線上篩不到那四個面向。
+  { name: "5b2. 上游篩選面向 (弱點/主題/標籤)", script: "patch-upstream-facets.mjs", extra: [], soft: true },
+  // 全形英數字 → 半形。**一定要排在所有會寫名字的階段之後** (1 / 4b / 4c / 4d / 5 / 5b),
+  // 早跑就會被後面的階段用上游原字覆蓋回去。冪等。
+  { name: "5b3. 拍組名全形英數字轉半形", script: "normalize-pair-names.mjs", extra: [], soft: false },
   // **一定要排在最後** — 會下載新圖的不只 stage 1: 4b (add-wiki-pairs) 與 4d (add-protagonist-pairs)
   // 也會寫 reference/trainer|pokemon 的 PNG。轉檔早跑就漏掉那兩批, 而 PNG 不進部署
   // (見 public/.assetsignore) → 那些拍組線上就是空卡。而且它要讀最終的 catalog 決定轉哪些圖,

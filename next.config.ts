@@ -91,9 +91,10 @@ const nextConfig: NextConfig = {
       // 道館根路徑 → 成員與拍組 (預設分頁, 使用者指定); 道館戰一覽在 /battles (真頁面)
       { source: "/gyms/:id", destination: "/gyms/:id/members", permanent: false },
       { source: "/gyms/:id/strategy", destination: "/gyms/:id/members", permanent: false },
-      // 道館攻略 / 紀錄 暫時下架 (2026-08-17) — 只擋入口, 頁面與資料留著之後重做
+      // 道館攻略仍然下架 (2026-08-17) — 只擋入口, 頁面與資料留著之後重做。
+      // **道館紀錄 2026-09-10 已經回來了** (使用者:「之前做過的道館紀錄我覺得可以加回來了」),
+      // 所以 /activity 這一行拿掉了 —— 分頁在 gym-tabs.tsx。
       { source: "/gyms/:id/guides", destination: "/gyms/:id/members", permanent: false },
-      { source: "/gyms/:id/activity", destination: "/gyms/:id/members", permanent: false },
       // 道館拍組已併進「成員與拍組」(同一頁的「全館拍組」視角)
       { source: "/gyms/:id/pairs", destination: "/gyms/:id/members", permanent: false },
       // AI 串接改成個人頁 (金鑰跟人走)

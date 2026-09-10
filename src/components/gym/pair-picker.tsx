@@ -20,6 +20,14 @@ import { ChevronDown, Plus, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { GRADE_LABELS } from "@/lib/gym/types";
 import { Sk } from "@/components/skeletons";
 import { SyncPairCard } from "@/components/sync-pair-card";
 import { TypeIcon } from "@/components/sync-pair-badges";
@@ -162,7 +170,48 @@ export function cycleGrade(current: number, awakenable: boolean): number {
   return current + 1;
 }
 
-/** 要求寶數徽章 — 點一下 +1 (自明的計數器樣式) */
+/**
+ * 要求練度的下拉 —— **直接選, 不要只能循環**。
+ * (2026-09-10 使用者:「隊伍庫的設定隊伍拍組的寶數很難按, 有時候要點很多下, 操作不直觀」)
+ * 循環只有「+1」一個方向, 從超覺醒5 退回寶3 要點八下, 而唯一的把手是卡片左下角那顆
+ * 30px 的六角 —— 站上其他地方會這樣點是因為**旁邊就有側板下拉**當第二條路, 隊伍這裡沒有。
+ * 卡片左下角的循環照舊留著 (與全站手勢一致), 這個下拉是給「我就是要寶3」的人用的。
+ */
+export function GradeSelect({
+  grade,
+  awakenable,
+  onChange,
+  className,
+}: {
+  grade: number;
+  awakenable: boolean;
+  onChange: (next: number) => void;
+  className?: string;
+}) {
+  // 需求一定是「至少寶1」—— 0 (無持有) 當需求沒有意義, 所以選單從 1 開始
+  const options = GRADE_LABELS.map((label, i) => ({ value: i, label })).filter(
+    (o) => o.value >= 1 && (awakenable || o.value <= 5)
+  );
+  return (
+    <Select value={String(grade)} onValueChange={(v) => onChange(Number(v))}>
+      <SelectTrigger
+        className={cn("h-7 w-full px-2 text-xs pointer-coarse:min-h-11", className)}
+        aria-label="要求練度"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((o) => (
+          <SelectItem key={o.value} value={String(o.value)}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+/** 要求寶數徽章 — 唯讀顯示用 (看板/隊伍卡); 可編輯的地方一律用 GradeSelect */
 export function GradeChip({
   grade,
   onClick,
@@ -344,6 +393,14 @@ export function PairPicker({
     onChange(picked.filter((_, i) => i !== index));
   }
 
+  /** 直接指定要求練度 (下拉) */
+  function setGrade(index: number, next: number) {
+    const cur = picked[index];
+    const list = [...picked];
+    list[index] = { ...cur, minGrade: Math.max(1, Math.min(10, next)) };
+    onChange(list);
+  }
+
   function bumpGrade(index: number) {
     const cur = picked[index];
     const rec = pairById.get(cur.pairId);
@@ -396,13 +453,21 @@ export function PairPicker({
                     </button>
                   ) : null}
                 </div>
-                <span className="line-clamp-2 w-full text-center text-[11px] leading-tight">
+                {/* 固定兩行高 (leading-tight × 2 = 2.5em) —— 名字一行/兩行的卡並排時,
+                    下面的下拉才會對齊在同一條水平線上 (2026-09-10 使用者抓到);
+                    與卡牆的卡名同一條規矩 (AGENTS「卡名固定兩行高」)。 */}
+                <span className="line-clamp-2 h-[2.5em] w-full text-center text-[11px] leading-tight">
                   {pairName(rec)}
                 </span>
-                <GradeChip
-                  grade={p.minGrade}
-                  onClick={readOnly ? undefined : () => bumpGrade(i)}
-                />
+                {readOnly ? (
+                  <GradeChip grade={p.minGrade} />
+                ) : (
+                  <GradeSelect
+                    grade={p.minGrade}
+                    awakenable={rec.hasAwakening === true}
+                    onChange={(next) => setGrade(i, next)}
+                  />
+                )}
               </div>
             );
           }
@@ -413,16 +478,19 @@ export function PairPicker({
               type="button"
               disabled={readOnly}
               onClick={() => setOpen(true)}
+              // 空位就是**一張卡的大小**, 不要撐滿整欄 —— 拍組卡是正方形的,
+              // 一個比卡片還大的虛線長方形擺在旁邊看起來像壞掉
+              // (2026-09-10 使用者:「不需要那麼大的 + 拍組虛線的樣子, 看起來很怪」)。
               className={cn(
-                "flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed text-muted-foreground transition-all",
-                compact && "aspect-[3/4]",
+                "mx-auto flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed text-muted-foreground transition-all",
+                compact ? "w-24" : "w-32",
                 "hover:border-primary/60 hover:bg-accent/40 hover:text-foreground active:scale-95",
                 open && "border-primary bg-accent/50 text-foreground",
                 "disabled:pointer-events-none disabled:opacity-40"
               )}
             >
-              <Plus className="h-6 w-6" />
-              <span className="text-xs">拍組 {i + 1}</span>
+              <Plus className="h-5 w-5" />
+              <span className="text-[11px]">加拍組</span>
             </button>
           );
         })}

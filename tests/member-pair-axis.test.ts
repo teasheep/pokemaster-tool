@@ -140,13 +140,30 @@ describe("道館成員拍組: 記錄什麼 vs 畫成什麼", () => {
     expect(client, "道館頁又傳了道館專用旗標").not.toMatch(flag);
   });
 
-  it("**卡牆不准畫個人星數** — 圖鑑畫面一律原始星級 (使用者: 只顯示在內頁)", () => {
+  // ⚠ 這條規則 2026-09-10 **反過來了**。
+  //
+  // 舊規則是「卡牆一律畫原始星級」, 理由是當時卡片是自己合成的, 6★EX 那張常常跑掉或歪掉
+  // (使用者原話:「你之前做的 6 星圖很常跑掉或歪掉」)。卡面換成官方成品卡之後,
+  // 星星是官方畫好烤在圖裡的, 那個理由就不存在了 —— 使用者指定「把顯示原始星級的限制完全拿掉」。
+  //
+  // 新的判準不是「哪一頁」而是「**這面牆代表誰**」:
+  //   一面牆 = 一個人 → 畫他的星數 (/pairs 我的拍組、分享頁、道館的成員明細)
+  //   一面牆 = 一群人 → 不畫 (全館拍組), 而且那邊本來也沒有「誰」可以拿
+  it("一面牆代表一個人時要畫個人星數; 混多人的牆不畫", () => {
     const client = read("src/app/gyms/[id]/members/members-client.tsx");
-    // 只看組 GridItem 的那段 (側板的 entryOf 本來就該帶 promotion, 那是內頁)
     const m = /const items = useMemo<GridItem\[\]>\([\s\S]*?\n {2}\}, \[/.exec(client);
     expect(m, "找不到卡牆的 items —— 這個測試自己壞了").not.toBe(null);
-    // GridItem 的 promotion 一旦被填, 整面卡牆的星星就會變成那個人的個人升星
-    expect(m![0], "道館卡牆把個人星數餵進 GridItem 了").not.toContain("promotion");
+    expect(
+      m![0],
+      "成員明細那面牆是這一位成員的收藏, 要畫他的星數 (2026-09-10 起)"
+    ).toContain("promotion");
+
+    // 全館拍組混著 20 個人的持有, 顯示誰的星都是錯的
+    const all = read("src/app/gyms/[id]/pairs/pairs-client.tsx");
+    const gm = /const gridItems: GridItem\[\] = useMemo\([\s\S]*?\n {2}\}, \[/.exec(all);
+    // 抓不到就是這個測試自己壞了 (改了變數名/寫法) —— 不可以靜靜跳過, 那比沒測還糟
+    expect(gm, "找不到全館拍組的 gridItems —— 這個測試自己壞了").not.toBe(null);
+    expect(gm![0], "全館拍組是混多人的牆, 不可以畫個人星數").not.toContain("promotion");
   });
 
   it("道館側板走 set_member_pair — 不可以直接寫 user_collection (RLS 只讓人寫自己的)", () => {

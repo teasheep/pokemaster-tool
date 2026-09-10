@@ -53,6 +53,8 @@ export type Database = {
           potential: number;
           super_awakening: number;
           ex_unlocked: boolean;
+          sync_grid: number;
+          ex_role_unlocked: boolean;
           ex_style_worn: boolean;
           lucky_skills: string[];
           notes: string | null;
@@ -69,6 +71,8 @@ export type Database = {
           potential?: number;
           super_awakening?: number;
           ex_unlocked?: boolean;
+          sync_grid?: number;
+          ex_role_unlocked?: boolean;
           ex_style_worn?: boolean;
           lucky_skills?: string[];
           notes?: string | null;
@@ -85,6 +89,8 @@ export type Database = {
           potential?: number;
           super_awakening?: number;
           ex_unlocked?: boolean;
+          sync_grid?: number;
+          ex_role_unlocked?: boolean;
           ex_style_worn?: boolean;
           lucky_skills?: string[];
           notes?: string | null;
@@ -216,6 +222,8 @@ export type Database = {
           super_awakening: number;
           level: number;
           promotion: number | null;
+          sync_grid: number | null;
+          ex_role_unlocked: boolean | null;
           ex_style_worn: boolean;
           created_at: string;
           updated_at: string;
@@ -230,6 +238,8 @@ export type Database = {
           super_awakening?: number;
           level?: number;
           promotion?: number | null;
+          sync_grid?: number | null;
+          ex_role_unlocked?: boolean | null;
           ex_style_worn?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -244,6 +254,8 @@ export type Database = {
           super_awakening?: number;
           level?: number;
           promotion?: number | null;
+          sync_grid?: number | null;
+          ex_role_unlocked?: boolean | null;
           ex_style_worn?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -684,6 +696,8 @@ export type Database = {
           potential: number;
           super_awakening: number;
           ex_unlocked: boolean;
+          sync_grid: number;
+          ex_role_unlocked: boolean;
         }[];
       };
       /** 分享頁的公開擁有者資訊 (RLS 讀不到 profiles, 走 security definer) */

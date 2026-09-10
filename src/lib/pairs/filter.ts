@@ -18,6 +18,14 @@ export type PairFilters = {
   stars: number[];
   /** 只看可超覺醒 */
   awakenOnly: boolean;
+  /** 弱點屬性 (多選) —— 上游 pokemonWeak */
+  weaks: string[];
+  /** 招式屬性 (多選) —— 上游 MoveType* 標籤 */
+  moves: string[];
+  /** 主題 (多選) —— 冠軍 / 道館館主 / 美極套裝… */
+  themes: string[];
+  /** 標籤 (多選) —— 天候 / 屬性抵抗 / 傳說 / 御三家…, 訓練家性別也走這裡 */
+  tags: string[];
 };
 
 export const EMPTY_PAIR_FILTERS: PairFilters = {
@@ -28,6 +36,10 @@ export const EMPTY_PAIR_FILTERS: PairFilters = {
   regions: [],
   stars: [],
   awakenOnly: false,
+  weaks: [],
+  moves: [],
+  themes: [],
+  tags: [],
 };
 
 /** 搜尋比對用字串 (中英名 + 地區) */
@@ -56,6 +68,11 @@ export function matchesPairFilters(p: ClientPairRecord, f: PairFilters, q: strin
   if (f.regions.length > 0 && !(p.region && f.regions.includes(p.region))) return false;
   if (f.stars.length > 0 && !f.stars.includes(Math.min(5, p.basePotential ?? 0))) return false;
   if (f.awakenOnly && p.hasAwakening !== true) return false;
+  if (f.weaks.length > 0 && !(p.weakType && f.weaks.includes(p.weakType))) return false;
+  // 招式/主題/標籤都是「拍組身上有這些之一」= 同面向或, 與其他面向且 (與屬性 chips 同一套語意)
+  if (f.moves.length > 0 && !(p.moveTypes ?? []).some((m) => f.moves.includes(m))) return false;
+  if (f.themes.length > 0 && !(p.themes ?? []).some((t) => f.themes.includes(t))) return false;
+  if (f.tags.length > 0 && !(p.tags ?? []).some((t) => f.tags.includes(t))) return false;
   if (q && !pairHaystack(p).includes(q)) return false;
   return true;
 }
@@ -69,6 +86,10 @@ export function hasActiveFilters(f: PairFilters): boolean {
     f.series.length > 0 ||
     f.regions.length > 0 ||
     f.stars.length > 0 ||
-    f.awakenOnly
+    f.awakenOnly ||
+    f.weaks.length > 0 ||
+    f.moves.length > 0 ||
+    f.themes.length > 0 ||
+    f.tags.length > 0
   );
 }

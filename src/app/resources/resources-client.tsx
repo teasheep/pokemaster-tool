@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { CANDY_TYPES, CandyBar, useMyCandies } from "@/components/gym/candy";
+import { CANDY_GROUPS, CANDY_TYPES, CandyBar, useMyCandies } from "@/components/gym/candy";
 import {
   TYPE_FOCUS_KINDS,
   TypeFocusBlock,
@@ -11,8 +11,9 @@ import {
 import { CandyBarSkeleton } from "@/components/skeletons";
 
 /**
- * 我的資源 — 三塊:
- *   1. 糖果 (有幾顆)
+ * 我的背包 — 三塊:
+ *   1. 道具 (糖果 / 體系蛋糕捲 / 成長潛力券, 各有幾個) —— 頁面本身就叫「我的背包」,
+ *      所以這一塊的標題不再叫背包 (同一個字出現兩次讀起來像重複)
  *   2. 想投入資源的屬性 (複選)
  *   3. 已投入較多資源的屬性 (複選)
  * 2/3 是屬性的集合不是數量, 所以不會長進 CandyBar 裡 (見 0056)。
@@ -43,15 +44,37 @@ export function ResourcesClient({
     <div className="space-y-3 sm:space-y-4">
       <section className="rounded-xl border bg-card p-3 sm:p-4">
         <div className="mb-2 flex items-baseline justify-between gap-2 sm:mb-3">
-          <h2 className="text-base font-semibold">糖果</h2>
+          {/* 背包 icon (遊戲內的道具袋按鈕) — 2026-09-09 使用者指定放在標題旁邊。
+              用 <img> 不用 next/image: 這是 22px 的固定小圖, 走 /reference/ui 那條
+              30 天快取的路徑, next/image 的最佳化在這個尺寸上只是多一層轉導。 */}
+          <h2 className="flex items-center gap-1.5 text-base font-semibold">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/reference/ui/bag.webp"
+              alt=""
+              width={22}
+              height={22}
+              draggable={false}
+              className="select-none"
+            />
+            道具</h2>
           {counts ? (
-            <span className="tabular-nums text-xs text-muted-foreground">共 {total} 顆</span>
+            <span className="tabular-nums text-xs text-muted-foreground">共 {total} 個</span>
           ) : null}
         </div>
         {/* 資料未到就畫骨架 (尺寸對齊可編輯版): 先畫唯讀的七顆 0 再整排換成可編輯版
             = 寬度與間距整個重排, 看起來像畫面壞掉 */}
+        {/* 分組顯示 (糖果 / 體系與潛力) —— 13 種擠成一排看不出哪些是同一類。
+            組名是小字不是第二層標題: 這一塊在頁面上仍然只有「背包」一個職責。 */}
         {counts ? (
-          <CandyBar counts={counts} onChange={res.change} editable />
+          <div className="space-y-3">
+            {CANDY_GROUPS.map((g) => (
+              <div key={g.key} className="space-y-1.5">
+                <div className="text-xs font-medium text-muted-foreground">{g.label}</div>
+                <CandyBar counts={counts} onChange={res.change} editable types={g.types} />
+              </div>
+            ))}
+          </div>
         ) : (
           <CandyBarSkeleton />
         )}

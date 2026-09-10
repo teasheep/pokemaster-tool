@@ -67,7 +67,7 @@ try {
   const errs = [];
   page.on("pageerror", e => errs.push("pageerror: " + String(e.message).split("\n")[0]));
   page.on("console", m => { if (m.type() === "error") errs.push("console: " + m.text().slice(0, 200)); });
-  const cards = () => page.locator("div.relative.w-24").count();
+  const cards = () => page.locator("[data-pair-cell]").count();
 
   // 甲開著「成員與拍組」→ 自己 →「道館拍組」
   await page.goto(`${BASE}/gyms/${gymId}/members`, { waitUntil: "networkidle" });
@@ -91,8 +91,8 @@ try {
   const same = recs[40];
   await page.getByPlaceholder(/搜尋/).first().fill(nameOf(same).split(" & ")[0]);
   await page.waitForTimeout(1800);
-  const target = page.locator("div.relative.w-24").filter({ hasText: (same.pokemonNameZh || same.pokemonName) }).first();
-  const card = (await target.count()) ? target : page.locator("div.relative.w-24").first();
+  const target = page.locator("[data-pair-cell]").filter({ hasText: (same.pokemonNameZh || same.pokemonName) }).first();
+  const card = (await target.count()) ? target : page.locator("[data-pair-cell]").first();
   await card.click({ position: { x: 45, y: 45 } });
   await page.waitForTimeout(1500);
   const title = (await page.locator("[data-tour='side-panel']").first().innerText()).split("\n")[0].trim();

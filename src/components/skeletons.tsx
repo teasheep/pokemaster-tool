@@ -114,8 +114,11 @@ export function FilterBarSkeleton() {
  * footer = 卡下方還有東西 (全館視角的持有率長條)。
  */
 export function PairWallSkeleton({
-  sections = 3,
-  cards = 13,
+  // 2026-09-10 使用者:「初始骨架好像有點太多了, 可以簡化一點, 不然看起來很怪」——
+  // 骨架要傳達的是「等一下這裡會有一面卡牆」, 不是把 654 張灰塊先鋪出來。
+  // 兩段 × 8 張已經足夠讀出那個意思, 又不會整個首屏都是灰色。
+  sections = 2,
+  cards = 8,
   footer = false,
 }: {
   sections?: number;
@@ -130,20 +133,22 @@ export function PairWallSkeleton({
           <div className="mb-2.5 flex items-center gap-2 border-b border-border/60 pb-1.5">
             <Sk className="h-5 w-16 rounded-full" delay={wave(s)} />
           </div>
-          <div className="flex flex-wrap gap-2.5">
+          {/* 手機一列四張 / gap 4px / 置中, 桌機左對齊 gap 10px —— 與 pair-type-grid.tsx
+              的卡牆逐字相同, 不然真卡長出來時整片會重排 */}
+          <div className="flex flex-wrap justify-center gap-1 sm:justify-start sm:gap-2.5">
             {range(cards).map((i) => {
               const d = wave(s * cards + i);
               return (
-                <div key={i} className="w-24">
-                  <Sk className="h-24 w-24 rounded-xl" delay={d} />
-                  {/* 卡名固定兩行高 (h-[2.5em] @10px = 25px), 卡牆高度才對得上 */}
-                  <div className="mt-0.5 h-[2.5em] w-24 text-[10px]">
-                    <Sk className="mx-auto h-2 w-20" delay={d} />
-                    <Sk className="mx-auto mt-1 h-2 w-14" delay={d + 50} />
+                <div key={i} className="w-[24%] max-w-24 sm:w-24">
+                  <Sk className="aspect-square w-full rounded-xl" delay={d} />
+                  {/* 卡名**固定兩行高**但只畫一條灰條 —— 高度要與真卡一致 (h-[2.5em] @10px = 25px)
+                      才不會重排, 但畫兩條會讓整面牆看起來像一堆條碼 (使用者說「很怪」的就是這個)。 */}
+                  <div className="mt-0.5 h-[2.5em] w-full pt-1 text-[10px]">
+                    <Sk className="mx-auto h-2 w-16" delay={d} />
                   </div>
                   {footer ? (
-                    <div className="w-24">
-                      <Sk className="h-1 w-24 rounded-full" delay={d} />
+                    <div className="w-full">
+                      <Sk className="h-1 w-full rounded-full" delay={d} />
                       <Sk className="mt-0.5 h-3 w-8" delay={d} />
                     </div>
                   ) : null}
@@ -297,43 +302,52 @@ export function TeamGridSkeleton({ tags = 4 }: { tags?: number }) {
 }
 
 /**
- * 糖果列 (七種糖) — candy.tsx 的 CandyBar 手機/桌機是兩套版面, 骨架也要兩套,
+ * 背包 (糖果 7 + 體系與潛力 6) — candy.tsx 的 CandyBar 手機/桌機是兩套版面, 骨架也要兩套,
  * 否則資料一到手機整排重排:
- *   手機 (sm 以下): 每種糖各佔滿一列 = 44px 圖 + 名稱 + 兩顆 44px 的 −/＋ (py-1.5 → 56px/列)
+ *   手機 (sm 以下): 每種各佔滿一列 = 44px 圖 + 名稱 + 兩顆 44px 的 −/＋ (py-1.5 → 56px/列)
  *   桌機: 原本的橫排小卡 (± 鈕平常隱形, 只留位置)
+ * ⚠ 這裡的 7/6 與組名那一行是照 candy.tsx 的 CANDY_GROUPS 手抄的 (那邊是 "use client",
+ *   這個檔沒有 —— loading.tsx 是 server 元件, import 過來會拿到 client reference)。
+ *   加糖或改分組時要回來一起改, 不然資料一到就重排。
  */
 export function CandyBarSkeleton() {
   return (
-    <div>
-      <div className="flex flex-col gap-2 sm:hidden">
-        {range(7).map((i) => (
-          <div
-            key={i}
-            className="flex w-full items-center gap-2 rounded-xl border py-1.5 pl-2.5 pr-1.5"
-          >
-            <Sk className="h-11 w-11 shrink-0 rounded-full" delay={wave(i)} />
-            <Sk className="h-5 min-w-0 flex-1" delay={wave(i)} />
-            <span className="h-11 w-11 shrink-0" />
-            <span className="w-10 shrink-0" />
-            <span className="h-11 w-11 shrink-0" />
+    <div className="space-y-3">
+      {[7, 6].map((n, gi) => (
+        <div key={gi} className="space-y-1.5">
+          {/* 組名 (text-xs = 16px 行高) */}
+          <Sk className="h-4 w-14" delay={wave(gi)} />
+          <div className="flex flex-col gap-2 sm:hidden">
+            {range(n).map((i) => (
+              <div
+                key={i}
+                className="flex w-full items-center gap-2 rounded-xl border py-1.5 pl-2.5 pr-1.5"
+              >
+                <Sk className="h-11 w-11 shrink-0 rounded-full" delay={wave(i)} />
+                <Sk className="h-5 min-w-0 flex-1" delay={wave(i)} />
+                <span className="h-11 w-11 shrink-0" />
+                <span className="w-10 shrink-0" />
+                <span className="h-11 w-11 shrink-0" />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2 max-sm:hidden">
-        {range(7).map((i) => (
-          <div
-            key={i}
-            className="inline-flex items-center gap-1 rounded-xl border px-1.5 py-1.5"
-          >
-            <span className="h-7 w-7" />
-            <span className="flex flex-col items-center gap-1 px-0.5">
-              <Sk className="h-14 w-14 rounded-full" delay={wave(i)} />
-              <Sk className="h-4 w-6" delay={wave(i)} />
-            </span>
-            <span className="h-7 w-7" />
+          <div className="flex flex-wrap items-center gap-2 max-sm:hidden">
+            {range(n).map((i) => (
+              <div
+                key={i}
+                className="inline-flex items-center gap-1 rounded-xl border px-1.5 py-1.5"
+              >
+                <span className="h-7 w-7" />
+                <span className="flex flex-col items-center gap-1 px-0.5">
+                  <Sk className="h-14 w-14 rounded-full" delay={wave(i)} />
+                  <Sk className="h-4 w-6" delay={wave(i)} />
+                </span>
+                <span className="h-7 w-7" />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

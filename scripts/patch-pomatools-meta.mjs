@@ -158,12 +158,17 @@ const variantOf = (tid) => Number((tid.match(/^ch\d{4}_(\d{2})_/) ?? [])[1] ?? 0
  * (2026-07 阿爾套裝 fair / 2026-05~06 Neo Champions EX 大師)。
  * pomatools 收錄後這些值會與自動比對一致, 屆時可移除。
  */
+// ⚠ **這張表不再管 releaseDate 的最終值** (2026-09-09): 日期的唯一手寫入口是
+//    src/data/pair-debut-dates.json (初上線日登記簿, 以 pairId 為鍵, 每筆都要附來源網址),
+//    由 scripts/apply-debut-dates.mjs 在管線最後一階套用, 蓋得過這裡與 pomatools / wiki。
+//    這裡留著的 releaseDate 只是「讓 upcoming 那條 fallback 有值可用」的中繼, 不是答案。
+//    以 trainerId 為鍵的表本來就表達不了「同一位訓練家的第二個拍組要改日期」。
 const RELEASED_OVERRIDES = {
   ch0158_90_carnet: { series: "arc", pairKind: "arc", releaseDate: "2026-07-18" }, // 阿爾套裝卡露妮 & 沙奈朵
-  ch0295_90_omodaka: { series: "arc", pairKind: "arc", releaseDate: "2026-07-19" }, // 阿爾套裝也慈 & 晶光芒
-  ch0112_91_hibiki: { series: "exmaster", pairKind: "exmaster", releaseDate: "2026-05-30" }, // 阿響 (冠軍) & 雷公
-  ch0002_90_kotone: { series: "exmaster", pairKind: "exmaster", releaseDate: "2026-06-01" }, // 琴音 (冠軍) & 炎帝
-  ch0291_40_sho: { series: "seasonal", pairKind: "none", releaseDate: "2026-07-30" }, // 小照 (2026夏季) & 瑪納霏
+  ch0295_90_omodaka: { series: "arc", pairKind: "arc" }, // 阿爾套裝也慈 & 晶光花
+  ch0112_91_hibiki: { series: "exmaster", pairKind: "exmaster" }, // 阿響 (冠軍) & 雷公
+  ch0002_90_kotone: { series: "exmaster", pairKind: "exmaster" }, // 琴音 (冠軍) & 炎帝
+  ch0291_40_sho: { series: "seasonal", pairKind: "none" }, // 小照 (2026夏季) & 瑪納霏
   ch0312_40_hinatsu: { series: "seasonal", pairKind: "none", releaseDate: "2026-07-02" }, // 火夏 (2026夏季) & 幽尾玄魚
   // ↓ 2026-09-01 補: wiki roster 對這幾筆都蓋了 MasterSyncPairMark, 但 pomatools 還沒收錄 →
   //   跑到下面 :223 的 fallback 只會拿到 upcoming/general 且 pairKind 留在 "none",

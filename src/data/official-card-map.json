@@ -1,0 +1,8254 @@
+{
+	"_note": [
+		"由 scripts/map-official-cards.mjs 產生, 不要手改。",
+		"上游來源與授權見 src/data/upstream-pin.json; 上游資料鏡像在 src/data/pomasters/syncpairs.json。",
+		"files 的 key 是星級 (3/4/5/EX), value 是上游檔名。下載時一律改名成 <pairId>_<星級>.png。"
+	],
+	"generatedFrom": "pomasters/SyncPairsTracker@511aeb9132a48e3798ba57dba523b024d70c86a3",
+	"upstreamVersion": "v2.72.0",
+	"counts": {
+		"catalog": 664,
+		"blockedA": 10,
+		"mapped": 654,
+		"withEx": 634,
+		"files": 1497,
+		"via": {
+			"exact": 610,
+			"protagonist": 11,
+			"trainerUnique": 33
+		}
+	},
+	"evolvedNameMismatch": [
+		{
+			"pairId": "10002000000",
+			"ours": "Chikorita",
+			"oursZh": "菊草葉",
+			"theirs": "Meganium"
+		},
+		{
+			"pairId": "10003000000",
+			"ours": "Espurr",
+			"oursZh": "妙喵",
+			"theirs": "Meowstic"
+		},
+		{
+			"pairId": "10004000000",
+			"ours": "Tepig",
+			"oursZh": "暖暖豬",
+			"theirs": "Emboar"
+		},
+		{
+			"pairId": "10011000000",
+			"ours": "Whirlipede",
+			"oursZh": "車輪毬",
+			"theirs": "Scolipede"
+		},
+		{
+			"pairId": "10018000000",
+			"ours": "Totodile",
+			"oursZh": "小鋸鱷",
+			"theirs": "Feraligatr"
+		},
+		{
+			"pairId": "10019000000",
+			"ours": "Treecko",
+			"oursZh": "木守宮",
+			"theirs": "Sceptile"
+		},
+		{
+			"pairId": "10020000000",
+			"ours": "Oshawott",
+			"oursZh": "水水獺",
+			"theirs": "Samurott"
+		},
+		{
+			"pairId": "10032000000",
+			"ours": "Seel",
+			"oursZh": "小海獅",
+			"theirs": "Dewgong"
+		},
+		{
+			"pairId": "10033000000",
+			"ours": "Palpitoad",
+			"oursZh": "藍蟾蜍",
+			"theirs": "Seismitoad"
+		},
+		{
+			"pairId": "10035000000",
+			"ours": "Voltorb",
+			"oursZh": "霹靂電球",
+			"theirs": "Electrode"
+		},
+		{
+			"pairId": "10037000000",
+			"ours": "Weepinbell",
+			"oursZh": "口呆花",
+			"theirs": "Victreebel"
+		},
+		{
+			"pairId": "10038000000",
+			"ours": "Cranidos",
+			"oursZh": "頭蓋龍",
+			"theirs": "Rampardos"
+		},
+		{
+			"pairId": "10039000000",
+			"ours": "Surskit",
+			"oursZh": "溜溜糖球",
+			"theirs": "Masquerain"
+		},
+		{
+			"pairId": "10043000000",
+			"ours": "Makuhita",
+			"oursZh": "幕下力士",
+			"theirs": "Hariyama"
+		},
+		{
+			"pairId": "10044000000",
+			"ours": "Nosepass",
+			"oursZh": "朝北鼻",
+			"theirs": "Probopass"
+		},
+		{
+			"pairId": "10049000000",
+			"ours": "Dusclops",
+			"oursZh": "彷徨夜靈",
+			"theirs": "Dusknoir"
+		},
+		{
+			"pairId": "10050000000",
+			"ours": "Meditite",
+			"oursZh": "瑪沙那",
+			"theirs": "Medicham"
+		},
+		{
+			"pairId": "10053000000",
+			"ours": "Amaura",
+			"oursZh": "冰雪龍",
+			"theirs": "Aurorus"
+		},
+		{
+			"pairId": "10059000000",
+			"ours": "Ponyta",
+			"oursZh": "小火馬",
+			"theirs": "Rapidash"
+		},
+		{
+			"pairId": "10099000000",
+			"ours": "Piplup",
+			"oursZh": "波加曼",
+			"theirs": "Empoleon"
+		},
+		{
+			"pairId": "10101000000",
+			"ours": "Snivy",
+			"oursZh": "藤藤蛇",
+			"theirs": "Serperior"
+		},
+		{
+			"pairId": "10101420000",
+			"ours": "Deerling (Spring Form)",
+			"oursZh": "四季鹿（春天的樣子）",
+			"theirs": "Deerling"
+		},
+		{
+			"pairId": "10101420001",
+			"ours": "Deerling (Summer Form)",
+			"oursZh": "四季鹿（夏天的樣子）",
+			"theirs": "Deerling"
+		},
+		{
+			"pairId": "10112000000",
+			"ours": "Cyndaquil",
+			"oursZh": "火球鼠",
+			"theirs": "Typhlosion"
+		},
+		{
+			"pairId": "10116000000",
+			"ours": "Turtwig",
+			"oursZh": "草苗龜",
+			"theirs": "Torterra"
+		},
+		{
+			"pairId": "10122000000",
+			"ours": "Popplio",
+			"oursZh": "球球海獅",
+			"theirs": "Primarina"
+		},
+		{
+			"pairId": "10123000000",
+			"ours": "Rowlet",
+			"oursZh": "木木梟",
+			"theirs": "Decidueye"
+		},
+		{
+			"pairId": "10126000000",
+			"ours": "Mudkip",
+			"oursZh": "水躍魚",
+			"theirs": "Swampert"
+		},
+		{
+			"pairId": "10130000000",
+			"ours": "Fennekin",
+			"oursZh": "火狐狸",
+			"theirs": "Delphox"
+		},
+		{
+			"pairId": "10244000003",
+			"ours": "Zacian",
+			"oursZh": "蒼響",
+			"theirs": "Zacian "
+		},
+		{
+			"pairId": "10250000000",
+			"ours": "Sirfetch’d",
+			"oursZh": "蔥遊兵",
+			"theirs": "Sirfetch'd"
+		},
+		{
+			"pairId": "10291000001",
+			"ours": "Mime Jr.",
+			"oursZh": "魔尼尼",
+			"theirs": "Mime Jr"
+		}
+	],
+	"entries": [
+		{
+			"pairId": "10000000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Charizard",
+			"files": {
+				"5": "icons/Red_0006_5.png",
+				"EX": "icons/Red_0006_EX.png"
+			}
+		},
+		{
+			"pairId": "10000100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pikachu",
+			"files": {
+				"5": "icons/Red_0025_5.png",
+				"EX": "icons/Red_0025_EX.png"
+			}
+		},
+		{
+			"pairId": "10000400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Charizard",
+			"files": {
+				"5": "icons/Red_0006_2_5.png",
+				"EX": "icons/Red_0006_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10000800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Snorlax",
+			"files": {
+				"5": "icons/Red_0143_5.png",
+				"EX": "icons/Red_0143_EX.png"
+			}
+		},
+		{
+			"pairId": "10000800001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Venusaur",
+			"files": {
+				"5": "icons/Red_0003_5.png",
+				"EX": "icons/Red_0003_EX.png"
+			}
+		},
+		{
+			"pairId": "10000900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Articuno",
+			"files": {
+				"5": "icons/Red_0144_5.png",
+				"EX": "icons/Red_0144_EX.png"
+			}
+		},
+		{
+			"pairId": "10001000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lycanroc",
+			"files": {
+				"5": "icons/Kukui_0745_5.png",
+				"EX": "icons/Kukui_0745_EX.png"
+			}
+		},
+		{
+			"pairId": "10002000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Meganium",
+			"files": {
+				"5": "icons/Lyra_0154_5.png",
+				"EX": "icons/Lyra_0154_EX.png"
+			}
+		},
+		{
+			"pairId": "10002000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Vaporeon",
+			"files": {
+				"5": "icons/Lyra_0134_5.png",
+				"EX": "icons/Lyra_0134_EX.png"
+			}
+		},
+		{
+			"pairId": "10002100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Celebi",
+			"files": {
+				"5": "icons/Lyra_0251_5.png",
+				"EX": "icons/Lyra_0251_EX.png"
+			}
+		},
+		{
+			"pairId": "10002400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Jigglypuff",
+			"files": {
+				"5": "icons/Lyra_0039_5.png",
+				"EX": "icons/Lyra_0039_EX.png"
+			}
+		},
+		{
+			"pairId": "10002410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Phanpy",
+			"files": {
+				"5": "icons/Lyra_0231_5.png",
+				"EX": "icons/Lyra_0231_EX.png"
+			}
+		},
+		{
+			"pairId": "10002900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Entei",
+			"files": {
+				"5": "icons/Lyra_0244_5.png",
+				"EX": "icons/Lyra_0244_EX.png"
+			}
+		},
+		{
+			"pairId": "10003000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Meowstic",
+			"files": {
+				"5": "icons/Calem_0678_5.png",
+				"EX": "icons/Calem_0678_EX.png"
+			}
+		},
+		{
+			"pairId": "10003000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Fennekin",
+			"files": {
+				"4": "icons/Calem_0653_4.png",
+				"5": "icons/Calem_0653_5.png",
+				"EX": "icons/Calem_0653_EX.png"
+			}
+		},
+		{
+			"pairId": "10003000008",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sylveon",
+			"files": {
+				"5": "icons/Calem_0700_5.png",
+				"EX": "icons/Calem_0700_EX.png"
+			}
+		},
+		{
+			"pairId": "10003900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Greninja",
+			"files": {
+				"5": "icons/Calem_0658_5.png",
+				"EX": "icons/Calem_0658_EX.png"
+			}
+		},
+		{
+			"pairId": "10004000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Emboar",
+			"files": {
+				"5": "icons/Hilda_0500_5.png",
+				"EX": "icons/Hilda_0500_EX.png"
+			}
+		},
+		{
+			"pairId": "10004000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tornadus",
+			"files": {
+				"5": "icons/Hilda_0641_5.png",
+				"EX": "icons/Hilda_0641_EX.png"
+			}
+		},
+		{
+			"pairId": "10004000004",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mienfoo",
+			"files": {
+				"4": "icons/Hilda_0619_4.png",
+				"5": "icons/Hilda_0619_5.png",
+				"EX": "icons/Hilda_0619_EX.png"
+			}
+		},
+		{
+			"pairId": "10004000008",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Leafeon",
+			"files": {
+				"5": "icons/Hilda_0470_5.png",
+				"EX": "icons/Hilda_0470_EX.png"
+			}
+		},
+		{
+			"pairId": "10004100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Victini",
+			"files": {
+				"5": "icons/Hilda_0494_5.png",
+				"EX": "icons/Hilda_0494_EX.png"
+			}
+		},
+		{
+			"pairId": "10004400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Diancie",
+			"files": {
+				"5": "icons/Hilda_0719_5.png",
+				"EX": "icons/Hilda_0719_EX.png"
+			}
+		},
+		{
+			"pairId": "10004410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Grapploct",
+			"files": {
+				"5": "icons/Hilda_0853_5.png",
+				"EX": "icons/Hilda_0853_EX.png"
+			}
+		},
+		{
+			"pairId": "10004900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Iron Leaves",
+			"files": {
+				"5": "icons/Hilda_1010_5.png",
+				"EX": "icons/Hilda_1010_EX.png"
+			}
+		},
+		{
+			"pairId": "10005000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lapras",
+			"files": {
+				"4": "icons/Lorelei_0131_4.png",
+				"5": "icons/Lorelei_0131_5.png",
+				"EX": "icons/Lorelei_0131_EX.png"
+			}
+		},
+		{
+			"pairId": "10005000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cloyster",
+			"files": {
+				"5": "icons/Lorelei_0091_5.png",
+				"EX": "icons/Lorelei_0091_EX.png"
+			}
+		},
+		{
+			"pairId": "10006000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Infernape",
+			"files": {
+				"4": "icons/Flint_0392_4.png",
+				"5": "icons/Flint_0392_5.png",
+				"EX": "icons/Flint_0392_EX.png"
+			}
+		},
+		{
+			"pairId": "10006000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rapidash",
+			"files": {
+				"4": "icons/Flint_0078_4.png",
+				"5": "icons/Flint_0078_5.png",
+				"EX": "icons/Flint_0078_EX.png"
+			}
+		},
+		{
+			"pairId": "10007000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Palossand",
+			"files": {
+				"5": "icons/Acerola_0770_5.png",
+				"EX": "icons/Acerola_0770_EX.png"
+			}
+		},
+		{
+			"pairId": "10007000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Banette",
+			"files": {
+				"4": "icons/Acerola_0354_4.png",
+				"5": "icons/Acerola_0354_5.png",
+				"EX": "icons/Acerola_0354_EX.png"
+			}
+		},
+		{
+			"pairId": "10007100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tapu Bulu",
+			"files": {
+				"5": "icons/Acerola_0787_5.png",
+				"EX": "icons/Acerola_0787_EX.png"
+			}
+		},
+		{
+			"pairId": "10007400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mimikyu",
+			"files": {
+				"5": "icons/Acerola_0778_5.png",
+				"EX": "icons/Acerola_0778_EX.png"
+			}
+		},
+		{
+			"pairId": "10007410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Jellicent",
+			"files": {
+				"5": "icons/Acerola_0593_5.png",
+				"EX": "icons/Acerola_0593_EX.png"
+			}
+		},
+		{
+			"pairId": "10008000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Vileplume",
+			"files": {
+				"3": "icons/Erika_0045_3.png",
+				"4": "icons/Erika_0045_4.png",
+				"5": "icons/Erika_0045_5.png",
+				"EX": "icons/Erika_0045_EX.png"
+			}
+		},
+		{
+			"pairId": "10008000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tangela",
+			"files": {
+				"4": "icons/Erika_0114_4.png",
+				"5": "icons/Erika_0114_5.png",
+				"EX": "icons/Erika_0114_EX.png"
+			}
+		},
+		{
+			"pairId": "10008100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Leafeon",
+			"files": {
+				"5": "icons/Erika_0470_5.png",
+				"EX": "icons/Erika_0470_EX.png"
+			}
+		},
+		{
+			"pairId": "10008400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Comfey",
+			"files": {
+				"5": "icons/Erika_0764_5.png",
+				"EX": "icons/Erika_0764_EX.png"
+			}
+		},
+		{
+			"pairId": "10008410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lurantis",
+			"files": {
+				"5": "icons/Erika_0754_5.png",
+				"EX": "icons/Erika_0754_EX.png"
+			}
+		},
+		{
+			"pairId": "10009000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Slaking",
+			"files": {
+				"3": "icons/Norman_0289_3.png",
+				"4": "icons/Norman_0289_4.png",
+				"5": "icons/Norman_0289_5.png",
+				"EX": "icons/Norman_0289_EX.png"
+			}
+		},
+		{
+			"pairId": "10010000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Floatzel",
+			"files": {
+				"3": "icons/Crasher Wake_0419_3.png",
+				"4": "icons/Crasher Wake_0419_4.png",
+				"5": "icons/Crasher Wake_0419_5.png",
+				"EX": "icons/Crasher Wake_0419_EX.png"
+			}
+		},
+		{
+			"pairId": "10011000000",
+			"via": "trainer-unique",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Scolipede",
+			"files": {
+				"4": "icons/Roxie_0545_4.png",
+				"5": "icons/Roxie_0545_5.png",
+				"EX": "icons/Roxie_0545_EX.png"
+			}
+		},
+		{
+			"pairId": "10011000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Garbodor",
+			"files": {
+				"5": "icons/Roxie_0569_5.png",
+				"EX": "icons/Roxie_0569_EX.png"
+			}
+		},
+		{
+			"pairId": "10011100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Toxtricity",
+			"files": {
+				"5": "icons/Roxie_0849_5.png",
+				"EX": "icons/Roxie_0849_EX.png"
+			}
+		},
+		{
+			"pairId": "10012000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lucario",
+			"files": {
+				"3": "icons/Korrina_0448_3.png",
+				"4": "icons/Korrina_0448_4.png",
+				"5": "icons/Korrina_0448_5.png",
+				"EX": "icons/Korrina_0448_EX.png"
+			}
+		},
+		{
+			"pairId": "10012000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Hawlucha",
+			"files": {
+				"5": "icons/Korrina_0701_5.png",
+				"EX": "icons/Korrina_0701_EX.png"
+			}
+		},
+		{
+			"pairId": "10012100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Marshadow",
+			"files": {
+				"5": "icons/Korrina_0802_5.png",
+				"EX": "icons/Korrina_0802_EX.png"
+			}
+		},
+		{
+			"pairId": "10012900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lucario",
+			"files": {
+				"5": "icons/Korrina_0448_2_5.png",
+				"EX": "icons/Korrina_0448_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10013000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mudsdale",
+			"files": {
+				"3": "icons/Hapu_0750_3.png",
+				"4": "icons/Hapu_0750_4.png",
+				"5": "icons/Hapu_0750_5.png",
+				"EX": "icons/Hapu_0750_EX.png"
+			}
+		},
+		{
+			"pairId": "10014010000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Stoutland",
+			"files": {
+				"5": "icons/Cheren_0508_5.png",
+				"EX": "icons/Cheren_0508_EX.png"
+			}
+		},
+		{
+			"pairId": "10014010001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Purrloin",
+			"files": {
+				"4": "icons/Cheren_0509_4.png",
+				"5": "icons/Cheren_0509_5.png",
+				"EX": "icons/Cheren_0509_EX.png"
+			}
+		},
+		{
+			"pairId": "10014010002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Liepard",
+			"files": {
+				"5": "icons/Cheren_0510_5.png",
+				"EX": "icons/Cheren_0510_EX.png"
+			}
+		},
+		{
+			"pairId": "10014900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tornadus",
+			"files": {
+				"5": "icons/Cheren_0641_5.png",
+				"EX": "icons/Cheren_0641_EX.png"
+			}
+		},
+		{
+			"pairId": "10015000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Onix",
+			"files": {
+				"3": "icons/Brock_0095_3.png",
+				"4": "icons/Brock_0095_4.png",
+				"5": "icons/Brock_0095_5.png",
+				"EX": "icons/Brock_0095_EX.png"
+			}
+		},
+		{
+			"pairId": "10015000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kabutops",
+			"files": {
+				"5": "icons/Brock_0141_5.png",
+				"EX": "icons/Brock_0141_EX.png"
+			}
+		},
+		{
+			"pairId": "10015010000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tyranitar",
+			"files": {
+				"3": "icons/Brock_0248_3.png",
+				"4": "icons/Brock_0248_4.png",
+				"5": "icons/Brock_0248_5.png",
+				"EX": "icons/Brock_0248_EX.png"
+			}
+		},
+		{
+			"pairId": "10015900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Onix",
+			"files": {
+				"5": "icons/Brock_0095_2_5.png",
+				"EX": "icons/Brock_0095_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10016000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Swanna",
+			"files": {
+				"3": "icons/Skyla_0581_3.png",
+				"4": "icons/Skyla_0581_4.png",
+				"5": "icons/Skyla_0581_5.png",
+				"EX": "icons/Skyla_0581_EX.png"
+			}
+		},
+		{
+			"pairId": "10016000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Unfezant",
+			"files": {
+				"4": "icons/Skyla_0521_4.png",
+				"5": "icons/Skyla_0521_5.png",
+				"EX": "icons/Skyla_0521_EX.png"
+			}
+		},
+		{
+			"pairId": "10016400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Togekiss",
+			"files": {
+				"5": "icons/Skyla_0468_5.png",
+				"EX": "icons/Skyla_0468_EX.png"
+			}
+		},
+		{
+			"pairId": "10016420000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Jumpluff",
+			"files": {
+				"5": "icons/Skyla_0189_5.png",
+				"EX": "icons/Skyla_0189_EX.png"
+			}
+		},
+		{
+			"pairId": "10016500000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tornadus",
+			"files": {
+				"5": "icons/Skyla_0641_5.png",
+				"EX": "icons/Skyla_0641_EX.png"
+			}
+		},
+		{
+			"pairId": "10017000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Eevee",
+			"files": {
+				"5": "icons/Leaf_0133_5.png",
+				"EX": "icons/Leaf_0133_EX.png"
+			}
+		},
+		{
+			"pairId": "10017000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Clefable",
+			"files": {
+				"4": "icons/Leaf_0036_4.png",
+				"5": "icons/Leaf_0036_5.png",
+				"EX": "icons/Leaf_0036_EX.png"
+			}
+		},
+		{
+			"pairId": "10017000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Blastoise",
+			"files": {
+				"5": "icons/Leaf_0009_5.png",
+				"EX": "icons/Leaf_0009_EX.png"
+			}
+		},
+		{
+			"pairId": "10017000003",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Beedrill",
+			"files": {
+				"5": "icons/Leaf_0015_5.png",
+				"EX": "icons/Leaf_0015_EX.png"
+			}
+		},
+		{
+			"pairId": "10017100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Venusaur",
+			"files": {
+				"5": "icons/Leaf_0003_5.png",
+				"EX": "icons/Leaf_0003_EX.png"
+			}
+		},
+		{
+			"pairId": "10017900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Moltres",
+			"files": {
+				"5": "icons/Leaf_0146_5.png",
+				"EX": "icons/Leaf_0146_EX.png"
+			}
+		},
+		{
+			"pairId": "10018000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Feraligatr",
+			"files": {
+				"5": "icons/Kris_0160_5.png",
+				"EX": "icons/Kris_0160_EX.png"
+			}
+		},
+		{
+			"pairId": "10018000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Jolteon",
+			"files": {
+				"5": "icons/Kris_0135_5.png",
+				"EX": "icons/Kris_0135_EX.png"
+			}
+		},
+		{
+			"pairId": "10018100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Suicune",
+			"files": {
+				"5": "icons/Kris_0245_5.png",
+				"EX": "icons/Kris_0245_EX.png"
+			}
+		},
+		{
+			"pairId": "10018400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Igglybuff",
+			"files": {
+				"5": "icons/Kris_0174_5.png",
+				"EX": "icons/Kris_0174_EX.png"
+			}
+		},
+		{
+			"pairId": "10019000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sceptile",
+			"files": {
+				"5": "icons/Brendan_0254_5.png",
+				"EX": "icons/Brendan_0254_EX.png"
+			}
+		},
+		{
+			"pairId": "10019000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Swellow",
+			"files": {
+				"4": "icons/Brendan_0277_4.png",
+				"5": "icons/Brendan_0277_5.png",
+				"EX": "icons/Brendan_0277_EX.png"
+			}
+		},
+		{
+			"pairId": "10019000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Salamence",
+			"files": {
+				"5": "icons/Brendan_0373_5.png",
+				"EX": "icons/Brendan_0373_EX.png"
+			}
+		},
+		{
+			"pairId": "10019100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Latios",
+			"files": {
+				"5": "icons/Brendan_0381_5.png",
+				"EX": "icons/Brendan_0381_EX.png"
+			}
+		},
+		{
+			"pairId": "10019400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Marshtomp",
+			"files": {
+				"5": "icons/Brendan_0259_5.png",
+				"EX": "icons/Brendan_0259_EX.png"
+			}
+		},
+		{
+			"pairId": "10019900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Groudon",
+			"files": {
+				"5": "icons/Brendan_0383_5.png",
+				"EX": "icons/Brendan_0383_EX.png"
+			}
+		},
+		{
+			"pairId": "10020000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Samurott",
+			"files": {
+				"5": "icons/Hilbert_0503_5.png",
+				"EX": "icons/Hilbert_0503_EX.png"
+			}
+		},
+		{
+			"pairId": "10020000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Thundurus",
+			"files": {
+				"5": "icons/Hilbert_0642_5.png",
+				"EX": "icons/Hilbert_0642_EX.png"
+			}
+		},
+		{
+			"pairId": "10020000008",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Glaceon",
+			"files": {
+				"5": "icons/Hilbert_0471_5.png",
+				"EX": "icons/Hilbert_0471_EX.png"
+			}
+		},
+		{
+			"pairId": "10020100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Genesect",
+			"files": {
+				"5": "icons/Hilbert_0649_5.png",
+				"EX": "icons/Hilbert_0649_EX.png"
+			}
+		},
+		{
+			"pairId": "10020400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mightyena",
+			"files": {
+				"5": "icons/Hilbert_0262_5.png",
+				"EX": "icons/Hilbert_0262_EX.png"
+			}
+		},
+		{
+			"pairId": "10020900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kyurem",
+			"files": {
+				"5": "icons/Hilbert_0646_5.png",
+				"EX": "icons/Hilbert_0646_EX.png"
+			}
+		},
+		{
+			"pairId": "10021000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pidgeot",
+			"files": {
+				"5": "icons/Blue_0018_5.png",
+				"EX": "icons/Blue_0018_EX.png"
+			}
+		},
+		{
+			"pairId": "10021000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Exeggutor",
+			"files": {
+				"4": "icons/Blue_0103_4.png",
+				"5": "icons/Blue_0103_5.png",
+				"EX": "icons/Blue_0103_EX.png"
+			}
+		},
+		{
+			"pairId": "10021000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Alakazam",
+			"files": {
+				"5": "icons/Blue_0065_5.png",
+				"EX": "icons/Blue_0065_EX.png"
+			}
+		},
+		{
+			"pairId": "10021010000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Blastoise",
+			"files": {
+				"5": "icons/Blue_0009_5.png",
+				"EX": "icons/Blue_0009_EX.png"
+			}
+		},
+		{
+			"pairId": "10021400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dragonite",
+			"files": {
+				"5": "icons/Blue_0149_5.png",
+				"EX": "icons/Blue_0149_EX.png"
+			}
+		},
+		{
+			"pairId": "10021800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Aerodactyl",
+			"files": {
+				"5": "icons/Blue_0142_5.png",
+				"EX": "icons/Blue_0142_EX.png"
+			}
+		},
+		{
+			"pairId": "10021800001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Charizard",
+			"files": {
+				"5": "icons/Blue_0006_5.png",
+				"EX": "icons/Blue_0006_EX.png"
+			}
+		},
+		{
+			"pairId": "10021900000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Arcanine",
+			"files": {
+				"4": "icons/Blue_0059_4.png",
+				"5": "icons/Blue_0059_5.png",
+				"EX": "icons/Blue_0059_EX.png"
+			}
+		},
+		{
+			"pairId": "10021900001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zapdos",
+			"files": {
+				"5": "icons/Blue_0145_5.png",
+				"EX": "icons/Blue_0145_EX.png"
+			}
+		},
+		{
+			"pairId": "10021910000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pidgeot",
+			"files": {
+				"5": "icons/Blue_0018_2_5.png",
+				"EX": "icons/Blue_0018_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10022000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Avalugg",
+			"files": {
+				"3": "icons/Wulfric_0713_3.png",
+				"4": "icons/Wulfric_0713_4.png",
+				"5": "icons/Wulfric_0713_5.png",
+				"EX": "icons/Wulfric_0713_EX.png"
+			}
+		},
+		{
+			"pairId": "10023000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Blissey",
+			"files": {
+				"3": "icons/Cheryl_0242_3.png",
+				"4": "icons/Cheryl_0242_4.png",
+				"5": "icons/Cheryl_0242_5.png",
+				"EX": "icons/Cheryl_0242_EX.png"
+			}
+		},
+		{
+			"pairId": "10023000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Wailord",
+			"files": {
+				"4": "icons/Cheryl_0321_4.png",
+				"5": "icons/Cheryl_0321_5.png",
+				"EX": "icons/Cheryl_0321_EX.png"
+			}
+		},
+		{
+			"pairId": "10024000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Chandelure",
+			"files": {
+				"4": "icons/Shauntal_0609_4.png",
+				"5": "icons/Shauntal_0609_5.png",
+				"EX": "icons/Shauntal_0609_EX.png"
+			}
+		},
+		{
+			"pairId": "10024400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Froslass",
+			"files": {
+				"5": "icons/Shauntal_0478_5.png",
+				"EX": "icons/Shauntal_0478_EX.png"
+			}
+		},
+		{
+			"pairId": "10025000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Abomasnow",
+			"files": {
+				"3": "icons/Candice_0460_3.png",
+				"4": "icons/Candice_0460_4.png",
+				"5": "icons/Candice_0460_5.png",
+				"EX": "icons/Candice_0460_EX.png"
+			}
+		},
+		{
+			"pairId": "10025000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Froslass",
+			"files": {
+				"4": "icons/Candice_0478_4.png",
+				"5": "icons/Candice_0478_5.png",
+				"EX": "icons/Candice_0478_EX.png"
+			}
+		},
+		{
+			"pairId": "10025400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Darmanitan",
+			"files": {
+				"5": "icons/Candice_0555_5.png",
+				"EX": "icons/Candice_0555_EX.png"
+			}
+		},
+		{
+			"pairId": "10026000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Miltank",
+			"files": {
+				"4": "icons/Whitney_0241_4.png",
+				"5": "icons/Whitney_0241_5.png",
+				"EX": "icons/Whitney_0241_EX.png"
+			}
+		},
+		{
+			"pairId": "10026000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Wigglytuff",
+			"files": {
+				"5": "icons/Whitney_0040_5.png",
+				"EX": "icons/Whitney_0040_EX.png"
+			}
+		},
+		{
+			"pairId": "10026000002",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Girafarig",
+			"files": {
+				"4": "icons/Whitney_0203_4.png",
+				"5": "icons/Whitney_0203_5.png",
+				"EX": "icons/Whitney_0203_EX.png"
+			}
+		},
+		{
+			"pairId": "10026400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sawsbuck",
+			"files": {
+				"5": "icons/Whitney_0586_5.png",
+				"EX": "icons/Whitney_0586_EX.png"
+			}
+		},
+		{
+			"pairId": "10027000000",
+			"via": "trainer-unique",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Roserade",
+			"files": {
+				"4": "icons/Gardenia_0407_4.png",
+				"5": "icons/Gardenia_0407_5.png",
+				"EX": "icons/Gardenia_0407_EX.png"
+			}
+		},
+		{
+			"pairId": "10027400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dhelmise",
+			"files": {
+				"5": "icons/Gardenia_0781_5.png",
+				"EX": "icons/Gardenia_0781_EX.png"
+			}
+		},
+		{
+			"pairId": "10028000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kingdra",
+			"files": {
+				"4": "icons/Clair_0230_4.png",
+				"5": "icons/Clair_0230_5.png",
+				"EX": "icons/Clair_0230_EX.png"
+			}
+		},
+		{
+			"pairId": "10028400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Drampa",
+			"files": {
+				"5": "icons/Clair_0780_5.png",
+				"EX": "icons/Clair_0780_EX.png"
+			}
+		},
+		{
+			"pairId": "10029000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Torkoal",
+			"files": {
+				"3": "icons/Flannery_0324_3.png",
+				"4": "icons/Flannery_0324_4.png",
+				"5": "icons/Flannery_0324_5.png",
+				"EX": "icons/Flannery_0324_EX.png"
+			}
+		},
+		{
+			"pairId": "10029400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Magcargo",
+			"files": {
+				"5": "icons/Flannery_0219_5.png",
+				"EX": "icons/Flannery_0219_EX.png"
+			}
+		},
+		{
+			"pairId": "10030000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lunatone",
+			"files": {
+				"3": "icons/Liza_0337_3.png",
+				"4": "icons/Liza_0337_4.png",
+				"5": "icons/Liza_0337_5.png",
+				"EX": "icons/Liza_0337_EX.png"
+			}
+		},
+		{
+			"pairId": "10030400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Celesteela",
+			"files": {
+				"5": "icons/Liza_0797_5.png",
+				"EX": "icons/Liza_0797_EX.png"
+			}
+		},
+		{
+			"pairId": "10031000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Solrock",
+			"files": {
+				"3": "icons/Tate_0338_3.png",
+				"4": "icons/Tate_0338_4.png",
+				"5": "icons/Tate_0338_5.png",
+				"EX": "icons/Tate_0338_EX.png"
+			}
+		},
+		{
+			"pairId": "10031400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Jirachi",
+			"files": {
+				"5": "icons/Tate_0385_5.png",
+				"EX": "icons/Tate_0385_EX.png"
+			}
+		},
+		{
+			"pairId": "10032000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dewgong",
+			"files": {
+				"3": "icons/Pryce_0087_3.png",
+				"4": "icons/Pryce_0087_4.png",
+				"5": "icons/Pryce_0087_5.png",
+				"EX": "icons/Pryce_0087_EX.png"
+			}
+		},
+		{
+			"pairId": "10033000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Seismitoad",
+			"files": {
+				"3": "icons/Clay_0537_3.png",
+				"4": "icons/Clay_0537_4.png",
+				"5": "icons/Clay_0537_5.png",
+				"EX": "icons/Clay_0537_EX.png"
+			}
+		},
+		{
+			"pairId": "10034000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Granbull",
+			"files": {
+				"3": "icons/Mina_0210_3.png",
+				"4": "icons/Mina_0210_4.png",
+				"5": "icons/Mina_0210_5.png",
+				"EX": "icons/Mina_0210_EX.png"
+			}
+		},
+		{
+			"pairId": "10034100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tapu Fini",
+			"files": {
+				"5": "icons/Mina_0788_5.png",
+				"EX": "icons/Mina_0788_EX.png"
+			}
+		},
+		{
+			"pairId": "10035000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Electrode",
+			"files": {
+				"3": "icons/Lt. Surge_0101_3.png",
+				"4": "icons/Lt. Surge_0101_4.png",
+				"5": "icons/Lt. Surge_0101_5.png",
+				"EX": "icons/Lt. Surge_0101_EX.png"
+			}
+		},
+		{
+			"pairId": "10035000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Raichu",
+			"files": {
+				"4": "icons/Lt. Surge_0026_4.png",
+				"5": "icons/Lt. Surge_0026_5.png",
+				"EX": "icons/Lt. Surge_0026_EX.png"
+			}
+		},
+		{
+			"pairId": "10036000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Togedemaru",
+			"files": {
+				"4": "icons/Sophocles_0777_4.png",
+				"5": "icons/Sophocles_0777_5.png",
+				"EX": "icons/Sophocles_0777_EX.png"
+			}
+		},
+		{
+			"pairId": "10036000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Golem",
+			"files": {
+				"4": "icons/Sophocles_0076_4.png",
+				"5": "icons/Sophocles_0076_5.png",
+				"EX": "icons/Sophocles_0076_EX.png"
+			}
+		},
+		{
+			"pairId": "10037000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Victreebel",
+			"files": {
+				"3": "icons/Ramos_0071_3.png",
+				"4": "icons/Ramos_0071_4.png",
+				"5": "icons/Ramos_0071_5.png",
+				"EX": "icons/Ramos_0071_EX.png"
+			}
+		},
+		{
+			"pairId": "10038000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rampardos",
+			"files": {
+				"3": "icons/Roark_0409_3.png",
+				"4": "icons/Roark_0409_4.png",
+				"5": "icons/Roark_0409_5.png",
+				"EX": "icons/Roark_0409_EX.png"
+			}
+		},
+		{
+			"pairId": "10039000000",
+			"via": "trainer-unique",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Masquerain",
+			"files": {
+				"4": "icons/Viola_0284_4.png",
+				"5": "icons/Viola_0284_5.png",
+				"EX": "icons/Viola_0284_EX.png"
+			}
+		},
+		{
+			"pairId": "10039400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Vivillon",
+			"files": {
+				"5": "icons/Viola_0666_5.png",
+				"EX": "icons/Viola_0666_EX.png"
+			}
+		},
+		{
+			"pairId": "10040000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cryogonal",
+			"files": {
+				"3": "icons/Brycen_0615_3.png",
+				"4": "icons/Brycen_0615_4.png",
+				"5": "icons/Brycen_0615_5.png",
+				"EX": "icons/Brycen_0615_EX.png"
+			}
+		},
+		{
+			"pairId": "10040000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Walrein",
+			"files": {
+				"4": "icons/Brycen_0365_4.png",
+				"5": "icons/Brycen_0365_5.png",
+				"EX": "icons/Brycen_0365_EX.png"
+			}
+		},
+		{
+			"pairId": "10041000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Bronzong",
+			"files": {
+				"4": "icons/Thorton_0437_4.png",
+				"5": "icons/Thorton_0437_5.png",
+				"EX": "icons/Thorton_0437_EX.png"
+			}
+		},
+		{
+			"pairId": "10041000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Magnezone",
+			"files": {
+				"5": "icons/Thorton_0462_5.png",
+				"EX": "icons/Thorton_0462_EX.png"
+			}
+		},
+		{
+			"pairId": "10041000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Regigigas",
+			"files": {
+				"5": "icons/Thorton_0486_5.png",
+				"EX": "icons/Thorton_0486_EX.png"
+			}
+		},
+		{
+			"pairId": "10042000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pelipper",
+			"files": {
+				"3": "icons/Winona_0279_3.png",
+				"4": "icons/Winona_0279_4.png",
+				"5": "icons/Winona_0279_5.png",
+				"EX": "icons/Winona_0279_EX.png"
+			}
+		},
+		{
+			"pairId": "10042000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Altaria",
+			"files": {
+				"5": "icons/Winona_0334_5.png",
+				"EX": "icons/Winona_0334_EX.png"
+			}
+		},
+		{
+			"pairId": "10043000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Hariyama",
+			"files": {
+				"3": "icons/Brawly_0297_3.png",
+				"4": "icons/Brawly_0297_4.png",
+				"5": "icons/Brawly_0297_5.png",
+				"EX": "icons/Brawly_0297_EX.png"
+			}
+		},
+		{
+			"pairId": "10044000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Probopass",
+			"files": {
+				"3": "icons/Roxanne_0476_3.png",
+				"4": "icons/Roxanne_0476_4.png",
+				"5": "icons/Roxanne_0476_5.png",
+				"EX": "icons/Roxanne_0476_EX.png"
+			}
+		},
+		{
+			"pairId": "10044400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Runerigus",
+			"files": {
+				"5": "icons/Roxanne_0867_5.png",
+				"EX": "icons/Roxanne_0867_EX.png"
+			}
+		},
+		{
+			"pairId": "10045000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Beedrill",
+			"files": {
+				"3": "icons/Bugsy_0015_3.png",
+				"4": "icons/Bugsy_0015_4.png",
+				"5": "icons/Bugsy_0015_5.png",
+				"EX": "icons/Bugsy_0015_EX.png"
+			}
+		},
+		{
+			"pairId": "10045400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kricketune",
+			"files": {
+				"5": "icons/Bugsy_0402_5.png",
+				"EX": "icons/Bugsy_0402_EX.png"
+			}
+		},
+		{
+			"pairId": "10045900000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Scyther",
+			"files": {
+				"4": "icons/Bugsy_0123_4.png",
+				"5": "icons/Bugsy_0123_5.png",
+				"EX": "icons/Bugsy_0123_EX.png"
+			}
+		},
+		{
+			"pairId": "10046000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pinsir",
+			"files": {
+				"4": "icons/Noland_0127_4.png",
+				"5": "icons/Noland_0127_5.png",
+				"EX": "icons/Noland_0127_EX.png"
+			}
+		},
+		{
+			"pairId": "10046000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ninjask",
+			"files": {
+				"5": "icons/Noland_0291_5.png",
+				"EX": "icons/Noland_0291_EX.png"
+			}
+		},
+		{
+			"pairId": "10047000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Xatu",
+			"files": {
+				"4": "icons/Will_0178_4.png",
+				"5": "icons/Will_0178_5.png",
+				"EX": "icons/Will_0178_EX.png"
+			}
+		},
+		{
+			"pairId": "10047000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Slowbro",
+			"files": {
+				"4": "icons/Will_0080_4.png",
+				"5": "icons/Will_0080_5.png",
+				"EX": "icons/Will_0080_EX.png"
+			}
+		},
+		{
+			"pairId": "10048000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Liepard",
+			"files": {
+				"5": "icons/Grimsley_0510_5.png",
+				"EX": "icons/Grimsley_0510_EX.png"
+			}
+		},
+		{
+			"pairId": "10048000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Honchkrow",
+			"files": {
+				"4": "icons/Grimsley_0430_4.png",
+				"5": "icons/Grimsley_0430_5.png",
+				"EX": "icons/Grimsley_0430_EX.png"
+			}
+		},
+		{
+			"pairId": "10048100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sharpedo",
+			"files": {
+				"5": "icons/Grimsley_0319_5.png",
+				"EX": "icons/Grimsley_0319_EX.png"
+			}
+		},
+		{
+			"pairId": "10048800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Bisharp",
+			"files": {
+				"5": "icons/Grimsley_0625_5.png",
+				"EX": "icons/Grimsley_0625_EX.png"
+			}
+		},
+		{
+			"pairId": "10048800001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Absol",
+			"files": {
+				"5": "icons/Grimsley_0359_5.png",
+				"EX": "icons/Grimsley_0359_EX.png"
+			}
+		},
+		{
+			"pairId": "10049000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dusknoir",
+			"files": {
+				"5": "icons/Phoebe_0477_5.png",
+				"EX": "icons/Phoebe_0477_EX.png"
+			}
+		},
+		{
+			"pairId": "10049000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sableye",
+			"files": {
+				"4": "icons/Phoebe_0302_4.png",
+				"5": "icons/Phoebe_0302_5.png",
+				"EX": "icons/Phoebe_0302_EX.png"
+			}
+		},
+		{
+			"pairId": "10049400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cofagrigus",
+			"files": {
+				"5": "icons/Phoebe_0563_5.png",
+				"EX": "icons/Phoebe_0563_EX.png"
+			}
+		},
+		{
+			"pairId": "10050000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Medicham",
+			"files": {
+				"3": "icons/Maylene_0308_3.png",
+				"4": "icons/Maylene_0308_4.png",
+				"5": "icons/Maylene_0308_5.png",
+				"EX": "icons/Maylene_0308_EX.png"
+			}
+		},
+		{
+			"pairId": "10051000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lycanroc",
+			"files": {
+				"5": "icons/Olivia_0745_5.png",
+				"EX": "icons/Olivia_0745_EX.png"
+			}
+		},
+		{
+			"pairId": "10051000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Carbink",
+			"files": {
+				"4": "icons/Olivia_0703_4.png",
+				"5": "icons/Olivia_0703_5.png",
+				"EX": "icons/Olivia_0703_EX.png"
+			}
+		},
+		{
+			"pairId": "10052000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Carracosta",
+			"files": {
+				"3": "icons/Marlon_0565_3.png",
+				"4": "icons/Marlon_0565_4.png",
+				"5": "icons/Marlon_0565_5.png",
+				"EX": "icons/Marlon_0565_EX.png"
+			}
+		},
+		{
+			"pairId": "10053000000",
+			"via": "trainer-unique",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Aurorus",
+			"files": {
+				"4": "icons/Grant_0699_4.png",
+				"5": "icons/Grant_0699_5.png",
+				"EX": "icons/Grant_0699_EX.png"
+			}
+		},
+		{
+			"pairId": "10054000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Crobat",
+			"files": {
+				"4": "icons/Koga_0169_4.png",
+				"5": "icons/Koga_0169_5.png",
+				"EX": "icons/Koga_0169_EX.png"
+			}
+		},
+		{
+			"pairId": "10055000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Aegislash",
+			"files": {
+				"4": "icons/Wikstrom_0681_4.png",
+				"5": "icons/Wikstrom_0681_5.png",
+				"EX": "icons/Wikstrom_0681_EX.png"
+			}
+		},
+		{
+			"pairId": "10056000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Persian",
+			"files": {
+				"4": "icons/Nanu_0053_4.png",
+				"5": "icons/Nanu_0053_5.png",
+				"EX": "icons/Nanu_0053_EX.png"
+			}
+		},
+		{
+			"pairId": "10057000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Machamp",
+			"files": {
+				"4": "icons/Bruno_0068_4.png",
+				"5": "icons/Bruno_0068_5.png",
+				"EX": "icons/Bruno_0068_EX.png"
+			}
+		},
+		{
+			"pairId": "10057000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Onix",
+			"files": {
+				"5": "icons/Bruno_0095_5.png",
+				"EX": "icons/Bruno_0095_EX.png"
+			}
+		},
+		{
+			"pairId": "10058000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Toucannon",
+			"files": {
+				"4": "icons/Kahili_0733_4.png",
+				"5": "icons/Kahili_0733_5.png",
+				"EX": "icons/Kahili_0733_EX.png"
+			}
+		},
+		{
+			"pairId": "10058000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mandibuzz",
+			"files": {
+				"4": "icons/Kahili_0630_4.png",
+				"5": "icons/Kahili_0630_5.png",
+				"EX": "icons/Kahili_0630_EX.png"
+			}
+		},
+		{
+			"pairId": "10059000000",
+			"via": "trainer-unique",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rapidash",
+			"files": {
+				"4": "icons/Blaine_0078_4.png",
+				"5": "icons/Blaine_0078_5.png",
+				"EX": "icons/Blaine_0078_EX.png"
+			}
+		},
+		{
+			"pairId": "10060000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ariados",
+			"files": {
+				"3": "icons/Janine_0168_3.png",
+				"4": "icons/Janine_0168_4.png",
+				"5": "icons/Janine_0168_5.png",
+				"EX": "icons/Janine_0168_EX.png"
+			}
+		},
+		{
+			"pairId": "10060000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Crobat",
+			"files": {
+				"4": "icons/Janine_0169_4.png",
+				"5": "icons/Janine_0169_5.png",
+				"EX": "icons/Janine_0169_EX.png"
+			}
+		},
+		{
+			"pairId": "10061000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gengar",
+			"files": {
+				"4": "icons/Agatha_0094_4.png",
+				"5": "icons/Agatha_0094_5.png",
+				"EX": "icons/Agatha_0094_EX.png"
+			}
+		},
+		{
+			"pairId": "10061000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Arbok",
+			"files": {
+				"5": "icons/Agatha_0024_5.png",
+				"EX": "icons/Agatha_0024_EX.png"
+			}
+		},
+		{
+			"pairId": "10062000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Houndoom",
+			"files": {
+				"5": "icons/Karen_0229_5.png",
+				"EX": "icons/Karen_0229_EX.png"
+			}
+		},
+		{
+			"pairId": "10062000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Umbreon",
+			"files": {
+				"4": "icons/Karen_0197_4.png",
+				"5": "icons/Karen_0197_5.png",
+				"EX": "icons/Karen_0197_EX.png"
+			}
+		},
+		{
+			"pairId": "10063000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Conkeldurr",
+			"files": {
+				"4": "icons/Marshal_0534_4.png",
+				"5": "icons/Marshal_0534_5.png",
+				"EX": "icons/Marshal_0534_EX.png"
+			}
+		},
+		{
+			"pairId": "10064010000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lycanroc",
+			"files": {
+				"5": "icons/Paulo_0745_5.png",
+				"EX": "icons/Paulo_0745_EX.png"
+			}
+		},
+		{
+			"pairId": "10066010000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Hoopa",
+			"files": {
+				"5": "icons/Lear_0720_5.png",
+				"EX": "icons/Lear_0720_EX.png"
+			}
+		},
+		{
+			"pairId": "10066010001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Krookodile",
+			"files": {
+				"4": "icons/Lear_0553_4.png",
+				"5": "icons/Lear_0553_5.png",
+				"EX": "icons/Lear_0553_EX.png"
+			}
+		},
+		{
+			"pairId": "10066100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gholdengo",
+			"files": {
+				"5": "icons/Lear_1000_5.png",
+				"EX": "icons/Lear_1000_EX.png"
+			}
+		},
+		{
+			"pairId": "10067010000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Umbreon",
+			"files": {
+				"4": "icons/Rachel_0197_4.png",
+				"5": "icons/Rachel_0197_5.png",
+				"EX": "icons/Rachel_0197_EX.png"
+			}
+		},
+		{
+			"pairId": "10067010001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gimmighoul",
+			"files": {
+				"5": "icons/Rachel_0999_5.png",
+				"EX": "icons/Rachel_0999_EX.png"
+			}
+		},
+		{
+			"pairId": "10068010000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Honchkrow",
+			"files": {
+				"4": "icons/Sawyer_0430_4.png",
+				"5": "icons/Sawyer_0430_5.png",
+				"EX": "icons/Sawyer_0430_EX.png"
+			}
+		},
+		{
+			"pairId": "10068010001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gimmighoul",
+			"files": {
+				"5": "icons/Sawyer_0999_5.png",
+				"EX": "icons/Sawyer_0999_EX.png"
+			}
+		},
+		{
+			"pairId": "10089000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zekrom",
+			"files": {
+				"5": "icons/N_0644_5.png",
+				"EX": "icons/N_0644_EX.png"
+			}
+		},
+		{
+			"pairId": "10089000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sigilyph",
+			"files": {
+				"4": "icons/N_0561_4.png",
+				"5": "icons/N_0561_5.png",
+				"EX": "icons/N_0561_EX.png"
+			}
+		},
+		{
+			"pairId": "10089000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Archeops",
+			"files": {
+				"5": "icons/N_0567_5.png",
+				"EX": "icons/N_0567_EX.png"
+			}
+		},
+		{
+			"pairId": "10089000003",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Landorus",
+			"files": {
+				"5": "icons/N_0645_5.png",
+				"EX": "icons/N_0645_EX.png"
+			}
+		},
+		{
+			"pairId": "10089100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kyurem",
+			"files": {
+				"5": "icons/N_0646_5.png",
+				"EX": "icons/N_0646_EX.png"
+			}
+		},
+		{
+			"pairId": "10089400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Reshiram",
+			"files": {
+				"5": "icons/N_0643_5.png",
+				"EX": "icons/N_0643_EX.png"
+			}
+		},
+		{
+			"pairId": "10089410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zoroark",
+			"files": {
+				"5": "icons/N_0571_5.png",
+				"EX": "icons/N_0571_EX.png"
+			}
+		},
+		{
+			"pairId": "10089900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zoroark",
+			"files": {
+				"5": "icons/N_0571_2_5.png",
+				"EX": "icons/N_0571_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10090000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Metagross",
+			"files": {
+				"5": "icons/Steven_0376_5.png",
+				"EX": "icons/Steven_0376_EX.png"
+			}
+		},
+		{
+			"pairId": "10090000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cradily",
+			"files": {
+				"4": "icons/Steven_0346_4.png",
+				"5": "icons/Steven_0346_5.png",
+				"EX": "icons/Steven_0346_EX.png"
+			}
+		},
+		{
+			"pairId": "10090000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Skarmory",
+			"files": {
+				"5": "icons/Steven_0227_5.png",
+				"EX": "icons/Steven_0227_EX.png"
+			}
+		},
+		{
+			"pairId": "10090100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Deoxys",
+			"files": {
+				"5": "icons/Steven_0386_5.png",
+				"EX": "icons/Steven_0386_EX.png"
+			}
+		},
+		{
+			"pairId": "10090400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sandslash",
+			"files": {
+				"5": "icons/Steven_0028_5.png",
+				"EX": "icons/Steven_0028_EX.png"
+			}
+		},
+		{
+			"pairId": "10090410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Stoutland",
+			"files": {
+				"5": "icons/Steven_0508_5.png",
+				"EX": "icons/Steven_0508_EX.png"
+			}
+		},
+		{
+			"pairId": "10090500000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rayquaza",
+			"files": {
+				"5": "icons/Steven_0384_5.png",
+				"EX": "icons/Steven_0384_EX.png"
+			}
+		},
+		{
+			"pairId": "10090900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Metagross",
+			"files": {
+				"5": "icons/Steven_0376_2_5.png",
+				"EX": "icons/Steven_0376_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10091000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Garchomp",
+			"files": {
+				"5": "icons/Cynthia_0445_5.png",
+				"EX": "icons/Cynthia_0445_EX.png"
+			}
+		},
+		{
+			"pairId": "10091000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gastrodon",
+			"files": {
+				"4": "icons/Cynthia_0423_4.png",
+				"5": "icons/Cynthia_0423_5.png",
+				"EX": "icons/Cynthia_0423_EX.png"
+			}
+		},
+		{
+			"pairId": "10091000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Spiritomb",
+			"files": {
+				"5": "icons/Cynthia_0442_5.png",
+				"EX": "icons/Cynthia_0442_EX.png"
+			}
+		},
+		{
+			"pairId": "10091000003",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Glaceon",
+			"files": {
+				"5": "icons/Cynthia_0471_5.png",
+				"EX": "icons/Cynthia_0471_EX.png"
+			}
+		},
+		{
+			"pairId": "10091010000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kommo-o",
+			"files": {
+				"5": "icons/Cynthia_0784_5.png",
+				"EX": "icons/Cynthia_0784_EX.png"
+			}
+		},
+		{
+			"pairId": "10091100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lucario",
+			"files": {
+				"5": "icons/Cynthia_0448_5.png",
+				"EX": "icons/Cynthia_0448_EX.png"
+			}
+		},
+		{
+			"pairId": "10091200000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Giratina",
+			"files": {
+				"5": "icons/Cynthia_0487_5.png",
+				"EX": "icons/Cynthia_0487_EX.png"
+			}
+		},
+		{
+			"pairId": "10091400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Milotic",
+			"files": {
+				"5": "icons/Cynthia_0350_5.png",
+				"EX": "icons/Cynthia_0350_EX.png"
+			}
+		},
+		{
+			"pairId": "10091900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Garchomp",
+			"files": {
+				"5": "icons/Cynthia_0445_2_5.png",
+				"EX": "icons/Cynthia_0445_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10092000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Haxorus",
+			"files": {
+				"3": "icons/Iris_0612_3.png",
+				"4": "icons/Iris_0612_4.png",
+				"5": "icons/Iris_0612_5.png",
+				"EX": "icons/Iris_0612_EX.png"
+			}
+		},
+		{
+			"pairId": "10092000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Druddigon",
+			"files": {
+				"4": "icons/Iris_0621_4.png",
+				"5": "icons/Iris_0621_5.png",
+				"EX": "icons/Iris_0621_EX.png"
+			}
+		},
+		{
+			"pairId": "10092400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Naganadel",
+			"files": {
+				"5": "icons/Iris_0804_5.png",
+				"EX": "icons/Iris_0804_EX.png"
+			}
+		},
+		{
+			"pairId": "10092410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lapras",
+			"files": {
+				"5": "icons/Iris_0131_5.png",
+				"EX": "icons/Iris_0131_EX.png"
+			}
+		},
+		{
+			"pairId": "10092800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Hydreigon",
+			"files": {
+				"5": "icons/Iris_0635_5.png",
+				"EX": "icons/Iris_0635_EX.png"
+			}
+		},
+		{
+			"pairId": "10094000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Salamence",
+			"files": {
+				"4": "icons/Drake_0373_4.png",
+				"5": "icons/Drake_0373_5.png",
+				"EX": "icons/Drake_0373_EX.png"
+			}
+		},
+		{
+			"pairId": "10095000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Reuniclus",
+			"files": {
+				"5": "icons/Caitlin_0579_5.png",
+				"EX": "icons/Caitlin_0579_EX.png"
+			}
+		},
+		{
+			"pairId": "10095400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sableye",
+			"files": {
+				"5": "icons/Caitlin_0302_5.png",
+				"EX": "icons/Caitlin_0302_EX.png"
+			}
+		},
+		{
+			"pairId": "10096000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Clawitzer",
+			"files": {
+				"4": "icons/Siebold_0693_4.png",
+				"5": "icons/Siebold_0693_5.png",
+				"EX": "icons/Siebold_0693_EX.png"
+			}
+		},
+		{
+			"pairId": "10096100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Octillery",
+			"files": {
+				"5": "icons/Siebold_0224_5.png",
+				"EX": "icons/Siebold_0224_EX.png"
+			}
+		},
+		{
+			"pairId": "10097000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Arcanine",
+			"files": {
+				"3": "icons/Marley_0059_3.png",
+				"4": "icons/Marley_0059_4.png",
+				"5": "icons/Marley_0059_5.png",
+				"EX": "icons/Marley_0059_EX.png"
+			}
+		},
+		{
+			"pairId": "10097400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Shaymin",
+			"files": {
+				"5": "icons/Marley_0492_5.png",
+				"EX": "icons/Marley_0492_EX.png"
+			}
+		},
+		{
+			"pairId": "10098000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Raichu",
+			"files": {
+				"4": "icons/Hau_0026_4.png",
+				"5": "icons/Hau_0026_5.png",
+				"EX": "icons/Hau_0026_EX.png"
+			}
+		},
+		{
+			"pairId": "10098000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Crabominable",
+			"files": {
+				"5": "icons/Hau_0740_5.png",
+				"EX": "icons/Hau_0740_EX.png"
+			}
+		},
+		{
+			"pairId": "10098000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Incineroar",
+			"files": {
+				"5": "icons/Hau_0727_5.png",
+				"EX": "icons/Hau_0727_EX.png"
+			}
+		},
+		{
+			"pairId": "10098000003",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tauros",
+			"files": {
+				"4": "icons/Hau_0128_4.png",
+				"5": "icons/Hau_0128_5.png",
+				"EX": "icons/Hau_0128_EX.png"
+			}
+		},
+		{
+			"pairId": "10098100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tapu Koko",
+			"files": {
+				"5": "icons/Hau_0785_5.png",
+				"EX": "icons/Hau_0785_EX.png"
+			}
+		},
+		{
+			"pairId": "10099000000",
+			"via": "trainer-unique",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Empoleon",
+			"files": {
+				"3": "icons/Barry_0395_3.png",
+				"4": "icons/Barry_0395_4.png",
+				"5": "icons/Barry_0395_5.png",
+				"EX": "icons/Barry_0395_EX.png"
+			}
+		},
+		{
+			"pairId": "10099000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Roserade",
+			"files": {
+				"4": "icons/Barry_0407_4.png",
+				"5": "icons/Barry_0407_5.png",
+				"EX": "icons/Barry_0407_EX.png"
+			}
+		},
+		{
+			"pairId": "10099000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Floatzel",
+			"files": {
+				"5": "icons/Barry_0419_5.png",
+				"EX": "icons/Barry_0419_EX.png"
+			}
+		},
+		{
+			"pairId": "10099000003",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Infernape",
+			"files": {
+				"5": "icons/Barry_0392_5.png",
+				"EX": "icons/Barry_0392_EX.png"
+			}
+		},
+		{
+			"pairId": "10099400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Heracross",
+			"files": {
+				"5": "icons/Barry_0214_5.png",
+				"EX": "icons/Barry_0214_EX.png"
+			}
+		},
+		{
+			"pairId": "10100000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Braviary",
+			"files": {
+				"5": "icons/Nate_0628_5.png",
+				"EX": "icons/Nate_0628_EX.png"
+			}
+		},
+		{
+			"pairId": "10100900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Haxorus",
+			"files": {
+				"5": "icons/Nate_0612_5.png",
+				"EX": "icons/Nate_0612_EX.png"
+			}
+		},
+		{
+			"pairId": "10101000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Serperior",
+			"files": {
+				"5": "icons/Rosa_0497_5.png",
+				"EX": "icons/Rosa_0497_EX.png"
+			}
+		},
+		{
+			"pairId": "10101000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dewott",
+			"files": {
+				"4": "icons/Rosa_0502_4.png",
+				"5": "icons/Rosa_0502_5.png",
+				"EX": "icons/Rosa_0502_EX.png"
+			}
+		},
+		{
+			"pairId": "10101100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Delibird",
+			"files": {
+				"5": "icons/Rosa_0225_5.png",
+				"EX": "icons/Rosa_0225_EX.png"
+			}
+		},
+		{
+			"pairId": "10101410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Shaymin",
+			"files": {
+				"5": "icons/Rosa_0492_5.png",
+				"EX": "icons/Rosa_0492_EX.png"
+			}
+		},
+		{
+			"pairId": "10101420000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Deerling",
+			"files": {
+				"5": "icons/Rosa_0585_5.png",
+				"EX": "icons/Rosa_0585_EX.png"
+			}
+		},
+		{
+			"pairId": "10101420001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Deerling",
+			"files": {
+				"5": "icons/Rosa_0585_2_5.png",
+				"EX": "icons/Rosa_0585_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10101900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Meloetta",
+			"files": {
+				"5": "icons/Rosa_0648_5.png",
+				"EX": "icons/Rosa_0648_EX.png"
+			}
+		},
+		{
+			"pairId": "10102000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Musharna",
+			"files": {
+				"5": "icons/Bianca_0518_5.png",
+				"EX": "icons/Bianca_0518_EX.png"
+			}
+		},
+		{
+			"pairId": "10102000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Chandelure",
+			"files": {
+				"5": "icons/Bianca_0609_5.png",
+				"EX": "icons/Bianca_0609_EX.png"
+			}
+		},
+		{
+			"pairId": "10102900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Virizion",
+			"files": {
+				"5": "icons/Bianca_0640_5.png",
+				"EX": "icons/Bianca_0640_EX.png"
+			}
+		},
+		{
+			"pairId": "10105010000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Flareon",
+			"files": {
+				"4": "icons/Tina_0136_4.png",
+				"5": "icons/Tina_0136_5.png",
+				"EX": "icons/Tina_0136_EX.png"
+			}
+		},
+		{
+			"pairId": "10106000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zebstrika",
+			"files": {
+				"5": "icons/Elesa_0523_5.png",
+				"EX": "icons/Elesa_0523_EX.png"
+			}
+		},
+		{
+			"pairId": "10106000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Joltik",
+			"files": {
+				"4": "icons/Elesa_0595_4.png",
+				"5": "icons/Elesa_0595_5.png",
+				"EX": "icons/Elesa_0595_EX.png"
+			}
+		},
+		{
+			"pairId": "10106100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rotom",
+			"files": {
+				"5": "icons/Elesa_0479_5.png",
+				"EX": "icons/Elesa_0479_EX.png"
+			}
+		},
+		{
+			"pairId": "10106110000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Thundurus",
+			"files": {
+				"5": "icons/Elesa_0642_5.png",
+				"EX": "icons/Elesa_0642_EX.png"
+			}
+		},
+		{
+			"pairId": "10106400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Togetic",
+			"files": {
+				"5": "icons/Elesa_0176_5.png",
+				"EX": "icons/Elesa_0176_EX.png"
+			}
+		},
+		{
+			"pairId": "10106800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": false,
+			"exPose": true,
+			"upstreamPokemonName": "Emolga",
+			"files": {
+				"5": "icons/Elesa_0587_5.png",
+				"EX": "icons/Elesa_0587_EX.png"
+			}
+		},
+		{
+			"pairId": "10107000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Simisage",
+			"files": {
+				"5": "icons/Cilan_0512_5.png",
+				"EX": "icons/Cilan_0512_EX.png"
+			}
+		},
+		{
+			"pairId": "10108000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Excadrill",
+			"files": {
+				"5": "icons/Ingo_0530_5.png",
+				"EX": "icons/Ingo_0530_EX.png"
+			}
+		},
+		{
+			"pairId": "10108000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Boldore",
+			"files": {
+				"4": "icons/Ingo_0525_4.png",
+				"5": "icons/Ingo_0525_5.png",
+				"EX": "icons/Ingo_0525_EX.png"
+			}
+		},
+		{
+			"pairId": "10108100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Chandelure",
+			"files": {
+				"5": "icons/Ingo_0609_5.png",
+				"EX": "icons/Ingo_0609_EX.png"
+			}
+		},
+		{
+			"pairId": "10108400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Accelgor",
+			"files": {
+				"5": "icons/Ingo_0617_5.png",
+				"EX": "icons/Ingo_0617_EX.png"
+			}
+		},
+		{
+			"pairId": "10109000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Archeops",
+			"files": {
+				"5": "icons/Emmet_0567_5.png",
+				"EX": "icons/Emmet_0567_EX.png"
+			}
+		},
+		{
+			"pairId": "10109000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gurdurr",
+			"files": {
+				"4": "icons/Emmet_0533_4.png",
+				"5": "icons/Emmet_0533_5.png",
+				"EX": "icons/Emmet_0533_EX.png"
+			}
+		},
+		{
+			"pairId": "10109100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Eelektross",
+			"files": {
+				"5": "icons/Emmet_0604_5.png",
+				"EX": "icons/Emmet_0604_EX.png"
+			}
+		},
+		{
+			"pairId": "10109400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Escavalier",
+			"files": {
+				"5": "icons/Emmet_0589_5.png",
+				"EX": "icons/Emmet_0589_EX.png"
+			}
+		},
+		{
+			"pairId": "10110000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Starmie",
+			"files": {
+				"3": "icons/Misty_0121_3.png",
+				"4": "icons/Misty_0121_4.png",
+				"5": "icons/Misty_0121_5.png",
+				"EX": "icons/Misty_0121_EX.png"
+			}
+		},
+		{
+			"pairId": "10110010000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Psyduck",
+			"files": {
+				"4": "icons/Misty_0054_4.png",
+				"5": "icons/Misty_0054_5.png",
+				"EX": "icons/Misty_0054_EX.png"
+			}
+		},
+		{
+			"pairId": "10110010001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Golduck",
+			"files": {
+				"4": "icons/Misty_0055_4.png",
+				"5": "icons/Misty_0055_5.png",
+				"EX": "icons/Misty_0055_EX.png"
+			}
+		},
+		{
+			"pairId": "10110100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Vaporeon",
+			"files": {
+				"5": "icons/Misty_0134_5.png",
+				"EX": "icons/Misty_0134_EX.png"
+			}
+		},
+		{
+			"pairId": "10110900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Starmie",
+			"files": {
+				"5": "icons/Misty_0121_2_5.png",
+				"EX": "icons/Misty_0121_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10111000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dragonite",
+			"files": {
+				"5": "icons/Lance_0149_5.png",
+				"EX": "icons/Lance_0149_EX.png"
+			}
+		},
+		{
+			"pairId": "10111000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dragonair",
+			"files": {
+				"5": "icons/Lance_0148_5.png",
+				"EX": "icons/Lance_0148_EX.png"
+			}
+		},
+		{
+			"pairId": "10111000002",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kingdra",
+			"files": {
+				"4": "icons/Lance_0230_4.png",
+				"5": "icons/Lance_0230_5.png",
+				"EX": "icons/Lance_0230_EX.png"
+			}
+		},
+		{
+			"pairId": "10111000003",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Charizard",
+			"files": {
+				"5": "icons/Lance_0006_5.png",
+				"EX": "icons/Lance_0006_EX.png"
+			}
+		},
+		{
+			"pairId": "10111400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gyarados",
+			"files": {
+				"5": "icons/Lance_0130_5.png",
+				"EX": "icons/Lance_0130_EX.png"
+			}
+		},
+		{
+			"pairId": "10111900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dragonite",
+			"files": {
+				"5": "icons/Lance_0149_2_5.png",
+				"EX": "icons/Lance_0149_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10112000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Typhlosion",
+			"files": {
+				"5": "icons/Ethan_0157_5.png",
+				"EX": "icons/Ethan_0157_EX.png"
+			}
+		},
+		{
+			"pairId": "10112000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ho-Oh",
+			"files": {
+				"5": "icons/Ethan_0250_5.png",
+				"EX": "icons/Ethan_0250_EX.png"
+			}
+		},
+		{
+			"pairId": "10112000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gyarados",
+			"files": {
+				"5": "icons/Ethan_0130_5.png",
+				"EX": "icons/Ethan_0130_EX.png"
+			}
+		},
+		{
+			"pairId": "10112100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lugia",
+			"files": {
+				"5": "icons/Ethan_0249_5.png",
+				"EX": "icons/Ethan_0249_EX.png"
+			}
+		},
+		{
+			"pairId": "10112900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lugia",
+			"files": {
+				"5": "icons/Ethan_0249_2_5.png",
+				"EX": "icons/Ethan_0249_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10112910000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Raikou",
+			"files": {
+				"5": "icons/Ethan_0243_5.png",
+				"EX": "icons/Ethan_0243_EX.png"
+			}
+		},
+		{
+			"pairId": "10113000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Steelix",
+			"files": {
+				"5": "icons/Jasmine_0208_5.png",
+				"EX": "icons/Jasmine_0208_EX.png"
+			}
+		},
+		{
+			"pairId": "10113000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Magnemite",
+			"files": {
+				"4": "icons/Jasmine_0081_4.png",
+				"5": "icons/Jasmine_0081_5.png",
+				"EX": "icons/Jasmine_0081_EX.png"
+			}
+		},
+		{
+			"pairId": "10113400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Celesteela",
+			"files": {
+				"5": "icons/Jasmine_0797_5.png",
+				"EX": "icons/Jasmine_0797_EX.png"
+			}
+		},
+		{
+			"pairId": "10113410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ampharos",
+			"files": {
+				"5": "icons/Jasmine_0181_5.png",
+				"EX": "icons/Jasmine_0181_EX.png"
+			}
+		},
+		{
+			"pairId": "10113420000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Forretress",
+			"files": {
+				"5": "icons/Jasmine_0205_5.png",
+				"EX": "icons/Jasmine_0205_EX.png"
+			}
+		},
+		{
+			"pairId": "10114000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Alakazam",
+			"files": {
+				"5": "icons/Sabrina_0065_5.png",
+				"EX": "icons/Sabrina_0065_EX.png"
+			}
+		},
+		{
+			"pairId": "10114400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Chingling",
+			"files": {
+				"5": "icons/Sabrina_0433_5.png",
+				"EX": "icons/Sabrina_0433_EX.png"
+			}
+		},
+		{
+			"pairId": "10114900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Alakazam",
+			"files": {
+				"5": "icons/Sabrina_0065_2_5.png",
+				"EX": "icons/Sabrina_0065_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10115000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Luxray",
+			"files": {
+				"5": "icons/Volkner_0405_5.png",
+				"EX": "icons/Volkner_0405_EX.png"
+			}
+		},
+		{
+			"pairId": "10115000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Raichu",
+			"files": {
+				"4": "icons/Volkner_0026_4.png",
+				"5": "icons/Volkner_0026_5.png",
+				"EX": "icons/Volkner_0026_EX.png"
+			}
+		},
+		{
+			"pairId": "10115400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Electivire",
+			"files": {
+				"5": "icons/Volkner_0466_5.png",
+				"EX": "icons/Volkner_0466_EX.png"
+			}
+		},
+		{
+			"pairId": "10116000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Torterra",
+			"files": {
+				"5": "icons/Dawn_0389_5.png",
+				"EX": "icons/Dawn_0389_EX.png"
+			}
+		},
+		{
+			"pairId": "10116000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Wormadam",
+			"files": {
+				"4": "icons/Dawn_0413_4.png",
+				"5": "icons/Dawn_0413_5.png",
+				"EX": "icons/Dawn_0413_EX.png"
+			}
+		},
+		{
+			"pairId": "10116000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Empoleon",
+			"files": {
+				"5": "icons/Dawn_0395_5.png",
+				"EX": "icons/Dawn_0395_EX.png"
+			}
+		},
+		{
+			"pairId": "10116100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cresselia",
+			"files": {
+				"5": "icons/Dawn_0488_5.png",
+				"EX": "icons/Dawn_0488_EX.png"
+			}
+		},
+		{
+			"pairId": "10116400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Alcremie",
+			"files": {
+				"5": "icons/Dawn_0869_5.png",
+				"EX": "icons/Dawn_0869_EX.png"
+			}
+		},
+		{
+			"pairId": "10116410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Oricorio",
+			"files": {
+				"5": "icons/Dawn_0741_5.png",
+				"EX": "icons/Dawn_0741_EX.png"
+			}
+		},
+		{
+			"pairId": "10116900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Palkia",
+			"files": {
+				"5": "icons/Dawn_0484_5.png",
+				"EX": "icons/Dawn_0484_EX.png"
+			}
+		},
+		{
+			"pairId": "10117000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Incineroar",
+			"files": {
+				"5": "icons/The Masked Royal_0727_5.png",
+				"EX": "icons/The Masked Royal_0727_EX.png"
+			}
+		},
+		{
+			"pairId": "10118000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Clefairy",
+			"files": {
+				"5": "icons/Lillie_0035_5.png",
+				"EX": "icons/Lillie_0035_EX.png"
+			}
+		},
+		{
+			"pairId": "10118000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Comfey",
+			"files": {
+				"4": "icons/Lillie_0764_4.png",
+				"5": "icons/Lillie_0764_5.png",
+				"EX": "icons/Lillie_0764_EX.png"
+			}
+		},
+		{
+			"pairId": "10118400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ribombee",
+			"files": {
+				"5": "icons/Lillie_0743_5.png",
+				"EX": "icons/Lillie_0743_EX.png"
+			}
+		},
+		{
+			"pairId": "10118410000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Polteageist",
+			"files": {
+				"5": "icons/Lillie_0855_5.png",
+				"EX": "icons/Lillie_0855_EX.png"
+			}
+		},
+		{
+			"pairId": "10118420000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Primarina",
+			"files": {
+				"5": "icons/Lillie_0730_5.png",
+				"EX": "icons/Lillie_0730_EX.png"
+			}
+		},
+		{
+			"pairId": "10118500000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lunala",
+			"files": {
+				"5": "icons/Lillie_0792_5.png",
+				"EX": "icons/Lillie_0792_EX.png"
+			}
+		},
+		{
+			"pairId": "10118510000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Solgaleo",
+			"files": {
+				"5": "icons/Lillie_0791_5.png",
+				"EX": "icons/Lillie_0791_EX.png"
+			}
+		},
+		{
+			"pairId": "10119000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Silvally",
+			"files": {
+				"5": "icons/Gladion_0773_5.png",
+				"EX": "icons/Gladion_0773_EX.png"
+			}
+		},
+		{
+			"pairId": "10119000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Golbat",
+			"files": {
+				"4": "icons/Gladion_0042_4.png",
+				"5": "icons/Gladion_0042_5.png",
+				"EX": "icons/Gladion_0042_EX.png"
+			}
+		},
+		{
+			"pairId": "10119000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Weavile",
+			"files": {
+				"5": "icons/Gladion_0461_5.png",
+				"EX": "icons/Gladion_0461_EX.png"
+			}
+		},
+		{
+			"pairId": "10119100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Magearna",
+			"files": {
+				"5": "icons/Gladion_0801_5.png",
+				"EX": "icons/Gladion_0801_EX.png"
+			}
+		},
+		{
+			"pairId": "10119400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Porygon-Z",
+			"files": {
+				"5": "icons/Gladion_0474_5.png",
+				"EX": "icons/Gladion_0474_EX.png"
+			}
+		},
+		{
+			"pairId": "10120000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pheromosa",
+			"files": {
+				"5": "icons/Lusamine_0795_5.png",
+				"EX": "icons/Lusamine_0795_EX.png"
+			}
+		},
+		{
+			"pairId": "10120000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lilligant",
+			"files": {
+				"4": "icons/Lusamine_0549_4.png",
+				"5": "icons/Lusamine_0549_5.png",
+				"EX": "icons/Lusamine_0549_EX.png"
+			}
+		},
+		{
+			"pairId": "10120000002",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Milotic",
+			"files": {
+				"4": "icons/Lusamine_0350_4.png",
+				"5": "icons/Lusamine_0350_5.png",
+				"EX": "icons/Lusamine_0350_EX.png"
+			}
+		},
+		{
+			"pairId": "10120100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Necrozma",
+			"files": {
+				"5": "icons/Lusamine_0800_5.png",
+				"EX": "icons/Lusamine_0800_EX.png"
+			}
+		},
+		{
+			"pairId": "10121000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Salazzle",
+			"files": {
+				"5": "icons/Plumeria_0758_5.png",
+				"EX": "icons/Plumeria_0758_EX.png"
+			}
+		},
+		{
+			"pairId": "10121000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gengar",
+			"files": {
+				"5": "icons/Plumeria_0094_5.png",
+				"EX": "icons/Plumeria_0094_EX.png"
+			}
+		},
+		{
+			"pairId": "10122000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Primarina",
+			"files": {
+				"5": "icons/Elio_0730_5.png",
+				"EX": "icons/Elio_0730_EX.png"
+			}
+		},
+		{
+			"pairId": "10122000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Espeon",
+			"files": {
+				"5": "icons/Elio_0196_5.png",
+				"EX": "icons/Elio_0196_EX.png"
+			}
+		},
+		{
+			"pairId": "10122000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Decidueye",
+			"files": {
+				"5": "icons/Elio_0724_5.png",
+				"EX": "icons/Elio_0724_EX.png"
+			}
+		},
+		{
+			"pairId": "10122800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Stakataka",
+			"files": {
+				"5": "icons/Elio_0805_5.png",
+				"EX": "icons/Elio_0805_EX.png"
+			}
+		},
+		{
+			"pairId": "10122900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Necrozma",
+			"files": {
+				"5": "icons/Elio_0800_5.png",
+				"EX": "icons/Elio_0800_EX.png"
+			}
+		},
+		{
+			"pairId": "10123000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Decidueye",
+			"files": {
+				"5": "icons/Selene_0724_5.png",
+				"EX": "icons/Selene_0724_EX.png"
+			}
+		},
+		{
+			"pairId": "10123000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Umbreon",
+			"files": {
+				"5": "icons/Selene_0197_5.png",
+				"EX": "icons/Selene_0197_EX.png"
+			}
+		},
+		{
+			"pairId": "10123000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Primarina",
+			"files": {
+				"5": "icons/Selene_0730_5.png",
+				"EX": "icons/Selene_0730_EX.png"
+			}
+		},
+		{
+			"pairId": "10123400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Scizor",
+			"files": {
+				"5": "icons/Selene_0212_5.png",
+				"EX": "icons/Selene_0212_EX.png"
+			}
+		},
+		{
+			"pairId": "10123800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Nihilego",
+			"files": {
+				"5": "icons/Selene_0793_5.png",
+				"EX": "icons/Selene_0793_EX.png"
+			}
+		},
+		{
+			"pairId": "10123900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Necrozma",
+			"files": {
+				"5": "icons/Selene_0800_5.png",
+				"EX": "icons/Selene_0800_EX.png"
+			}
+		},
+		{
+			"pairId": "10124000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tsareena",
+			"files": {
+				"5": "icons/Mallow_0763_5.png",
+				"EX": "icons/Mallow_0763_EX.png"
+			}
+		},
+		{
+			"pairId": "10124000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Shiinotic",
+			"files": {
+				"5": "icons/Mallow_0756_5.png",
+				"EX": "icons/Mallow_0756_EX.png"
+			}
+		},
+		{
+			"pairId": "10124400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Appletun",
+			"files": {
+				"5": "icons/Mallow_0842_5.png",
+				"EX": "icons/Mallow_0842_EX.png"
+			}
+		},
+		{
+			"pairId": "10125000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Golisopod",
+			"files": {
+				"5": "icons/Guzma_0768_5.png",
+				"EX": "icons/Guzma_0768_EX.png"
+			}
+		},
+		{
+			"pairId": "10125000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ariados",
+			"files": {
+				"5": "icons/Guzma_0168_5.png",
+				"EX": "icons/Guzma_0168_EX.png"
+			}
+		},
+		{
+			"pairId": "10125400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Buzzwole",
+			"files": {
+				"5": "icons/Guzma_0794_5.png",
+				"EX": "icons/Guzma_0794_EX.png"
+			}
+		},
+		{
+			"pairId": "10126000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Swampert",
+			"files": {
+				"5": "icons/May_0260_5.png",
+				"EX": "icons/May_0260_EX.png"
+			}
+		},
+		{
+			"pairId": "10126000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Wailmer",
+			"files": {
+				"4": "icons/May_0320_4.png",
+				"5": "icons/May_0320_5.png",
+				"EX": "icons/May_0320_EX.png"
+			}
+		},
+		{
+			"pairId": "10126100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Blaziken",
+			"files": {
+				"5": "icons/May_0257_5.png",
+				"EX": "icons/May_0257_EX.png"
+			}
+		},
+		{
+			"pairId": "10126400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lopunny",
+			"files": {
+				"5": "icons/May_0428_5.png",
+				"EX": "icons/May_0428_EX.png"
+			}
+		},
+		{
+			"pairId": "10126500000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Latias",
+			"files": {
+				"5": "icons/May_0380_5.png",
+				"EX": "icons/May_0380_EX.png"
+			}
+		},
+		{
+			"pairId": "10126900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kyogre",
+			"files": {
+				"5": "icons/May_0382_5.png",
+				"EX": "icons/May_0382_EX.png"
+			}
+		},
+		{
+			"pairId": "10127000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Milotic",
+			"files": {
+				"5": "icons/Wallace_0350_5.png",
+				"EX": "icons/Wallace_0350_EX.png"
+			}
+		},
+		{
+			"pairId": "10127400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Blacephalon",
+			"files": {
+				"5": "icons/Wallace_0806_5.png",
+				"EX": "icons/Wallace_0806_EX.png"
+			}
+		},
+		{
+			"pairId": "10128000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gallade",
+			"files": {
+				"5": "icons/Wally_0475_5.png",
+				"EX": "icons/Wally_0475_EX.png"
+			}
+		},
+		{
+			"pairId": "10128000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Delcatty",
+			"files": {
+				"4": "icons/Wally_0301_4.png",
+				"5": "icons/Wally_0301_5.png",
+				"EX": "icons/Wally_0301_EX.png"
+			}
+		},
+		{
+			"pairId": "10128000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Altaria",
+			"files": {
+				"5": "icons/Wally_0334_5.png",
+				"EX": "icons/Wally_0334_EX.png"
+			}
+		},
+		{
+			"pairId": "10128100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gardevoir",
+			"files": {
+				"5": "icons/Wally_0282_5.png",
+				"EX": "icons/Wally_0282_EX.png"
+			}
+		},
+		{
+			"pairId": "10129000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rayquaza",
+			"files": {
+				"5": "icons/Zinnia_0384_5.png",
+				"EX": "icons/Zinnia_0384_EX.png"
+			}
+		},
+		{
+			"pairId": "10129000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Salamence",
+			"files": {
+				"4": "icons/Zinnia_0373_4.png",
+				"5": "icons/Zinnia_0373_5.png",
+				"EX": "icons/Zinnia_0373_EX.png"
+			}
+		},
+		{
+			"pairId": "10129400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Thievul",
+			"files": {
+				"5": "icons/Zinnia_0828_5.png",
+				"EX": "icons/Zinnia_0828_EX.png"
+			}
+		},
+		{
+			"pairId": "10130000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Delphox",
+			"files": {
+				"5": "icons/Serena_0655_5.png",
+				"EX": "icons/Serena_0655_EX.png"
+			}
+		},
+		{
+			"pairId": "10130000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Fletchling",
+			"files": {
+				"4": "icons/Serena_0661_4.png",
+				"5": "icons/Serena_0661_5.png",
+				"EX": "icons/Serena_0661_EX.png"
+			}
+		},
+		{
+			"pairId": "10130100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zygarde",
+			"files": {
+				"5": "icons/Serena_0718_5.png",
+				"EX": "icons/Serena_0718_EX.png"
+			}
+		},
+		{
+			"pairId": "10130400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Whimsicott",
+			"files": {
+				"5": "icons/Serena_0547_5.png",
+				"EX": "icons/Serena_0547_EX.png"
+			}
+		},
+		{
+			"pairId": "10130410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Greninja",
+			"files": {
+				"5": "icons/Serena_0658_2_5.png",
+				"EX": "icons/Serena_0658_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10130900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Greninja",
+			"files": {
+				"5": "icons/Serena_0658_5.png",
+				"EX": "icons/Serena_0658_EX.png"
+			}
+		},
+		{
+			"pairId": "10131000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Heliolisk",
+			"files": {
+				"5": "icons/Clemont_0695_5.png",
+				"EX": "icons/Clemont_0695_EX.png"
+			}
+		},
+		{
+			"pairId": "10131000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Magneton",
+			"files": {
+				"4": "icons/Clemont_0082_4.png",
+				"5": "icons/Clemont_0082_5.png",
+				"EX": "icons/Clemont_0082_EX.png"
+			}
+		},
+		{
+			"pairId": "10132000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Volcarona",
+			"files": {
+				"5": "icons/Alder_0637_5.png",
+				"EX": "icons/Alder_0637_EX.png"
+			}
+		},
+		{
+			"pairId": "10132900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Volcarona",
+			"files": {
+				"5": "icons/Alder_0637_2_5.png",
+				"EX": "icons/Alder_0637_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10133000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ho-Oh",
+			"files": {
+				"5": "icons/Silver_0250_5.png",
+				"EX": "icons/Silver_0250_EX.png"
+			}
+		},
+		{
+			"pairId": "10133000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Feraligatr",
+			"files": {
+				"4": "icons/Silver_0160_4.png",
+				"5": "icons/Silver_0160_5.png",
+				"EX": "icons/Silver_0160_EX.png"
+			}
+		},
+		{
+			"pairId": "10133000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Crobat",
+			"files": {
+				"5": "icons/Silver_0169_5.png",
+				"EX": "icons/Silver_0169_EX.png"
+			}
+		},
+		{
+			"pairId": "10133100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sneasel",
+			"files": {
+				"5": "icons/Silver_0215_5.png",
+				"EX": "icons/Silver_0215_EX.png"
+			}
+		},
+		{
+			"pairId": "10133900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tyranitar",
+			"files": {
+				"5": "icons/Silver_0248_5.png",
+				"EX": "icons/Silver_0248_EX.png"
+			}
+		},
+		{
+			"pairId": "10133910000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ho-Oh",
+			"files": {
+				"5": "icons/Silver_0250_2_5.png",
+				"EX": "icons/Silver_0250_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10134000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Regigigas",
+			"files": {
+				"5": "icons/Palmer_0486_5.png",
+				"EX": "icons/Palmer_0486_EX.png"
+			}
+		},
+		{
+			"pairId": "10135000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Absol",
+			"files": {
+				"5": "icons/Sidney_0359_5.png",
+				"EX": "icons/Sidney_0359_EX.png"
+			}
+		},
+		{
+			"pairId": "10136000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Xerneas",
+			"files": {
+				"5": "icons/Professor Sycamore_0716_5.png",
+				"EX": "icons/Professor Sycamore_0716_EX.png"
+			}
+		},
+		{
+			"pairId": "10136000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Bulbasaur",
+			"files": {
+				"4": "icons/Professor Sycamore_0001_4.png",
+				"5": "icons/Professor Sycamore_0001_5.png",
+				"EX": "icons/Professor Sycamore_0001_EX.png"
+			}
+		},
+		{
+			"pairId": "10136400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gogoat",
+			"files": {
+				"5": "icons/Professor Sycamore_0673_5.png",
+				"EX": "icons/Professor Sycamore_0673_EX.png"
+			}
+		},
+		{
+			"pairId": "10137000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mew",
+			"files": {
+				"3": "icons/Professor Oak_0151_3.png",
+				"4": "icons/Professor Oak_0151_4.png",
+				"5": "icons/Professor Oak_0151_5.png",
+				"EX": "icons/Professor Oak_0151_EX.png"
+			}
+		},
+		{
+			"pairId": "10137000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Nidorino",
+			"files": {
+				"5": "icons/Professor Oak_0033_5.png",
+				"EX": "icons/Professor Oak_0033_EX.png"
+			}
+		},
+		{
+			"pairId": "10138000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Exeggutor",
+			"files": {
+				"5": "icons/Samson Oak_0103_5.png",
+				"EX": "icons/Samson Oak_0103_EX.png"
+			}
+		},
+		{
+			"pairId": "10139000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Chesnaught",
+			"files": {
+				"5": "icons/Shauna_0652_5.png",
+				"EX": "icons/Shauna_0652_EX.png"
+			}
+		},
+		{
+			"pairId": "10139000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Delcatty",
+			"files": {
+				"4": "icons/Shauna_0301_4.png",
+				"5": "icons/Shauna_0301_5.png",
+				"EX": "icons/Shauna_0301_EX.png"
+			}
+		},
+		{
+			"pairId": "10139000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sylveon",
+			"files": {
+				"5": "icons/Shauna_0700_5.png",
+				"EX": "icons/Shauna_0700_EX.png"
+			}
+		},
+		{
+			"pairId": "10139400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Klefki",
+			"files": {
+				"5": "icons/Shauna_0707_5.png",
+				"EX": "icons/Shauna_0707_EX.png"
+			}
+		},
+		{
+			"pairId": "10140000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mewtwo",
+			"files": {
+				"5": "icons/Giovanni_0150_5.png",
+				"EX": "icons/Giovanni_0150_EX.png"
+			}
+		},
+		{
+			"pairId": "10140000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rhydon",
+			"files": {
+				"5": "icons/Giovanni_0112_5.png",
+				"EX": "icons/Giovanni_0112_EX.png"
+			}
+		},
+		{
+			"pairId": "10140000002",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Nidorino",
+			"files": {
+				"4": "icons/Giovanni_0033_4.png",
+				"5": "icons/Giovanni_0033_5.png",
+				"EX": "icons/Giovanni_0033_EX.png"
+			}
+		},
+		{
+			"pairId": "10140100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Nidoking",
+			"files": {
+				"5": "icons/Giovanni_0034_5.png",
+				"EX": "icons/Giovanni_0034_EX.png"
+			}
+		},
+		{
+			"pairId": "10140110000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Guzzlord",
+			"files": {
+				"5": "icons/Giovanni_0799_5.png",
+				"EX": "icons/Giovanni_0799_EX.png"
+			}
+		},
+		{
+			"pairId": "10140800000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Persian",
+			"files": {
+				"4": "icons/Giovanni_0053_4.png",
+				"5": "icons/Giovanni_0053_5.png",
+				"EX": "icons/Giovanni_0053_EX.png"
+			}
+		},
+		{
+			"pairId": "10141000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Houndoom",
+			"files": {
+				"5": "icons/Archer_0229_5.png",
+				"EX": "icons/Archer_0229_EX.png"
+			}
+		},
+		{
+			"pairId": "10142000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Arbok",
+			"files": {
+				"5": "icons/Ariana_0024_5.png",
+				"EX": "icons/Ariana_0024_EX.png"
+			}
+		},
+		{
+			"pairId": "10143000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Weezing",
+			"files": {
+				"5": "icons/Petrel_0110_5.png",
+				"EX": "icons/Petrel_0110_EX.png"
+			}
+		},
+		{
+			"pairId": "10144000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Golbat",
+			"files": {
+				"5": "icons/Proton_0042_5.png",
+				"EX": "icons/Proton_0042_EX.png"
+			}
+		},
+		{
+			"pairId": "10145000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Simisear",
+			"files": {
+				"5": "icons/Chili_0514_5.png",
+				"EX": "icons/Chili_0514_EX.png"
+			}
+		},
+		{
+			"pairId": "10146000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Simipour",
+			"files": {
+				"5": "icons/Cress_0516_5.png",
+				"EX": "icons/Cress_0516_EX.png"
+			}
+		},
+		{
+			"pairId": "10147000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Bouffalant",
+			"files": {
+				"5": "icons/Hugh_0626_5.png",
+				"EX": "icons/Hugh_0626_EX.png"
+			}
+		},
+		{
+			"pairId": "10147000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Unfezant",
+			"files": {
+				"5": "icons/Hugh_0521_5.png",
+				"EX": "icons/Hugh_0521_EX.png"
+			}
+		},
+		{
+			"pairId": "10147400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pignite",
+			"files": {
+				"5": "icons/Hugh_0499_5.png",
+				"EX": "icons/Hugh_0499_EX.png"
+			}
+		},
+		{
+			"pairId": "10148000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Drifblim",
+			"files": {
+				"5": "icons/Morty_0426_5.png",
+				"EX": "icons/Morty_0426_EX.png"
+			}
+		},
+		{
+			"pairId": "10148000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mismagius",
+			"files": {
+				"4": "icons/Morty_0429_4.png",
+				"5": "icons/Morty_0429_5.png",
+				"EX": "icons/Morty_0429_EX.png"
+			}
+		},
+		{
+			"pairId": "10148000002",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gastly",
+			"files": {
+				"4": "icons/Morty_0092_4.png",
+				"5": "icons/Morty_0092_5.png",
+				"EX": "icons/Morty_0092_EX.png"
+			}
+		},
+		{
+			"pairId": "10148100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ho-Oh",
+			"files": {
+				"5": "icons/Morty_0250_5.png",
+				"EX": "icons/Morty_0250_EX.png"
+			}
+		},
+		{
+			"pairId": "10148400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Banette",
+			"files": {
+				"5": "icons/Morty_0354_5.png",
+				"EX": "icons/Morty_0354_EX.png"
+			}
+		},
+		{
+			"pairId": "10148410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Typhlosion",
+			"files": {
+				"5": "icons/Morty_0157_5.png",
+				"EX": "icons/Morty_0157_EX.png"
+			}
+		},
+		{
+			"pairId": "10149000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Marowak",
+			"files": {
+				"5": "icons/Kiawe_0105_5.png",
+				"EX": "icons/Kiawe_0105_EX.png"
+			}
+		},
+		{
+			"pairId": "10149000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Arcanine",
+			"files": {
+				"5": "icons/Kiawe_0059_5.png",
+				"EX": "icons/Kiawe_0059_EX.png"
+			}
+		},
+		{
+			"pairId": "10150000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Swellow",
+			"files": {
+				"5": "icons/Falkner_0277_5.png",
+				"EX": "icons/Falkner_0277_EX.png"
+			}
+		},
+		{
+			"pairId": "10150000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pidgeot",
+			"files": {
+				"4": "icons/Falkner_0018_4.png",
+				"5": "icons/Falkner_0018_5.png",
+				"EX": "icons/Falkner_0018_EX.png"
+			}
+		},
+		{
+			"pairId": "10150000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Noctowl",
+			"files": {
+				"5": "icons/Falkner_0164_5.png",
+				"EX": "icons/Falkner_0164_EX.png"
+			}
+		},
+		{
+			"pairId": "10151000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mismagius",
+			"files": {
+				"5": "icons/Fantina_0429_5.png",
+				"EX": "icons/Fantina_0429_EX.png"
+			}
+		},
+		{
+			"pairId": "10151000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dusknoir",
+			"files": {
+				"5": "icons/Fantina_0477_5.png",
+				"EX": "icons/Fantina_0477_EX.png"
+			}
+		},
+		{
+			"pairId": "10152000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Vespiquen",
+			"files": {
+				"5": "icons/Aaron_0416_5.png",
+				"EX": "icons/Aaron_0416_EX.png"
+			}
+		},
+		{
+			"pairId": "10152000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dustox",
+			"files": {
+				"4": "icons/Aaron_0269_4.png",
+				"5": "icons/Aaron_0269_5.png",
+				"EX": "icons/Aaron_0269_EX.png"
+			}
+		},
+		{
+			"pairId": "10153000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Glalie",
+			"files": {
+				"5": "icons/Glacia_0362_5.png",
+				"EX": "icons/Glacia_0362_EX.png"
+			}
+		},
+		{
+			"pairId": "10154000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Hippowdon",
+			"files": {
+				"5": "icons/Bertha_0450_5.png",
+				"EX": "icons/Bertha_0450_EX.png"
+			}
+		},
+		{
+			"pairId": "10155000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dragalge",
+			"files": {
+				"5": "icons/Drasna_0691_5.png",
+				"EX": "icons/Drasna_0691_EX.png"
+			}
+		},
+		{
+			"pairId": "10156000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lucario",
+			"files": {
+				"5": "icons/Riley_0448_5.png",
+				"EX": "icons/Riley_0448_EX.png"
+			}
+		},
+		{
+			"pairId": "10157000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sylveon",
+			"files": {
+				"4": "icons/Valerie_0700_4.png",
+				"5": "icons/Valerie_0700_5.png",
+				"EX": "icons/Valerie_0700_EX.png"
+			}
+		},
+		{
+			"pairId": "10157000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mawile",
+			"files": {
+				"4": "icons/Valerie_0303_4.png",
+				"5": "icons/Valerie_0303_5.png",
+				"EX": "icons/Valerie_0303_EX.png"
+			}
+		},
+		{
+			"pairId": "10158000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gardevoir",
+			"files": {
+				"5": "icons/Diantha_0282_5.png",
+				"EX": "icons/Diantha_0282_EX.png"
+			}
+		},
+		{
+			"pairId": "10158000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tyrantrum",
+			"files": {
+				"4": "icons/Diantha_0697_4.png",
+				"5": "icons/Diantha_0697_5.png",
+				"EX": "icons/Diantha_0697_EX.png"
+			}
+		},
+		{
+			"pairId": "10158100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Diancie",
+			"files": {
+				"5": "icons/Diantha_0719_5.png",
+				"EX": "icons/Diantha_0719_EX.png"
+			}
+		},
+		{
+			"pairId": "10158400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Keldeo",
+			"files": {
+				"5": "icons/Diantha_0647_5.png",
+				"EX": "icons/Diantha_0647_EX.png"
+			}
+		},
+		{
+			"pairId": "10158900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gardevoir",
+			"files": {
+				"5": "icons/Diantha_0282_2_5.png",
+				"EX": "icons/Diantha_0282_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10159000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Staraptor",
+			"files": {
+				"5": "icons/Darach_0398_5.png",
+				"EX": "icons/Darach_0398_EX.png"
+			}
+		},
+		{
+			"pairId": "10160000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Araquanid",
+			"files": {
+				"5": "icons/Lana_0752_5.png",
+				"EX": "icons/Lana_0752_EX.png"
+			}
+		},
+		{
+			"pairId": "10160000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lanturn",
+			"files": {
+				"4": "icons/Lana_0171_4.png",
+				"5": "icons/Lana_0171_5.png",
+				"EX": "icons/Lana_0171_EX.png"
+			}
+		},
+		{
+			"pairId": "10160000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cloyster",
+			"files": {
+				"5": "icons/Lana_0091_5.png",
+				"EX": "icons/Lana_0091_EX.png"
+			}
+		},
+		{
+			"pairId": "10160100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tapu Lele",
+			"files": {
+				"5": "icons/Lana_0786_5.png",
+				"EX": "icons/Lana_0786_EX.png"
+			}
+		},
+		{
+			"pairId": "10160400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dondozo",
+			"files": {
+				"5": "icons/Lana_0977_5.png",
+				"EX": "icons/Lana_0977_EX.png"
+			}
+		},
+		{
+			"pairId": "10161000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Crabominable",
+			"files": {
+				"5": "icons/Hala_0740_5.png",
+				"EX": "icons/Hala_0740_EX.png"
+			}
+		},
+		{
+			"pairId": "10162000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dialga",
+			"files": {
+				"5": "icons/Lucas_0483_5.png",
+				"EX": "icons/Lucas_0483_EX.png"
+			}
+		},
+		{
+			"pairId": "10162000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Flareon",
+			"files": {
+				"5": "icons/Lucas_0136_5.png",
+				"EX": "icons/Lucas_0136_EX.png"
+			}
+		},
+		{
+			"pairId": "10162000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Torterra",
+			"files": {
+				"5": "icons/Lucas_0389_5.png",
+				"EX": "icons/Lucas_0389_EX.png"
+			}
+		},
+		{
+			"pairId": "10162900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dialga",
+			"files": {
+				"5": "icons/Lucas_0483_2_5.png",
+				"EX": "icons/Lucas_0483_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10169000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Watchog",
+			"files": {
+				"5": "icons/Lenora_0505_5.png",
+				"EX": "icons/Lenora_0505_EX.png"
+			}
+		},
+		{
+			"pairId": "10170000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Leavanny",
+			"files": {
+				"5": "icons/Burgh_0542_5.png",
+				"EX": "icons/Burgh_0542_EX.png"
+			}
+		},
+		{
+			"pairId": "10170400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Togepi",
+			"files": {
+				"5": "icons/Burgh_0175_5.png",
+				"EX": "icons/Burgh_0175_EX.png"
+			}
+		},
+		{
+			"pairId": "10171000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Poliwrath",
+			"files": {
+				"5": "icons/Chuck_0062_5.png",
+				"EX": "icons/Chuck_0062_EX.png"
+			}
+		},
+		{
+			"pairId": "10175000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sigilyph",
+			"files": {
+				"5": "icons/Olympia_0561_5.png",
+				"EX": "icons/Olympia_0561_EX.png"
+			}
+		},
+		{
+			"pairId": "10176000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Girafarig",
+			"files": {
+				"5": "icons/Lucian_0203_5.png",
+				"EX": "icons/Lucian_0203_EX.png"
+			}
+		},
+		{
+			"pairId": "10177000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Talonflame",
+			"files": {
+				"5": "icons/Malva_0663_5.png",
+				"EX": "icons/Malva_0663_EX.png"
+			}
+		},
+		{
+			"pairId": "10178000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Snorlax",
+			"files": {
+				"5": "icons/Anabel_0143_5.png",
+				"EX": "icons/Anabel_0143_EX.png"
+			}
+		},
+		{
+			"pairId": "10180000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Crawdaunt",
+			"files": {
+				"5": "icons/Tierno_0342_5.png",
+				"EX": "icons/Tierno_0342_EX.png"
+			}
+		},
+		{
+			"pairId": "10180000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Talonflame",
+			"files": {
+				"5": "icons/Tierno_0663_5.png",
+				"EX": "icons/Tierno_0663_EX.png"
+			}
+		},
+		{
+			"pairId": "10181000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Florges",
+			"files": {
+				"5": "icons/Trevor_0671_5.png",
+				"EX": "icons/Trevor_0671_EX.png"
+			}
+		},
+		{
+			"pairId": "10182000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gumshoos",
+			"files": {
+				"5": "icons/Ilima_0735_5.png",
+				"EX": "icons/Ilima_0735_EX.png"
+			}
+		},
+		{
+			"pairId": "10183000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dugtrio",
+			"files": {
+				"4": "icons/Molayne_0051_4.png",
+				"5": "icons/Molayne_0051_5.png",
+				"EX": "icons/Molayne_0051_EX.png"
+			}
+		},
+		{
+			"pairId": "10187000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Glaceon",
+			"files": {
+				"5": "icons/Sina_0471_5.png",
+				"EX": "icons/Sina_0471_EX.png"
+			}
+		},
+		{
+			"pairId": "10188000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Espeon",
+			"files": {
+				"5": "icons/Dexio_0196_5.png",
+				"EX": "icons/Dexio_0196_EX.png"
+			}
+		},
+		{
+			"pairId": "10190000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Turtonator",
+			"files": {
+				"5": "icons/Ryuki_0776_5.png",
+				"EX": "icons/Ryuki_0776_EX.png"
+			}
+		},
+		{
+			"pairId": "10191000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Klinklang",
+			"files": {
+				"5": "icons/Colress_0601_5.png",
+				"EX": "icons/Colress_0601_EX.png"
+			}
+		},
+		{
+			"pairId": "10192000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Groudon",
+			"files": {
+				"5": "icons/Maxie_0383_5.png",
+				"EX": "icons/Maxie_0383_EX.png"
+			}
+		},
+		{
+			"pairId": "10193000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kyogre",
+			"files": {
+				"5": "icons/Archie_0382_5.png",
+				"EX": "icons/Archie_0382_EX.png"
+			}
+		},
+		{
+			"pairId": "10194000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Palkia",
+			"files": {
+				"5": "icons/Cyrus_0484_5.png",
+				"EX": "icons/Cyrus_0484_EX.png"
+			}
+		},
+		{
+			"pairId": "10194000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Weavile",
+			"files": {
+				"5": "icons/Cyrus_0461_5.png",
+				"EX": "icons/Cyrus_0461_EX.png"
+			}
+		},
+		{
+			"pairId": "10194100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Darkrai",
+			"files": {
+				"5": "icons/Cyrus_0491_5.png",
+				"EX": "icons/Cyrus_0491_EX.png"
+			}
+		},
+		{
+			"pairId": "10195000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kyurem",
+			"files": {
+				"5": "icons/Ghetsis_0646_5.png",
+				"EX": "icons/Ghetsis_0646_EX.png"
+			}
+		},
+		{
+			"pairId": "10196000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Yveltal",
+			"files": {
+				"5": "icons/Lysandre_0717_5.png",
+				"EX": "icons/Lysandre_0717_EX.png"
+			}
+		},
+		{
+			"pairId": "10196100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Volcanion",
+			"files": {
+				"5": "icons/Lysandre_0721_5.png",
+				"EX": "icons/Lysandre_0721_EX.png"
+			}
+		},
+		{
+			"pairId": "10198000000",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Seviper",
+			"files": {
+				"4": "icons/Lucy_0336_4.png",
+				"5": "icons/Lucy_0336_5.png",
+				"EX": "icons/Lucy_0336_EX.png"
+			}
+		},
+		{
+			"pairId": "10199000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Breloom",
+			"files": {
+				"5": "icons/Greta_0286_5.png",
+				"EX": "icons/Greta_0286_EX.png"
+			}
+		},
+		{
+			"pairId": "10201000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Articuno",
+			"files": {
+				"5": "icons/Brandon_0144_5.png",
+				"EX": "icons/Brandon_0144_EX.png"
+			}
+		},
+		{
+			"pairId": "10202000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ludicolo",
+			"files": {
+				"5": "icons/Dahlia_0272_5.png",
+				"EX": "icons/Dahlia_0272_EX.png"
+			}
+		},
+		{
+			"pairId": "10203000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Skarmory",
+			"files": {
+				"5": "icons/Argenta_0227_5.png",
+				"EX": "icons/Argenta_0227_EX.png"
+			}
+		},
+		{
+			"pairId": "10204000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Landorus",
+			"files": {
+				"5": "icons/Nita_0645_5.png",
+				"EX": "icons/Nita_0645_EX.png"
+			}
+		},
+		{
+			"pairId": "10205000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Entei",
+			"files": {
+				"5": "icons/Evelyn_0244_5.png",
+				"EX": "icons/Evelyn_0244_EX.png"
+			}
+		},
+		{
+			"pairId": "10206000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Regice",
+			"files": {
+				"5": "icons/Dana_0378_5.png",
+				"EX": "icons/Dana_0378_EX.png"
+			}
+		},
+		{
+			"pairId": "10207000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Virizion",
+			"files": {
+				"5": "icons/Morgan_0640_5.png",
+				"EX": "icons/Morgan_0640_EX.png"
+			}
+		},
+		{
+			"pairId": "10212000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Volcarona",
+			"files": {
+				"5": "icons/Benga_0637_5.png",
+				"EX": "icons/Benga_0637_EX.png"
+			}
+		},
+		{
+			"pairId": "10215000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Altaria",
+			"files": {
+				"5": "icons/Lisia_0334_5.png",
+				"EX": "icons/Lisia_0334_EX.png"
+			}
+		},
+		{
+			"pairId": "10215400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rapidash",
+			"files": {
+				"5": "icons/Lisia_0078_5.png",
+				"EX": "icons/Lisia_0078_EX.png"
+			}
+		},
+		{
+			"pairId": "10216000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Suicune",
+			"files": {
+				"5": "icons/Eusine_0245_5.png",
+				"EX": "icons/Eusine_0245_EX.png"
+			}
+		},
+		{
+			"pairId": "10217000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Croagunk",
+			"files": {
+				"5": "icons/Looker_0453_5.png",
+				"EX": "icons/Looker_0453_EX.png"
+			}
+		},
+		{
+			"pairId": "10220000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Crobat",
+			"files": {
+				"5": "icons/Emma_0169_5.png",
+				"EX": "icons/Emma_0169_EX.png"
+			}
+		},
+		{
+			"pairId": "10222000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Camerupt",
+			"files": {
+				"5": "icons/Courtney_0323_5.png",
+				"EX": "icons/Courtney_0323_EX.png"
+			}
+		},
+		{
+			"pairId": "10225000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Purugly",
+			"files": {
+				"5": "icons/Mars_0432_5.png",
+				"EX": "icons/Mars_0432_EX.png"
+			}
+		},
+		{
+			"pairId": "10226000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Skuntank",
+			"files": {
+				"5": "icons/Jupiter_0435_5.png",
+				"EX": "icons/Jupiter_0435_EX.png"
+			}
+		},
+		{
+			"pairId": "10227000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Toxicroak",
+			"files": {
+				"5": "icons/Saturn_0454_5.png",
+				"EX": "icons/Saturn_0454_EX.png"
+			}
+		},
+		{
+			"pairId": "10240000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Arbok",
+			"files": {
+				"3": "icons/Jessie_0024_3.png",
+				"4": "icons/Jessie_0024_4.png",
+				"5": "icons/Jessie_0024_5.png"
+			}
+		},
+		{
+			"pairId": "10241000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Weezing",
+			"files": {
+				"3": "icons/James_0110_3.png",
+				"4": "icons/James_0110_4.png",
+				"5": "icons/James_0110_5.png"
+			}
+		},
+		{
+			"pairId": "10242000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rillaboom",
+			"files": {
+				"5": "icons/Victor_0812_5.png",
+				"EX": "icons/Victor_0812_EX.png"
+			}
+		},
+		{
+			"pairId": "10242000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Spectrier",
+			"files": {
+				"5": "icons/Victor_0897_5.png",
+				"EX": "icons/Victor_0897_EX.png"
+			}
+		},
+		{
+			"pairId": "10242400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Greedent",
+			"files": {
+				"5": "icons/Victor_0820_5.png",
+				"EX": "icons/Victor_0820_EX.png"
+			}
+		},
+		{
+			"pairId": "10243000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zacian",
+			"files": {
+				"5": "icons/Gloria_0888_5.png",
+				"EX": "icons/Gloria_0888_EX.png"
+			}
+		},
+		{
+			"pairId": "10243000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Thwackey",
+			"files": {
+				"4": "icons/Gloria_0811_4.png",
+				"5": "icons/Gloria_0811_5.png",
+				"EX": "icons/Gloria_0811_EX.png"
+			}
+		},
+		{
+			"pairId": "10243400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Inteleon",
+			"files": {
+				"5": "icons/Gloria_0818_5.png",
+				"EX": "icons/Gloria_0818_EX.png"
+			}
+		},
+		{
+			"pairId": "10243410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cinderace",
+			"files": {
+				"5": "icons/Gloria_0815_2_5.png",
+				"EX": "icons/Gloria_0815_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10243800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Urshifu",
+			"files": {
+				"5": "icons/Gloria_0892_5.png",
+				"EX": "icons/Gloria_0892_EX.png"
+			}
+		},
+		{
+			"pairId": "10243810000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cinderace",
+			"files": {
+				"5": "icons/Gloria_0815_5.png",
+				"EX": "icons/Gloria_0815_EX.png"
+			}
+		},
+		{
+			"pairId": "10244000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zamazenta",
+			"files": {
+				"5": "icons/Hop_0889_5.png",
+				"EX": "icons/Hop_0889_EX.png"
+			}
+		},
+		{
+			"pairId": "10244000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rillaboom",
+			"files": {
+				"5": "icons/Hop_0812_5.png",
+				"EX": "icons/Hop_0812_EX.png"
+			}
+		},
+		{
+			"pairId": "10244000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pincurchin",
+			"files": {
+				"5": "icons/Hop_0871_5.png",
+				"EX": "icons/Hop_0871_EX.png"
+			}
+		},
+		{
+			"pairId": "10244000003",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zacian ",
+			"files": {
+				"5": "icons/Hop_0888_5.png",
+				"EX": "icons/Hop_0888_EX.png"
+			}
+		},
+		{
+			"pairId": "10244900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zapdos",
+			"files": {
+				"5": "icons/Hop_0145_5.png",
+				"EX": "icons/Hop_0145_EX.png"
+			}
+		},
+		{
+			"pairId": "10245000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Morpeko",
+			"files": {
+				"5": "icons/Marnie_0877_5.png",
+				"EX": "icons/Marnie_0877_EX.png"
+			}
+		},
+		{
+			"pairId": "10245000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Toxicroak",
+			"files": {
+				"4": "icons/Marnie_0454_4.png",
+				"5": "icons/Marnie_0454_5.png",
+				"EX": "icons/Marnie_0454_EX.png"
+			}
+		},
+		{
+			"pairId": "10245000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Scrafty",
+			"files": {
+				"5": "icons/Marnie_0560_5.png",
+				"EX": "icons/Marnie_0560_EX.png"
+			}
+		},
+		{
+			"pairId": "10245000003",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cinderace",
+			"files": {
+				"5": "icons/Marnie_0815_5.png",
+				"EX": "icons/Marnie_0815_EX.png"
+			}
+		},
+		{
+			"pairId": "10245000004",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Liepard",
+			"files": {
+				"5": "icons/Marnie_0510_5.png",
+				"EX": "icons/Marnie_0510_EX.png"
+			}
+		},
+		{
+			"pairId": "10245400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Grimmsnarl",
+			"files": {
+				"5": "icons/Marnie_0861_5.png",
+				"EX": "icons/Marnie_0861_EX.png"
+			}
+		},
+		{
+			"pairId": "10245410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mawile",
+			"files": {
+				"5": "icons/Marnie_0303_5.png",
+				"EX": "icons/Marnie_0303_EX.png"
+			}
+		},
+		{
+			"pairId": "10245420000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cyclizar",
+			"files": {
+				"5": "icons/Marnie_0967_5.png",
+				"EX": "icons/Marnie_0967_EX.png"
+			}
+		},
+		{
+			"pairId": "10245800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Grimmsnarl",
+			"files": {
+				"5": "icons/Marnie_0861_2_5.png",
+				"EX": "icons/Marnie_0861_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10245900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Moltres",
+			"files": {
+				"5": "icons/Marnie_0146_5.png",
+				"EX": "icons/Marnie_0146_EX.png"
+			}
+		},
+		{
+			"pairId": "10246000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Hatterene",
+			"files": {
+				"5": "icons/Bede_0858_5.png",
+				"EX": "icons/Bede_0858_EX.png"
+			}
+		},
+		{
+			"pairId": "10246000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Inteleon",
+			"files": {
+				"5": "icons/Bede_0818_5.png",
+				"EX": "icons/Bede_0818_EX.png"
+			}
+		},
+		{
+			"pairId": "10246000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mawile",
+			"files": {
+				"5": "icons/Bede_0303_5.png",
+				"EX": "icons/Bede_0303_EX.png"
+			}
+		},
+		{
+			"pairId": "10246100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Iron Valiant",
+			"files": {
+				"5": "icons/Bede_1006_5.png",
+				"EX": "icons/Bede_1006_EX.png"
+			}
+		},
+		{
+			"pairId": "10246800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rapidash",
+			"files": {
+				"5": "icons/Bede_0078_5.png",
+				"EX": "icons/Bede_0078_EX.png"
+			}
+		},
+		{
+			"pairId": "10246900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Articuno",
+			"files": {
+				"5": "icons/Bede_0144_5.png",
+				"EX": "icons/Bede_0144_EX.png"
+			}
+		},
+		{
+			"pairId": "10247000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Charizard",
+			"files": {
+				"5": "icons/Leon_0006_5.png",
+				"EX": "icons/Leon_0006_EX.png"
+			}
+		},
+		{
+			"pairId": "10247000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Seismitoad",
+			"files": {
+				"4": "icons/Leon_0537_4.png",
+				"5": "icons/Leon_0537_5.png",
+				"EX": "icons/Leon_0537_EX.png"
+			}
+		},
+		{
+			"pairId": "10247100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Eternatus",
+			"files": {
+				"5": "icons/Leon_0890_5.png",
+				"EX": "icons/Leon_0890_EX.png"
+			}
+		},
+		{
+			"pairId": "10247400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Calyrex",
+			"files": {
+				"5": "icons/Leon_0898_5.png",
+				"EX": "icons/Leon_0898_EX.png"
+			}
+		},
+		{
+			"pairId": "10247800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dragapult",
+			"files": {
+				"5": "icons/Leon_0887_5.png",
+				"EX": "icons/Leon_0887_EX.png"
+			}
+		},
+		{
+			"pairId": "10247900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Charizard",
+			"files": {
+				"5": "icons/Leon_0006_2_5.png",
+				"EX": "icons/Leon_0006_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10248000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Eldegoss",
+			"files": {
+				"5": "icons/Milo_0830_5.png",
+				"EX": "icons/Milo_0830_EX.png"
+			}
+		},
+		{
+			"pairId": "10249000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Drednaw",
+			"files": {
+				"5": "icons/Nessa_0834_5.png",
+				"EX": "icons/Nessa_0834_EX.png"
+			}
+		},
+		{
+			"pairId": "10249000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Barraskewda",
+			"files": {
+				"4": "icons/Nessa_0847_4.png",
+				"5": "icons/Nessa_0847_5.png",
+				"EX": "icons/Nessa_0847_EX.png"
+			}
+		},
+		{
+			"pairId": "10249400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Eiscue",
+			"files": {
+				"5": "icons/Nessa_0875_5.png",
+				"EX": "icons/Nessa_0875_EX.png"
+			}
+		},
+		{
+			"pairId": "10250000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sirfetch'd",
+			"files": {
+				"5": "icons/Bea_0865_5.png",
+				"EX": "icons/Bea_0865_EX.png"
+			}
+		},
+		{
+			"pairId": "10250000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Hitmontop",
+			"files": {
+				"4": "icons/Bea_0237_4.png",
+				"5": "icons/Bea_0237_5.png",
+				"EX": "icons/Bea_0237_EX.png"
+			}
+		},
+		{
+			"pairId": "10250400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Vanilluxe",
+			"files": {
+				"5": "icons/Bea_0584_5.png",
+				"EX": "icons/Bea_0584_EX.png"
+			}
+		},
+		{
+			"pairId": "10251000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gengar",
+			"files": {
+				"5": "icons/Allister_0094_5.png",
+				"EX": "icons/Allister_0094_EX.png"
+			}
+		},
+		{
+			"pairId": "10251400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gourgeist",
+			"files": {
+				"5": "icons/Allister_0711_5.png",
+				"EX": "icons/Allister_0711_EX.png"
+			}
+		},
+		{
+			"pairId": "10252000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Centiskorch",
+			"files": {
+				"5": "icons/Kabu_0851_5.png",
+				"EX": "icons/Kabu_0851_EX.png"
+			}
+		},
+		{
+			"pairId": "10252000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Torkoal",
+			"files": {
+				"4": "icons/Kabu_0324_4.png",
+				"5": "icons/Kabu_0324_5.png",
+				"EX": "icons/Kabu_0324_EX.png"
+			}
+		},
+		{
+			"pairId": "10252000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ninetales",
+			"files": {
+				"5": "icons/Kabu_0038_5.png",
+				"EX": "icons/Kabu_0038_EX.png"
+			}
+		},
+		{
+			"pairId": "10252400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Camerupt",
+			"files": {
+				"5": "icons/Kabu_0323_5.png",
+				"EX": "icons/Kabu_0323_EX.png"
+			}
+		},
+		{
+			"pairId": "10254000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Coalossal",
+			"files": {
+				"5": "icons/Gordie_0839_5.png",
+				"EX": "icons/Gordie_0839_EX.png"
+			}
+		},
+		{
+			"pairId": "10254000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Barbaracle",
+			"files": {
+				"5": "icons/Gordie_0689_5.png",
+				"EX": "icons/Gordie_0689_EX.png"
+			}
+		},
+		{
+			"pairId": "10255000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lapras",
+			"files": {
+				"5": "icons/Melony_0131_5.png",
+				"EX": "icons/Melony_0131_EX.png"
+			}
+		},
+		{
+			"pairId": "10255000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Frosmoth",
+			"files": {
+				"5": "icons/Melony_0873_5.png",
+				"EX": "icons/Melony_0873_EX.png"
+			}
+		},
+		{
+			"pairId": "10256000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Obstagoon",
+			"files": {
+				"5": "icons/Piers_0862_5.png",
+				"EX": "icons/Piers_0862_EX.png"
+			}
+		},
+		{
+			"pairId": "10256000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Skuntank",
+			"files": {
+				"4": "icons/Piers_0435_4.png",
+				"5": "icons/Piers_0435_5.png",
+				"EX": "icons/Piers_0435_EX.png"
+			}
+		},
+		{
+			"pairId": "10256100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Toxtricity",
+			"files": {
+				"5": "icons/Piers_0849_5.png",
+				"EX": "icons/Piers_0849_EX.png"
+			}
+		},
+		{
+			"pairId": "10257000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Duraludon",
+			"files": {
+				"5": "icons/Raihan_0884_5.png",
+				"EX": "icons/Raihan_0884_EX.png"
+			}
+		},
+		{
+			"pairId": "10257000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gigalith",
+			"files": {
+				"4": "icons/Raihan_0526_4.png",
+				"5": "icons/Raihan_0526_5.png",
+				"EX": "icons/Raihan_0526_EX.png"
+			}
+		},
+		{
+			"pairId": "10257400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Flygon",
+			"files": {
+				"5": "icons/Raihan_0330_5.png",
+				"EX": "icons/Raihan_0330_EX.png"
+			}
+		},
+		{
+			"pairId": "10257410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sandaconda",
+			"files": {
+				"5": "icons/Raihan_0844_5.png",
+				"EX": "icons/Raihan_0844_EX.png"
+			}
+		},
+		{
+			"pairId": "10259000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Yamper",
+			"files": {
+				"5": "icons/Sonia_0835_5.png",
+				"EX": "icons/Sonia_0835_EX.png"
+			}
+		},
+		{
+			"pairId": "10259400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tsareena",
+			"files": {
+				"5": "icons/Sonia_0763_5.png",
+				"EX": "icons/Sonia_0763_EX.png"
+			}
+		},
+		{
+			"pairId": "10259410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Corviknight",
+			"files": {
+				"5": "icons/Sonia_0823_5.png",
+				"EX": "icons/Sonia_0823_EX.png"
+			}
+		},
+		{
+			"pairId": "10262000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Copperajah",
+			"files": {
+				"5": "icons/Rose_0879_5.png",
+				"EX": "icons/Rose_0879_EX.png"
+			}
+		},
+		{
+			"pairId": "10262000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Perrserker",
+			"files": {
+				"4": "icons/Rose_0863_4.png",
+				"5": "icons/Rose_0863_5.png",
+				"EX": "icons/Rose_0863_EX.png"
+			}
+		},
+		{
+			"pairId": "10263000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Garbodor",
+			"files": {
+				"5": "icons/Oleana_0569_5.png",
+				"EX": "icons/Oleana_0569_EX.png"
+			}
+		},
+		{
+			"pairId": "10264000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pikachu",
+			"files": {
+				"5": "icons/Ash_0025_5.png",
+				"EX": "icons/Ash_0025_EX.png"
+			}
+		},
+		{
+			"pairId": "10269000000",
+			"via": "trainer-unique",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Eevee",
+			"files": {
+				"5": "icons/Elaine_0133_5.png",
+				"EX": "icons/Elaine_0133_EX.png"
+			}
+		},
+		{
+			"pairId": "10272000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Slowbro",
+			"files": {
+				"5": "icons/Klara_0080_5.png",
+				"EX": "icons/Klara_0080_EX.png"
+			}
+		},
+		{
+			"pairId": "10273000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Slowking",
+			"files": {
+				"5": "icons/Avery_0199_5.png",
+				"EX": "icons/Avery_0199_EX.png"
+			}
+		},
+		{
+			"pairId": "10279000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pikachu",
+			"files": {
+				"5": "icons/Chase_0025_5.png",
+				"EX": "icons/Chase_0025_EX.png"
+			}
+		},
+		{
+			"pairId": "10279000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Eevee",
+			"files": {
+				"5": "icons/Chase_0133_5.png",
+				"EX": "icons/Chase_0133_EX.png"
+			}
+		},
+		{
+			"pairId": "10282000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Amoonguss",
+			"files": {
+				"5": "icons/Ball Guy_0591_5.png",
+				"EX": "icons/Ball Guy_0591_EX.png"
+			}
+		},
+		{
+			"pairId": "10282000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Voltorb",
+			"files": {
+				"4": "icons/Ball Guy_0100_4.png",
+				"5": "icons/Ball Guy_0100_5.png",
+				"EX": "icons/Ball Guy_0100_EX.png"
+			}
+		},
+		{
+			"pairId": "10282100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Electrode",
+			"files": {
+				"5": "icons/Ball Guy_0101_5.png",
+				"EX": "icons/Ball Guy_0101_EX.png"
+			}
+		},
+		{
+			"pairId": "10284000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Leafeon",
+			"files": {
+				"5": "icons/Adaman_0470_5.png",
+				"EX": "icons/Adaman_0470_EX.png"
+			}
+		},
+		{
+			"pairId": "10284000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Vaporeon",
+			"files": {
+				"4": "icons/Adaman_0134_4.png",
+				"5": "icons/Adaman_0134_5.png",
+				"EX": "icons/Adaman_0134_EX.png"
+			}
+		},
+		{
+			"pairId": "10284400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ursaluna",
+			"files": {
+				"5": "icons/Adaman_0901_5.png",
+				"EX": "icons/Adaman_0901_EX.png"
+			}
+		},
+		{
+			"pairId": "10284410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sylveon",
+			"files": {
+				"5": "icons/Adaman_0700_5.png",
+				"EX": "icons/Adaman_0700_EX.png"
+			}
+		},
+		{
+			"pairId": "10285000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Glaceon",
+			"files": {
+				"5": "icons/Irida_0471_5.png",
+				"EX": "icons/Irida_0471_EX.png"
+			}
+		},
+		{
+			"pairId": "10285000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Flareon",
+			"files": {
+				"4": "icons/Irida_0136_4.png",
+				"5": "icons/Irida_0136_5.png",
+				"EX": "icons/Irida_0136_EX.png"
+			}
+		},
+		{
+			"pairId": "10285400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zoroark",
+			"files": {
+				"5": "icons/Irida_0571_5.png",
+				"EX": "icons/Irida_0571_EX.png"
+			}
+		},
+		{
+			"pairId": "10285410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Typhlosion",
+			"files": {
+				"5": "icons/Irida_0157_5.png",
+				"EX": "icons/Irida_0157_EX.png"
+			}
+		},
+		{
+			"pairId": "10286000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Miraidon",
+			"files": {
+				"5": "icons/Florian_1008_5.png",
+				"EX": "icons/Florian_1008_EX.png"
+			}
+		},
+		{
+			"pairId": "10286000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lechonk",
+			"files": {
+				"5": "icons/Florian_0915_5.png",
+				"EX": "icons/Florian_0915_EX.png"
+			}
+		},
+		{
+			"pairId": "10286000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Fuecoco",
+			"files": {
+				"5": "icons/Florian_0909_5.png",
+				"EX": "icons/Florian_0909_EX.png"
+			}
+		},
+		{
+			"pairId": "10286400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ogerpon",
+			"files": {
+				"5": "icons/Florian_1017_5.png",
+				"EX": "icons/Florian_1017_EX.png"
+			}
+		},
+		{
+			"pairId": "10286800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Yanmega",
+			"files": {
+				"5": "icons/Florian_0469_5.png",
+				"EX": "icons/Florian_0469_EX.png"
+			}
+		},
+		{
+			"pairId": "10287000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Koraidon",
+			"files": {
+				"5": "icons/Juliana_1007_5.png",
+				"EX": "icons/Juliana_1007_EX.png"
+			}
+		},
+		{
+			"pairId": "10287000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sprigatito",
+			"files": {
+				"5": "icons/Juliana_0906_5.png",
+				"EX": "icons/Juliana_0906_EX.png"
+			}
+		},
+		{
+			"pairId": "10287000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Chimecho",
+			"files": {
+				"5": "icons/Juliana_0358_5.png",
+				"EX": "icons/Juliana_0358_EX.png"
+			}
+		},
+		{
+			"pairId": "10287400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Terapagos",
+			"files": {
+				"5": "icons/Juliana_1024_5.png",
+				"EX": "icons/Juliana_1024_EX.png"
+			}
+		},
+		{
+			"pairId": "10289000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pawmot",
+			"files": {
+				"5": "icons/Nemona_0923_5.png",
+				"EX": "icons/Nemona_0923_EX.png"
+			}
+		},
+		{
+			"pairId": "10289000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lycanroc",
+			"files": {
+				"5": "icons/Nemona_0745_5.png",
+				"EX": "icons/Nemona_0745_EX.png"
+			}
+		},
+		{
+			"pairId": "10289000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Quaxly",
+			"files": {
+				"5": "icons/Nemona_0912_5.png",
+				"EX": "icons/Nemona_0912_EX.png"
+			}
+		},
+		{
+			"pairId": "10289100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Scream Tail",
+			"files": {
+				"5": "icons/Nemona_0985_5.png",
+				"EX": "icons/Nemona_0985_EX.png"
+			}
+		},
+		{
+			"pairId": "10290000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Decidueye",
+			"files": {
+				"5": "icons/Rei_0724_5.png",
+				"EX": "icons/Rei_0724_EX.png"
+			}
+		},
+		{
+			"pairId": "10290400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Braviary",
+			"files": {
+				"5": "icons/Rei_0628_5.png",
+				"EX": "icons/Rei_0628_EX.png"
+			}
+		},
+		{
+			"pairId": "10291000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Samurott",
+			"files": {
+				"5": "icons/Akari_0503_5.png",
+				"EX": "icons/Akari_0503_EX.png"
+			}
+		},
+		{
+			"pairId": "10291000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mime Jr",
+			"files": {
+				"4": "icons/Akari_0439_4.png",
+				"5": "icons/Akari_0439_5.png",
+				"EX": "icons/Akari_0439_EX.png"
+			}
+		},
+		{
+			"pairId": "10291400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Manaphy",
+			"files": {
+				"5": "icons/Akari_0490_5.png",
+				"EX": "icons/Akari_0490_EX.png"
+			}
+		},
+		{
+			"pairId": "10293000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sylveon",
+			"files": {
+				"5": "icons/Penny_0700_5.png",
+				"EX": "icons/Penny_0700_EX.png"
+			}
+		},
+		{
+			"pairId": "10293000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Eevee",
+			"files": {
+				"4": "icons/Penny_0133_4.png",
+				"5": "icons/Penny_0133_5.png",
+				"EX": "icons/Penny_0133_EX.png"
+			}
+		},
+		{
+			"pairId": "10294000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Cetitan",
+			"files": {
+				"5": "icons/Grusha_0975_5.png",
+				"EX": "icons/Grusha_0975_EX.png"
+			}
+		},
+		{
+			"pairId": "10294000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Beartic",
+			"files": {
+				"5": "icons/Grusha_0614_5.png",
+				"EX": "icons/Grusha_0614_EX.png"
+			}
+		},
+		{
+			"pairId": "10295000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Glimmora",
+			"files": {
+				"5": "icons/Geeta_0970_5.png",
+				"EX": "icons/Geeta_0970_EX.png"
+			}
+		},
+		{
+			"pairId": "10295900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Glimmora",
+			"files": {
+				"5": "icons/Geeta_0970_2_5.png",
+				"EX": "icons/Geeta_0970_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10296000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Bellibolt",
+			"files": {
+				"5": "icons/Iono_0939_5.png",
+				"EX": "icons/Iono_0939_EX.png"
+			}
+		},
+		{
+			"pairId": "10296000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Wattrel",
+			"files": {
+				"4": "icons/Iono_0940_4.png",
+				"5": "icons/Iono_0940_5.png",
+				"EX": "icons/Iono_0940_EX.png"
+			}
+		},
+		{
+			"pairId": "10296000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kilowattrel",
+			"files": {
+				"5": "icons/Iono_0941_5.png",
+				"EX": "icons/Iono_0941_EX.png"
+			}
+		},
+		{
+			"pairId": "10296100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Raging Bolt",
+			"files": {
+				"5": "icons/Iono_1021_5.png",
+				"EX": "icons/Iono_1021_EX.png"
+			}
+		},
+		{
+			"pairId": "10296400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Flutter Mane",
+			"files": {
+				"5": "icons/Iono_0987_5.png",
+				"EX": "icons/Iono_0987_EX.png"
+			}
+		},
+		{
+			"pairId": "10297000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Togepi",
+			"files": {
+				"5": "icons/Volo_0175_5.png",
+				"EX": "icons/Volo_0175_EX.png"
+			}
+		},
+		{
+			"pairId": "10297000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gible",
+			"files": {
+				"4": "icons/Volo_0443_4.png",
+				"5": "icons/Volo_0443_5.png",
+				"EX": "icons/Volo_0443_EX.png"
+			}
+		},
+		{
+			"pairId": "10298000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Farigiraf",
+			"files": {
+				"5": "icons/Jacq_0981_5.png",
+				"EX": "icons/Jacq_0981_EX.png"
+			}
+		},
+		{
+			"pairId": "10298000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mudsdale",
+			"files": {
+				"4": "icons/Jacq_0750_4.png",
+				"5": "icons/Jacq_0750_5.png",
+				"EX": "icons/Jacq_0750_EX.png"
+			}
+		},
+		{
+			"pairId": "10300000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Swoobat",
+			"files": {
+				"5": "icons/Bellelba_0528_5.png",
+				"EX": "icons/Bellelba_0528_EX.png"
+			}
+		},
+		{
+			"pairId": "10301000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Zoroark",
+			"files": {
+				"5": "icons/Brycen-Man_0571_5.png",
+				"EX": "icons/Brycen-Man_0571_EX.png"
+			}
+		},
+		{
+			"pairId": "10302000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Clodsire",
+			"files": {
+				"5": "icons/Rika_0980_5.png",
+				"EX": "icons/Rika_0980_EX.png"
+			}
+		},
+		{
+			"pairId": "10302000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Whiscash",
+			"files": {
+				"4": "icons/Rika_0340_4.png",
+				"5": "icons/Rika_0340_5.png",
+				"EX": "icons/Rika_0340_EX.png"
+			}
+		},
+		{
+			"pairId": "10302000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Great Tusk",
+			"files": {
+				"5": "icons/Rika_0984_5.png",
+				"EX": "icons/Rika_0984_EX.png"
+			}
+		},
+		{
+			"pairId": "10302400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Quagsire",
+			"files": {
+				"5": "icons/Rika_0195_5.png",
+				"EX": "icons/Rika_0195_EX.png"
+			}
+		},
+		{
+			"pairId": "10303000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Tinkaton",
+			"files": {
+				"5": "icons/Poppy_0959_5.png",
+				"EX": "icons/Poppy_0959_EX.png"
+			}
+		},
+		{
+			"pairId": "10303000001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Iron Treads",
+			"files": {
+				"5": "icons/Poppy_0990_5.png",
+				"EX": "icons/Poppy_0990_EX.png"
+			}
+		},
+		{
+			"pairId": "10303400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Steelix",
+			"files": {
+				"5": "icons/Poppy_0208_5.png",
+				"EX": "icons/Poppy_0208_EX.png"
+			}
+		},
+		{
+			"pairId": "10304000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dudunsparce",
+			"files": {
+				"5": "icons/Larry_0982_5.png",
+				"EX": "icons/Larry_0982_EX.png"
+			}
+		},
+		{
+			"pairId": "10304000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Oinkologne",
+			"files": {
+				"4": "icons/Larry_0916_4.png",
+				"5": "icons/Larry_0916_5.png",
+				"EX": "icons/Larry_0916_EX.png"
+			}
+		},
+		{
+			"pairId": "10304400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Flamigo",
+			"files": {
+				"5": "icons/Larry_0973_5.png",
+				"EX": "icons/Larry_0973_EX.png"
+			}
+		},
+		{
+			"pairId": "10304410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Komala",
+			"files": {
+				"5": "icons/Larry_0775_5.png",
+				"EX": "icons/Larry_0775_EX.png"
+			}
+		},
+		{
+			"pairId": "10311000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Munchlax",
+			"files": {
+				"5": "icons/Mai_0446_5.png",
+				"EX": "icons/Mai_0446_EX.png"
+			}
+		},
+		{
+			"pairId": "10312000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lilligant",
+			"files": {
+				"5": "icons/Arezu_0549_5.png",
+				"EX": "icons/Arezu_0549_EX.png"
+			}
+		},
+		{
+			"pairId": "10312400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Basculegion",
+			"files": {
+				"5": "icons/Arezu_0902_5.png",
+				"EX": "icons/Arezu_0902_EX.png"
+			}
+		},
+		{
+			"pairId": "10315000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Rhyperior",
+			"files": {
+				"5": "icons/Sabi_0464_5.png",
+				"EX": "icons/Sabi_0464_EX.png"
+			}
+		},
+		{
+			"pairId": "10317000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mabosstiff",
+			"files": {
+				"5": "icons/Arven_0943_5.png",
+				"EX": "icons/Arven_0943_EX.png"
+			}
+		},
+		{
+			"pairId": "10317000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Nacli",
+			"files": {
+				"4": "icons/Arven_0932_4.png",
+				"5": "icons/Arven_0932_5.png",
+				"EX": "icons/Arven_0932_EX.png"
+			}
+		},
+		{
+			"pairId": "10317000002",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Skwovet",
+			"files": {
+				"5": "icons/Arven_0819_5.png",
+				"EX": "icons/Arven_0819_EX.png"
+			}
+		},
+		{
+			"pairId": "10317400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Scovillain",
+			"files": {
+				"5": "icons/Arven_0952_5.png",
+				"EX": "icons/Arven_0952_EX.png"
+			}
+		},
+		{
+			"pairId": "10318000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Quaquaval",
+			"files": {
+				"5": "icons/Clavell_0914_5.png",
+				"EX": "icons/Clavell_0914_EX.png"
+			}
+		},
+		{
+			"pairId": "10318800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sprigatito",
+			"files": {
+				"5": "icons/Clavell_0906_5.png",
+				"EX": "icons/Clavell_0906_EX.png"
+			}
+		},
+		{
+			"pairId": "10320000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Armarouge",
+			"files": {
+				"5": "icons/Mela_0936_5.png",
+				"EX": "icons/Mela_0936_EX.png"
+			}
+		},
+		{
+			"pairId": "10327000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Kingambit",
+			"files": {
+				"5": "icons/Giacomo_0983_5.png",
+				"EX": "icons/Giacomo_0983_EX.png"
+			}
+		},
+		{
+			"pairId": "10328000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Revavroom",
+			"files": {
+				"5": "icons/Atticus_0966_5.png",
+				"EX": "icons/Atticus_0966_EX.png"
+			}
+		},
+		{
+			"pairId": "10329000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Dachsbun",
+			"files": {
+				"5": "icons/Ortega_0927_5.png",
+				"EX": "icons/Ortega_0927_EX.png"
+			}
+		},
+		{
+			"pairId": "10330000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Annihilape",
+			"files": {
+				"5": "icons/Eri_0979_5.png",
+				"EX": "icons/Eri_0979_EX.png"
+			}
+		},
+		{
+			"pairId": "10335000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Baxcalibur",
+			"files": {
+				"5": "icons/Hassel_0998_5.png",
+				"EX": "icons/Hassel_0998_EX.png"
+			}
+		},
+		{
+			"pairId": "10336000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Toxapex",
+			"files": {
+				"5": "icons/Miriam_0748_5.png",
+				"EX": "icons/Miriam_0748_EX.png"
+			}
+		},
+		{
+			"pairId": "10337000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sudowoodo",
+			"files": {
+				"5": "icons/Brassius_0185_5.png",
+				"EX": "icons/Brassius_0185_EX.png"
+			}
+		},
+		{
+			"pairId": "10338000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Growlithe",
+			"files": {
+				"5": "icons/Perrin_0058_5.png",
+				"EX": "icons/Perrin_0058_EX.png"
+			}
+		},
+		{
+			"pairId": "10338400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Noctowl",
+			"files": {
+				"5": "icons/Perrin_0164_5.png",
+				"EX": "icons/Perrin_0164_EX.png"
+			}
+		},
+		{
+			"pairId": "10348000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Gengar",
+			"files": {
+				"5": "icons/Raifort_0094_5.png",
+				"EX": "icons/Raifort_0094_EX.png"
+			}
+		},
+		{
+			"pairId": "10351000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Kirlia",
+			"files": {
+				"3": "icons/Blossom_0281_3.png",
+				"4": "icons/Blossom_0281_4.png",
+				"5": "icons/Blossom_0281_5.png"
+			}
+		},
+		{
+			"pairId": "10352000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Granbull",
+			"files": {
+				"5": "icons/Lacey_0210_5.png",
+				"EX": "icons/Lacey_0210_EX.png"
+			}
+		},
+		{
+			"pairId": "10352000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Alcremie",
+			"files": {
+				"4": "icons/Lacey_0869_4.png",
+				"5": "icons/Lacey_0869_5.png",
+				"EX": "icons/Lacey_0869_EX.png"
+			}
+		},
+		{
+			"pairId": "10352400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Whimsicott",
+			"files": {
+				"5": "icons/Lacey_0547_5.png",
+				"EX": "icons/Lacey_0547_EX.png"
+			}
+		},
+		{
+			"pairId": "10356000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sinistcha",
+			"files": {
+				"5": "icons/Carmine_1013_5.png",
+				"EX": "icons/Carmine_1013_EX.png"
+			}
+		},
+		{
+			"pairId": "10356000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Swadloon",
+			"files": {
+				"4": "icons/Carmine_0541_4.png",
+				"5": "icons/Carmine_0541_5.png",
+				"EX": "icons/Carmine_0541_EX.png"
+			}
+		},
+		{
+			"pairId": "10356100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pecharunt",
+			"files": {
+				"5": "icons/Carmine_1025_5.png",
+				"EX": "icons/Carmine_1025_EX.png"
+			}
+		},
+		{
+			"pairId": "10356800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Mightyena",
+			"files": {
+				"5": "icons/Carmine_0262_5.png",
+				"EX": "icons/Carmine_0262_EX.png"
+			}
+		},
+		{
+			"pairId": "10357000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Hydrapple",
+			"files": {
+				"5": "icons/Kieran_1019_5.png",
+				"EX": "icons/Kieran_1019_EX.png"
+			}
+		},
+		{
+			"pairId": "10357100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Furret",
+			"files": {
+				"5": "icons/Kieran_0162_5.png",
+				"EX": "icons/Kieran_0162_EX.png"
+			}
+		},
+		{
+			"pairId": "10358000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Amoonguss",
+			"files": {
+				"5": "icons/Clive_0591_5.png",
+				"EX": "icons/Clive_0591_EX.png"
+			}
+		},
+		{
+			"pairId": "10359000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Giratina",
+			"files": {
+				"5": "icons/Volo_0487_5.png",
+				"EX": "icons/Volo_0487_EX.png"
+			}
+		},
+		{
+			"pairId": "10360000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Archaludon",
+			"files": {
+				"5": "icons/Drayton_1018_5.png",
+				"EX": "icons/Drayton_1018_EX.png"
+			}
+		},
+		{
+			"pairId": "10363000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Aromatisse",
+			"files": {
+				"3": "icons/Linnea_0683_3.png",
+				"4": "icons/Linnea_0683_4.png",
+				"5": "icons/Linnea_0683_5.png"
+			}
+		},
+		{
+			"pairId": "10364000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Rellor",
+			"files": {
+				"3": "icons/Teddy_0953_3.png",
+				"4": "icons/Teddy_0953_4.png",
+				"5": "icons/Teddy_0953_5.png"
+			}
+		},
+		{
+			"pairId": "10365000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pikachu",
+			"files": {
+				"5": "icons/Red_0025_2_5.png",
+				"EX": "icons/Red_0025_2_EX.png"
+			}
+		},
+		{
+			"pairId": "10366000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Feraligatr",
+			"files": {
+				"5": "icons/Harmony_0160_5.png",
+				"EX": "icons/Harmony_0160_EX.png"
+			}
+		},
+		{
+			"pairId": "10367000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Meganium",
+			"files": {
+				"5": "icons/Urbain_0154_5.png",
+				"EX": "icons/Urbain_0154_EX.png"
+			}
+		},
+		{
+			"pairId": "10367000001",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Avalugg",
+			"files": {
+				"4": "icons/Urbain_0713_4.png",
+				"5": "icons/Urbain_0713_5.png",
+				"EX": "icons/Urbain_0713_EX.png"
+			}
+		},
+		{
+			"pairId": "10651780000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Sandslash",
+			"files": {
+				"3": "icons/Naomi_0028_3.png",
+				"4": "icons/Naomi_0028_4.png",
+				"5": "icons/Naomi_0028_5.png"
+			}
+		},
+		{
+			"pairId": "10652680000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Haunter",
+			"files": {
+				"3": "icons/Helena_0093_3.png",
+				"4": "icons/Helena_0093_4.png",
+				"5": "icons/Helena_0093_5.png"
+			}
+		},
+		{
+			"pairId": "10653680000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Azumarill",
+			"files": {
+				"3": "icons/Kali_0184_3.png",
+				"4": "icons/Kali_0184_4.png",
+				"5": "icons/Kali_0184_5.png"
+			}
+		},
+		{
+			"pairId": "10656000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Eevee",
+			"files": {
+				"3": "icons/Eve_0133_3.png",
+				"4": "icons/Eve_0133_4.png",
+				"5": "icons/Eve_0133_5.png"
+			}
+		},
+		{
+			"pairId": "10657000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Pikachu",
+			"files": {
+				"3": "icons/Petey_0025_3.png",
+				"4": "icons/Petey_0025_4.png",
+				"5": "icons/Petey_0025_5.png"
+			}
+		},
+		{
+			"pairId": "10658000000",
+			"via": "exact",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Slurpuff",
+			"files": {
+				"3": "icons/Katherine_0685_3.png",
+				"4": "icons/Katherine_0685_4.png",
+				"5": "icons/Katherine_0685_5.png"
+			}
+		},
+		{
+			"pairId": "player-alcremie",
+			"via": "protagonist",
+			"basePotential": 4,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Alcremie",
+			"files": {
+				"4": "icons/Scottie_0869_4.png",
+				"5": "icons/Scottie_0869_5.png"
+			}
+		},
+		{
+			"pairId": "player-buzzwole",
+			"via": "protagonist",
+			"basePotential": 5,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Buzzwole",
+			"files": {
+				"5": "icons/Scottie_0794_5.png"
+			}
+		},
+		{
+			"pairId": "player-cobalion",
+			"via": "protagonist",
+			"basePotential": 5,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Cobalion",
+			"files": {
+				"5": "icons/Scottie_0638_5.png"
+			}
+		},
+		{
+			"pairId": "player-mesprit",
+			"via": "protagonist",
+			"basePotential": 5,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Mesprit",
+			"files": {
+				"5": "icons/Scottie_0481_5.png"
+			}
+		},
+		{
+			"pairId": "player-pikachu",
+			"via": "protagonist",
+			"basePotential": 3,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Pikachu",
+			"files": {
+				"3": "icons/Scottie_0025_3.png",
+				"4": "icons/Scottie_0025_4.png",
+				"5": "icons/Scottie_0025_5.png",
+				"EX": "icons/Scottie_0025_EX.png"
+			}
+		},
+		{
+			"pairId": "player-poipole",
+			"via": "protagonist",
+			"basePotential": 5,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Poipole",
+			"files": {
+				"5": "icons/Scottie_0803_5.png"
+			}
+		},
+		{
+			"pairId": "player-raikou",
+			"via": "protagonist",
+			"basePotential": 5,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Raikou",
+			"files": {
+				"5": "icons/Scottie_0243_5.png"
+			}
+		},
+		{
+			"pairId": "player-regirock",
+			"via": "protagonist",
+			"basePotential": 5,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Regirock",
+			"files": {
+				"5": "icons/Scottie_0377_5.png"
+			}
+		},
+		{
+			"pairId": "player-registeel",
+			"via": "protagonist",
+			"basePotential": 5,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Registeel",
+			"files": {
+				"5": "icons/Scottie_0379_5.png"
+			}
+		},
+		{
+			"pairId": "player-solgaleo",
+			"via": "protagonist",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Solgaleo",
+			"files": {
+				"5": "icons/Scottie_0791_5.png",
+				"EX": "icons/Scottie_0791_EX.png"
+			}
+		},
+		{
+			"pairId": "player-torchic",
+			"via": "protagonist",
+			"basePotential": 3,
+			"hasSixEx": false,
+			"exPose": false,
+			"upstreamPokemonName": "Torchic",
+			"files": {
+				"3": "icons/Scottie_0255_3.png",
+				"4": "icons/Scottie_0255_4.png",
+				"5": "icons/Scottie_0255_5.png"
+			}
+		}
+	]
+}

@@ -31,6 +31,7 @@ vi.mock("server-only", () => ({}));
 
 import { CATALOG_ASSET_PATH } from "@/data/catalog-version";
 import { isUnreleasedPair, loadPairs, loadPairsById, loadPairsForClient } from "@/lib/pairs/loader";
+import { isUpcomingPair } from "@/lib/pairs/name";
 import type { PairRecord } from "@/lib/pairs/types";
 
 const repoRoot = join(__dirname, "..");
@@ -82,30 +83,33 @@ describe("判準 A — 沒有來源證實也沒有上架日 (datamine 先行)", 
   });
 });
 
-describe("判準 B — 上架日還沒到", () => {
+describe("尚未上架 — 標示而不是擋住 (2026-09-09 改)", () => {
   // 固定日期的純函式測試 (不依賴今天是哪天, 才不會隨時間變紅/變綠)
   const withSource = { verifiedSources: ["wiki"] };
 
-  it("有來源但日期在未來 = 擋 (判準 A 擋不到的那種)", () => {
-    expect(isUnreleasedPair({ ...withSource, releaseDate: "2026-09-16" }, "2026-09-01")).toBe(true);
+  it("有來源但日期在未來 = 照樣輸出, 只是標成尚未上架", () => {
+    const rec = { ...withSource, releaseDate: "2026-09-16" };
+    expect(isUnreleasedPair(rec)).toBe(false);
+    expect(isUpcomingPair(rec, "2026-09-01")).toBe(true);
   });
 
-  it("上架當天就放行 (是 > 不是 >=)", () => {
-    expect(isUnreleasedPair({ ...withSource, releaseDate: "2026-09-16" }, "2026-09-16")).toBe(false);
-    expect(isUnreleasedPair({ ...withSource, releaseDate: "2026-09-16" }, "2026-09-17")).toBe(false);
+  it("上架當天就不再標示 (是 > 不是 >=)", () => {
+    expect(isUpcomingPair({ releaseDate: "2026-09-16" }, "2026-09-16")).toBe(false);
+    expect(isUpcomingPair({ releaseDate: "2026-09-16" }, "2026-09-17")).toBe(false);
   });
 
-  it("已上市的拍組不受影響, 連沒有來源的也一樣", () => {
-    expect(isUnreleasedPair({ ...withSource, releaseDate: "2019-08-29" }, "2026-09-01")).toBe(false);
-    // 主角拍組是手寫補進來的, verifiedSources 可能是空的 —— 有上架日就不該被擋
-    expect(isUnreleasedPair({ verifiedSources: [], releaseDate: "2026-08-28" }, "2026-09-01")).toBe(false);
+  it("已上市的拍組不標示, 沒有日期的也不標示", () => {
+    expect(isUpcomingPair({ releaseDate: "2019-08-29" }, "2026-09-01")).toBe(false);
+    expect(isUpcomingPair({ releaseDate: null }, "2026-09-01")).toBe(false);
   });
 
-  it("catalog 裡每一筆未來日期的拍組都被擋下 (數量隨時間自然歸零, 不寫死)", () => {
+  it("catalog 裡未來日期的拍組全部進得了對外輸出 (數量隨時間自然歸零, 不寫死)", async () => {
+    const visible = new Set((await loadPairsForClient()).map((p) => p.pairId));
     for (const r of futureDated) {
-      expect(isUnreleasedPair(r), `${r.pairId} ${r.releaseDate} 還沒上架卻沒被擋`).toBe(true);
+      expect(visible.has(r.pairId), `${r.pairId} ${r.releaseDate} 應該要對外輸出`).toBe(true);
+      expect(isUpcomingPair(r, "2026-09-09")).toBe(true);
     }
-    expect(unreleased.length).toBe(noSourceNoDate.length + futureDated.length);
+    expect(unreleased.length).toBe(noSourceNoDate.length);
   });
 });
 

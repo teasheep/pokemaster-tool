@@ -19,60 +19,69 @@ import { memo, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { regionLabel } from "@/data/sync-pairs";
-import { CARD_POLY, hexPoints } from "@/components/sync-pair-defs";
 import { isNewPair } from "@/lib/pairs/name";
 import { useNearViewport } from "@/lib/pairs/use-near-viewport";
+import { usePromoteGesture } from "@/lib/pairs/use-promote-gesture";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 
-const TYPE_FILE: Record<string, string> = {
-  normal: "001", fire: "002", water: "003", electric: "004", grass: "005",
-  ice: "006", fighting: "007", poison: "008", ground: "009", flying: "010",
-  psychic: "011", bug: "012", rock: "013", ghost: "014", dragon: "015",
-  dark: "016", steel: "017", fairy: "018",
-};
-
-// 來自 pomatools main.js: this.color / this.colorDarker 對應 theme 1-18
-const THEME_COLORS: Array<{ color: string; darker: string }> = [
-  { color: "#66b2a5", darker: "#316571" }, // 0 default
-  { color: "#afaeac", darker: "#7d7875" }, // 1
-  { color: "#ee605f", darker: "#ca4b4f" }, // 2
-  { color: "#60c3ec", darker: "#3190b5" }, // 3
-  { color: "#feda3c", darker: "#b09102" }, // 4
-  { color: "#4fcb5d", darker: "#409849" }, // 5
-  { color: "#78c8d1", darker: "#4d9da4" }, // 6
-  { color: "#f9915a", darker: "#c55e24" }, // 7
-  { color: "#c873db", darker: "#9052b3" }, // 8
-  { color: "#d28247", darker: "#a06547" }, // 9
-  { color: "#81a0f0", darker: "#4c73e0" }, // 10
-  { color: "#f682af", darker: "#d44a7e" }, // 11
-  { color: "#aad23d", darker: "#6a9002" }, // 12
-  { color: "#be9778", darker: "#8f6b47" }, // 13
-  { color: "#c89bc2", darker: "#8c6487" }, // 14
-  { color: "#32aacd", darker: "#0d9cab" }, // 15
-  { color: "#9695b4", darker: "#636287" }, // 16
-  { color: "#95aad7", darker: "#62759d" }, // 17
-  { color: "#fa9ead", darker: "#c1666e" }, // 18
-];
-
-// type → theme index (pomatools data.themes[0]%100 正好對到 18 屬性的順序)
-const TYPE_THEME_INDEX: Record<string, number> = {
-  normal: 1, fire: 2, water: 3, electric: 4, grass: 5,
-  ice: 6, fighting: 7, poison: 8, ground: 9, flying: 10,
-  psychic: 11, bug: 12, rock: 13, ghost: 14, dragon: 15,
-  dark: 16, steel: 17, fairy: 18,
-};
-
-function pickTheme(type: string) {
-  const idx = TYPE_THEME_INDEX[type];
-  return idx != null ? THEME_COLORS[idx] : THEME_COLORS[0];
-}
-
-// (外框漸層 / 背景底色 / clipPath 的定義搬到 sync-pair-defs.tsx —— 全站共用一份 defs,
-//  這裡只引用固定 id; 顏色值要改請改那邊)
+// 2026-09-10: sync-pair-defs.tsx 整個刪掉了 —— 外框漸層 / 背景底色 / clipPath 那 10 個 id
+// 在換成官方成品卡之後全站零引用, 卻還在每一頁的 root layout 渲染一次。
 
 // 卡片需要的拍組欄位 = client 投影型別 (單一來源在 @/lib/pairs/types)。
 // 之前這裡手抄了一份 PairRecord, 加欄位會漏同步; 改成 alias 後只剩一處定義。
 export type SyncPairCardData = ClientPairRecord;
+
+/**
+ * NEW 標記 —— **畫在拍組名稱前面**, 不畫在卡面上 (2026-09-09 使用者指定:
+ * 「new 的位置還是不太好, 試試看在拍組名稱前面呢? 這樣至少可以對齊」)。
+ *
+ * 前兩版都不行, 記著免得又繞回去:
+ *  - 壓在卡面下緣 → 蓋住官方卡面的內容。
+ *  - 卡片上方獨立一列 → 要為它固定保留高度, 而那段高度對「沒有 NEW 的卡」是純浪費。
+ * 放進名稱那一行就完全不必處理對齊 —— 名稱本來就是固定兩行高的區塊, 有沒有 NEW 都一樣。
+ *
+ * `isNewPair` 的判定 (半年內初上線) 在 lib/pairs/name.ts, 與這裡只有顯示與否的關係。
+ * 卡牆的名稱由 PairTypeGrid 畫, 卡片自己的 showName 也會畫 —— 兩處都用這一顆。
+ */
+/**
+ * 拍檔石盤徽章 —— 直接用官方那六張 49×22 的圖 (grid_60…grid_70)。
+ * 60-68 是青色、70 是橘色 (滿階自己會亮起來), 那是遊戲本身的視覺語言, 不要自己配色。
+ *
+ * **只有升過才畫** (索引 0 = 60 = 每張卡的起點, 畫了整面牆都掛一顆「60」就不帶資訊了)。
+ * 這是照 pomasters 的做法, 他們用 CSS 把第一張圖藏起來。
+ *
+ * 放在**名稱那一行**不放卡面上, 兩個理由:
+ *  1. 官方卡面的左下角是寶數六角、下緣中央是類別徽章、右下是寶可夢圈, 疊上去一定撞。
+ *  2. 那張圖是 49×22 的長條, 縮進 96px 的卡裡數字看不清楚。
+ */
+export function SyncGridTag({ cap, className }: { cap: number; className?: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- 站內小圖一律原生 img (與 candy.tsx 同)
+    <img
+      src={`/reference/ui/grid_${cap}.webp`}
+      alt={`拍檔石盤 ${cap}`}
+      title={`拍檔石盤 ${cap}`}
+      width={49}
+      height={22}
+      /* 高度跟著字級走, 寬度照 49:22 自己算 —— 名稱那一行的字級在卡牆與側板不一樣 */
+      className={cn("mr-1 inline-block h-[1.25em] w-auto align-[-0.2em]", className)}
+    />
+  );
+}
+
+export function NewTag({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "mr-1 inline-block rounded-full bg-rose-600 px-1 py-px align-[0.05em]",
+        "text-[0.85em] font-extrabold leading-none text-white",
+        className
+      )}
+    >
+      NEW
+    </span>
+  );
+}
 
 type Props = {
   pair: SyncPairCardData;
@@ -89,9 +98,12 @@ type Props = {
   selected?: boolean;
   className?: string;
   showName?: boolean;
-  hideStars?: boolean;
-  /** 顯示 EX role 第二徽章 (預設關, 由 /pairs 全域 toggle 控制) */
-  showExRole?: boolean;
+  /**
+   * 這個人**已經解鎖 EX 體系** (`ex_role_unlocked`, 0065) → 卡片左緣多畫一顆體系圖示。
+   * 這是**使用者資料**不是全域開關 (舊版的 `showExRole` 是後者, 全站零呼叫端已移除):
+   * 解鎖了才看得到, 與遊戲裡一樣。混多人的卡牆不要傳 (見 AGENTS「一面牆代表誰」)。
+   */
+  exRoleUnlocked?: boolean;
   /**
    * 換掉訓練家立繪的來源 (data: URL 也可以) —— **只給本機的取景工具頁用**
    * (`/dev/trainer-art`, 那頁在 cloudflare build 完全不存在)。
@@ -103,15 +115,19 @@ type Props = {
   /** 是否已擁有; false 時卡片變灰 (管理頁未點亮狀態) */
   owned?: boolean;
   /**
-   * 顯示 EX 換裝標記。EX 換裝 UI 已下架 (見 AGENTS.md『EX 裝』), 目前全站沒有呼叫端,
-   * 立繪也一律用一般立繪 — 重啟時連同 exStyleImagePath 一起復原。
+   * 顯示 EX 換裝標記。**這個功能不會回來了** (2026-09-10 使用者決定) ——
+   * 6★EX 的卡面本來就是官方在 6★EX 時的樣子, 不需要我方再疊一個標記。
+   * prop 留著只為呼叫端相容, 全站零呼叫端。
    */
   exStyle?: boolean;
-  /** 太晶化拍組: 寶可夢用六角形框而非圓形 */
+  /**
+   * 太晶化拍組。**2026-09-09 起不再影響卡片長相** —— 六角框烤在官方卡面裡了,
+   * 形狀由官方那張圖決定。prop 保留只為了呼叫端相容 (仍有幾處在傳)。
+   */
   tera?: boolean;
   /**
-   * 精簡模式: 只留拍組圖 + 星級 + 寶數 + 超覺醒, 隱藏 Lv 文字、招式屬性 icon、
-   * 角色定位與拍組類別徽章 (道館用途只在意「是誰、幾寶」)。
+   * 精簡模式。換成官方成品卡之後**只剩「隱藏 Lv 文字」一個作用** ——
+   * 屬性圓 / 角色定位 / 拍組類別徽章都烤在官方圖裡, 挖不掉也不該挖。
    */
   minimal?: boolean;
   /**
@@ -124,6 +140,11 @@ type Props = {
    * 有給才會變成可點的按鈕; 點擊不會觸發卡片本身的 onClick。
    */
   onCountClick?: () => void;
+  /**
+   * 升星 (桌機右鍵 / 手機長按) —— 見 lib/pairs/use-promote-gesture.ts。
+   * 沒給就完全不掛事件, 卡片行為與以前一模一樣。
+   */
+  onPromote?: () => void;
   /** 略過延遲判定, 立刻給圖 (首屏就看得到的卡用) */
   eager?: boolean;
   /** 延遲載圖的 IntersectionObserver root — 卡片在自己捲的框裡時要給那個框 */
@@ -142,27 +163,26 @@ export const SyncPairCard = memo(function SyncPairCard({
   selected,
   className,
   showName = true,
-  hideStars = false,
-  showExRole = false,
+  exRoleUnlocked = false,
   trainerImgSrc,
   superAwakening = 0,
   owned = true,
   exStyle = false,
-  tera,
   minimal = false,
   awakenable,
   onCountClick,
+  onPromote,
   eager = false,
   scrollRoot,
 }: Props) {
   const handleClick = onClick ?? (onSelect ? () => onSelect(pair.pairId) : undefined);
+  const promoteBind = usePromoteGesture(onPromote);
   // 唯讀卡 (無任何點擊行為) 渲染成 div, 不給 hover 浮起/按壓動效 — 可聚焦 button
   // 假裝可點會誤導 (成員唯讀視圖/隊伍展示卡)
   const interactive = !!handleClick || !!onCountClick;
 
-  // 太晶拍組 (呼叫端可用 prop 覆寫); 判定規則在 loader.loadPairsForClient —
-  // 原本要載整包 forms 才算得出來, 現在投影時就折成 isTera 布林
-  const isTera = tera ?? pair.isTera;
+  // 太晶的六角框現在烤在官方卡面裡 → isTera 不再影響卡片長相。
+  // tera / pair.isTera 兩個都保留 (呼叫端與投影都還在用), 只是這裡不再讀。
 
   // 點左下角計數時的回饋: 數字彈一下 (值變才觸發, 不吃初次渲染)
   const shownCount = superAwakening > 0 ? superAwakening : (potential ?? 0);
@@ -189,8 +209,9 @@ export const SyncPairCard = memo(function SyncPairCard({
   // (public/.assetsignore)。所以這裡改回 .png 會讓線上整牆變空圖。
   // 重啟 EX 換裝時要把 exStyleImagePath 加回 CLIENT_PAIR_FIELDS (見 AGENTS.md『EX 裝』) —
   // 立繪路徑一律吃 catalog 的 exStyleImagePath, 不要用 trainerId 拼 (同名多變體會拼錯)。
-  const tImg = trainerImgSrc ?? `/reference/trainer/${pair.trainerId}_128.webp`;
-  const pImg = `/reference/pokemon/${pair.pokemonId}_128.webp`;
+  // ⚠ 換成官方卡面之後這裡不再拼訓練家 / 寶可夢的圖 —— 兩張都烤在卡面裡了。
+  //    `trainerImgSrc` (全站只有 /dev/trainer-art 會傳) 因此**暫時失效**, 那頁要另外處理。
+  void trainerImgSrc;
 
   // 延遲載圖: 只延後「每張卡獨有的重圖」= 訓練家立繪 + 寶可夢圖 (一頁 645 張卡 ≈ 981 個請求
   // /14.7MB, 佔全頁圖片位元組 98.7%)。星星/屬性/角色/徽章/ballground 是全站共用的幾十個小檔,
@@ -201,20 +222,39 @@ export const SyncPairCard = memo(function SyncPairCard({
   // 給過圖就不再收回: eager 是「第 N 張」的位置判定, 篩選/排序/切子分頁後名次會變,
   // 沒黏住的話已經下載好的圖會被拔掉再重載。(在 render 中寫 ref 這裡是安全的 —
   //  單向、只影響自己這張卡的輸出, 最壞情況是「圖照樣顯示」。)
-  const shownRef = useRef(false);
-  shownRef.current = shownRef.current || eager || near;
-  const showArt = shownRef.current;
+  // 「給過圖就黏住」改用 state, 不要在 render 階段寫 ref —— 那會被 react-hooks/refs 擋下,
+  // 而規則是對的 (那樣寫元件不保證跟著更新)。
+  //
+  // 這裡用的是 React 官方認可的「render 期間調整 state」寫法: 條件式 setState + 立刻回傳,
+  // React 會在同一次 render 內重跑這個元件, 不會多一輪 commit, 也不是 effect
+  // (所以不撞 set-state-in-effect)。`showArt` 另外 OR 上當下的 eager / near,
+  // 讓「這一輪就該給圖」不必等到重跑。
+  const [everShown, setEverShown] = useState(false);
+  /** 卡面圖載好了沒 —— 只影響淡入, 沒載好也不會擋住任何互動 */
+  const [artLoaded, setArtLoaded] = useState(false);
+  const showArt = everShown || eager || near;
+  if (showArt && !everShown) setEverShown(true);
 
-  // 星星圖 (官方資產) — 星數 6 = 6★EX 用 EX 星, 其餘一律 p5_N。
-  // (以前「可 6EX 的拍組」即使只有 3★ 也套 pex_N 的星, 同一個星數兩種長相, 已取消)
   const isSixEx = promo >= 6 || !!ex;
-  const starsUrl = isSixEx ? "/reference/ui/pex_ex.webp" : `/reference/ui/p5_${Math.min(promo, 5)}.webp`;
 
-  const theme = pickTheme(pair.type);
-  // frame 色 = 當前星級 (3-5★ 銅/銀/金); 6★EX 不另外做外框變化 — 星星已經表達了
-  const frameId = `spc-frame-${Math.min(5, Math.max(3, promo))}`;
-  // 角色背景底色依星數 (非屬性): 6★EX 淡彩虹, 否則 radial glow (3-5★ 銅/銀/金)
-  const bgId = ex ? "spc-bg-ex" : `spc-bg-${Math.min(5, Math.max(3, promo))}`;
+  /**
+   * 官方卡面 —— 卡片本體現在是**一張圖**, 不再自己合成 (2026-09-09 使用者指定:
+   * 「那邊只有壓平的成品卡, 那就把我們的卡全面改成那邊的成品卡」)。
+   *
+   * 底色 / 外框 / 星星 / 屬性圓 / 角色定位 / 拍組類別徽章 / 寶可夢圈 **全都烤在這張圖裡**,
+   * 所以那幾層 SVG 已經移除。我們自己畫的只剩「這個人的狀態」: 左下角寶數計數、
+   * 卡片上方的 NEW、以及蓋掉被計數擋住的類別徽章。
+   *
+   * 檔名 `<pairId>_<3|4|5|EX>.webp`, 星級由 promo 決定 —— 官方的 _3/_4/_5 只差左上角
+   * 那條星星, 外框與底色三階完全相同 (已逐像素驗證), 所以「外框不因星級變化」照舊成立。
+   * 沒傳 promotion 就自動拿到 basePotential 那張 (混多人的牆就是這樣用的)。
+   *
+   * EX 檔只有 634/654 有 (取決於這個拍組在遊戲裡有沒有 EX 姿勢), 用 hasSixEx 當守門:
+   * 實測 hasSixEx=true 的每一筆都有 _EX 檔, 反向只有 1 筆例外 (小菊兒（合眾）&電飛鼠,
+   * 那是我方 wiki 抓取的頁名歸屬錯誤, 修在資料端不是這裡)。
+   */
+  const cardTier = isSixEx && pair.hasSixEx ? "EX" : String(Math.min(5, promo));
+  const cardUrl = `/reference/card/${pair.pairId}_${cardTier}.webp`;
 
   const dim = { sm: 96, md: 128, lg: 192 }[size];
 
@@ -222,9 +262,26 @@ export const SyncPairCard = memo(function SyncPairCard({
   return (
     <Wrapper
       {...(handleClick ? { type: "button" as const, onClick: handleClick } : { role: "img" })}
+      {...(promoteBind
+        ? {
+            onContextMenu: promoteBind.onContextMenu,
+            onPointerDown: promoteBind.onPointerDown,
+            onPointerMove: promoteBind.onPointerMove,
+            onPointerUp: promoteBind.onPointerUp,
+            onPointerCancel: promoteBind.onPointerCancel,
+            onClickCapture: promoteBind.onClickCapture,
+          }
+        : null)}
       aria-label={cardLabel}
       className={cn(
-        "group relative inline-block overflow-hidden rounded-xl",
+        "group relative inline-block rounded-xl",
+        // 左下角的計數放大時會超出 128×128 的畫布 (六角本來就貼著左下緣),
+        // overflow-hidden 會把放大的那一圈切掉一角, 很難看
+        // (2026-09-10 使用者:「六角有變好, 但左下會被裁掉」)。
+        // 只有真的可點的卡才放行 —— 其餘維持原本的裁切, 免得哪天有東西不小心漏出來。
+        // hover 時抬到上層, 免得溢出的那一角被右邊/下面那張卡蓋住。
+        onCountClick ? "overflow-visible hover:z-20" : "overflow-hidden",
+        promoteBind?.className,
         // 點擊回饋: hover 微放大提亮, 按下時縮一下 (唯讀卡不給, 避免誤導可點)
         interactive &&
           "transition-[transform,filter,box-shadow] duration-150 ease-out " +
@@ -246,54 +303,41 @@ export const SyncPairCard = memo(function SyncPairCard({
         xmlns="http://www.w3.org/2000/svg"
         width={dim}
         height={dim}
-        className="block transition-[filter,opacity] duration-300 ease-out motion-reduce:transition-none"
+        className={cn(
+          "block transition-[filter,opacity] duration-300 ease-out motion-reduce:transition-none",
+          // ⚠ **最外層的 <svg> 自己也會裁**: UA 樣式表對 outermost svg 是 overflow:hidden,
+          // 所以只在外面那顆 div/button 開 overflow-visible 沒有用 —— 放大的六角超出
+          // viewBox (0 0 128 128) 的那一圈還是會被 SVG viewport 切掉
+          // (2026-09-10 使用者連續回報兩次「左下會被裁掉」, 第一次只改了外層)。
+          // 兩層都要開才看得到完整的六角。
+          onCountClick && "overflow-visible"
+        )}
         style={owned ? undefined : { filter: "grayscale(1) brightness(0.55)", opacity: 0.6 }}
       >
-        {/* defs 全站共用一份 (SyncPairDefs, 在 root layout 渲染) — 這裡只引用固定 id */}
-
         {/* 0. 外層 128×128 透明 — 讓 star/hex/pokemon 等元件可以超出框,跟遊戲一致 */}
 
-        {/* 1. 卡片 body polygon — 背景底色依星數 (稀有度), 非屬性 */}
-        <polygon points={CARD_POLY} fill={`url(#${bgId})`} />
-
-        {/* 2. 訓練家圖 — 放大約 13% (144×144 置中偏上) 讓頭更大、被框裁掉更多, 更貼近遊戲內比例 */}
-        <g clipPath="url(#spc-clip-card)">
-          <image
-            href={showArt ? tImg : undefined}
-            x="-8"
-            y="-5"
-            width="144"
-            height="144"
-            preserveAspectRatio="xMidYMid slice"
-          />
-        </g>
-
-        {/* 3a. polygon 內框 — rarity 漸層描邊 (3★ 銅/4★ 銀/5★ 金; 6★EX 不變框) */}
-        <polygon
-          points={CARD_POLY}
-          fill="none"
-          stroke={`url(#${frameId})`}
-          strokeWidth="4"
-          strokeLinejoin="round"
+        {/* 1. 卡片本體 = 官方成品卡一張圖 (128×128)。
+            舊的 1-4 / 6 / 6b / 8 層 (底色 polygon、訓練家圖、外框、星星、屬性圓、角色定位、
+            寶可夢圈) 全部烤在這張圖裡, 已移除 —— 不要再疊自己的版本上去, 會變成雙畫。
+            `hideStars` 因此也失效 (星星在圖裡挖不掉), 那個 prop 全站零呼叫端, 留著只是相容。 */}
+        {/* 卡面圖**載好才淡入** (2026-09-10 使用者:「篩選完以後拍組用閃的出現」)。
+            篩完之後新進畫面的卡是新掛載的元件, 圖要現抓 —— 沒有這一層的話,
+            使用者看到的是一格空白然後圖「啪」一下蓋上去, 整面牆同時閃。
+            120ms 夠短, 不會變成「圖慢慢浮出來」的那種假掰效果; 已經在快取裡的圖
+            onLoad 會在同一幀觸發, 幾乎看不到過渡。 */}
+        <image
+          href={showArt ? cardUrl : undefined}
+          x="0"
+          y="0"
+          width="128"
+          height="128"
+          preserveAspectRatio="xMidYMid meet"
+          onLoad={() => setArtLoaded(true)}
+          className={cn(
+            "transition-opacity duration-[120ms] ease-out motion-reduce:transition-none",
+            artLoaded ? "opacity-100" : "opacity-0"
+          )}
         />
-        {/* 3b. 內側細暗線增加層次 */}
-        <polygon
-          points={CARD_POLY}
-          fill="none"
-          stroke="black"
-          strokeOpacity="0.18"
-          strokeWidth="0.5"
-        />
-
-        {/* 4. 星星 (官方 PNG, 6★EX 較寬, 一般 1-5★ 較窄) */}
-        {!hideStars && (
-          <image
-            href={starsUrl}
-            x="2"
-            y="2"
-            width={isSixEx ? 66 : 54}
-          />
-        )}
 
         {/* 5. Lv 文字 (右上, 描邊白字, 避開放大星星) */}
         {!minimal && level != null && (
@@ -313,91 +357,44 @@ export const SyncPairCard = memo(function SyncPairCard({
           </g>
         )}
 
-        {/* 6. 屬性 icon — 主屬性大顆 (遊戲原位 92,30) 兩種模式都顯示;
-            moveTypes[0] 不一定等於主屬性 (輔助手常有雜色招), 不能拿來當主屬性。
-            一般模式另列「與主屬性不同的」招式屬性小 icon (垂直排, 主屬性下方) */}
-        <image
-          href={`/reference/ui/TYPE_${TYPE_FILE[pair.type] ?? "001"}.webp`}
-          x="94"
-          y="26"
-          width="28"
-          height="28"
-          preserveAspectRatio="xMidYMid meet"
-        />
-        {(minimal ? [] : (pair.moveTypes ?? []).filter((t) => t !== pair.type))
-          .slice(0, 2)
-          .map((t, i) => {
-            const tf = TYPE_FILE[t] ?? "001";
-            return (
-              <image
-                key={t + i}
-                href={`/reference/ui/TYPE_${tf}.webp`}
-                x="100"
-                y={58 + i * 17}
-                width="16"
-                height="16"
-                preserveAspectRatio="xMidYMid meet"
-              />
-            );
-          })}
+        {/* 6 / 6b 已移除: 主屬性圓與角色定位徽章都烤在官方卡面裡了。
+            招式屬性的小 icon 也一併拿掉 —— 官方卡面沒有這個東西, 而且我方 moveTypes
+            有 17 筆根本不含拍組自身的屬性 (forms[].moves 611 筆全空, 推導不回來),
+            那 38 張卡因此多畫了一顆「一般」圖示。少畫這一層正好順手修掉。 */}
 
-        {/* 6b. 角色定位 (ROLE_* 攻擊/技巧/輔助/衝刺/場地) — 左側星星下方。
-            辨識拍組定位的關鍵資訊, minimal 卡也要顯示 (與屬性 icon 同級) */}
-        {pair.roleAsset && (
-          <image
-            href={`/reference/ui/${pair.roleAsset}.webp`}
-            x="2"
-            y="42"
-            width="30"
-            height="30"
-            preserveAspectRatio="xMidYMid meet"
-          />
-        )}
-        {/* 6c. EX role (預設關, showExRole=true 才顯示) — 橫向放在主 role 右邊以節省垂直空間;
-            minimal 卡也要吃 (收藏牆的「顯示 EX role」開關才有作用) */}
-        {showExRole && pair.hasExRole && pair.exRole && (
+        {/* 6c. EX 體系圖示 —— **解鎖了才畫** (使用者資料, 不是全域開關)。
+            官方卡面把「原本的體系」烤在左緣 x7..29 / y45..59, 這顆就**疊在它正下方**,
+            與遊戲裡「解鎖後多一個體系」的呈現一致 (參考站也是這樣排的)。
+            用同一組官方圖 (`/reference/ui/ROLE_*.webp`), 高度對齊上面那顆的 14px,
+            寬度讓 meet 自己算 —— 那六張圖的長寬比本來就不一樣 (55×32 到 61×40)。
+            ⚠ 不要改成畫在右邊: 右緣中段是官方的同步圖示, 下面是寶可夢圈, 兩邊都會撞。 */}
+        {exRoleUnlocked && pair.hasExRole && pair.exRole && (
           <image
             href={`/reference/ui/${pair.exRole}.webp`}
-            x="33"
-            y="44"
+            /* 2026-09-10 使用者微調: 往左 2 / 往下 2 —— 與烤在卡面上那顆的左緣對齊, 中間留一點空 */
+            x="5"
+            y="61"
             width="26"
-            height="26"
-            preserveAspectRatio="xMidYMid meet"
+            height="16"
+            preserveAspectRatio="xMinYMid meet"
           />
         )}
-        {/* 6c2. NEW 徽章 — 半年內上架的拍組 (下緣中央, 壓在卡框上) */}
-        {isNewPair(pair) && (
-          <g>
-            <rect
-              x="48"
-              y="112"
-              width="32"
-              height="14"
-              rx="7"
-              fill="#e11d48"
-              stroke="#ffffff"
-              strokeWidth="1.2"
-            />
-            <text
-              x="64"
-              y="122.5"
-              textAnchor="middle"
-              fontSize="9.5"
-              fontWeight="800"
-              fill="#ffffff"
-              fontFamily="Roboto, sans-serif"
-            >
-              NEW
-            </text>
-          </g>
-        )}
+        {/* 6d. 拍組類別徽章 (master/exmaster/arc/academy) — **移到下緣中央** (2026-09-09 使用者指定
+            「徽章改移到 new 的位置」)。
+            為什麼要重畫一次: 官方卡面自己也有這顆徽章, 但它烤在**左下角 x3..28 y92..117**,
+            正好被我們的寶數六角整個蓋住 (實測只露出左斜邊 3-6 個像素)。寶數計數不能搬 ——
+            「點左下角 = 寶數循環」是 AGENTS 明訂的手勢, 首頁 hero 在演它、教學也在框它。
+            所以讓徽章讓位, 在計數右邊的空白處重畫一顆。
 
-        {/* 6d. 拍組類別徽章 (master/exmaster/arc) — 遊戲內小卡有, minimal 也要顯示 */}
-        {pair.pairKind && pair.pairKind !== "none" && (
+            ⚠ **只在計數真的有畫的時候才重畫** (`potential != null`) —— 否則就是同一顆徽章
+            出現兩次: 官方那顆在左下角好端端露著, 我們又在中間補一顆。
+            2026-09-09 第一版漏了這個條件, 訪客版的 /pairs (沒有收藏 = 不畫計數) 整牆
+            雙徽章。這個壞法只在「沒有計數」的畫面上看得到, 登入後反而正常, 很容易漏。 */}
+        {pair.pairKind && pair.pairKind !== "none" && potential != null && (
           <image
             href={`/reference/ui/${pair.pairKind}.webp`}
-            x="4"
-            y="68"
+            x="53"
+            y="103"
             width="22"
             height="22"
             preserveAspectRatio="xMidYMid meet"
@@ -421,34 +418,23 @@ export const SyncPairCard = memo(function SyncPairCard({
             }
             className={cn(
               "origin-[19px_108px] transition-transform duration-150 ease-out motion-reduce:transition-none",
-              onCountClick && "group/count hover:scale-110 active:scale-95",
+              // 可點的提示 = **六角本身放大**, 不要在它後面透出一顆圓
+              // (2026-09-10 使用者:「會有一個圓形的 hover 框透出來, 但我不要,
+              //  我想要就是那個六角形 hover 放大一點」+「效果明顯一點」)。
+              // 圓形本來是要當光暈, 但那個形狀跟遊戲裡的六角對不起來, 看起來像多一層東西。
+              // 觸控裝置沒有 hover → 常駐放大一點點, 不然完全沒有「這裡可以點」的線索。
+              onCountClick &&
+                "group/count hover:scale-[1.32] active:scale-95 pointer-coarse:scale-105",
+              // 陰影只是讓放大的六角從卡面上浮起來, 不是要壓一塊黑影
+              // (2026-09-10 使用者:「陰影有點深, 我想要亮一點點的陰影」)
+              onCountClick &&
+                "hover:[filter:drop-shadow(0_1px_2px_rgb(0_0_0/0.28))]",
               pop && "animate-count-pop"
             )}
             style={onCountClick ? { cursor: "pointer" } : undefined}
           >
-            {/* 可點時: 原生 tooltip + hover 白色光暈, 讓「這裡能點」一目瞭然 */}
-            {onCountClick && (
-              <>
-                <title>點一下 +1 (寶數 → 超覺醒 → 歸零)</title>
-                {/* 觸控裝置沒有 hover — 光暈常駐淡顯 (pointer-coarse), 提示這裡可點 */}
-                <circle
-                  cx="19"
-                  cy="108"
-                  r="17"
-                  fill="#ffffff"
-                  className="opacity-0 transition-opacity duration-150 group-hover/count:opacity-30 pointer-coarse:opacity-20"
-                />
-                <circle
-                  cx="19"
-                  cy="108"
-                  r="17"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="2"
-                  className="opacity-0 transition-opacity duration-150 group-hover/count:opacity-90 pointer-coarse:opacity-60"
-                />
-              </>
-            )}
+            {/* 可點時只留原生 tooltip —— 放大就是提示本身 (見上面 className 的註解) */}
+            {onCountClick && <title>點一下 +1 (寶數 → 超覺醒 → 歸零)</title>}
             {/* 放大的可點區域 (透明) — 左下象限都算, sm 卡換算約 45×42px 觸控目標 */}
             {onCountClick && <rect x="-6" y="72" width="60" height="56" fill="transparent" />}
             <image
@@ -492,31 +478,8 @@ export const SyncPairCard = memo(function SyncPairCard({
           </g>
         )}
 
-        {/* 8. Pokemon 圈 (brybry 圖較少留白, 縮成 r=24 native size 不再放大):
-            外圈 r=24 theme.darker + ballground 44×44 + pokemon 44×44 */}
-        {tera ? (
-          <polygon points={hexPoints(24)} fill={theme.darker} stroke="#b06cff" strokeWidth="1.5" />
-        ) : (
-          <circle cx="100" cy="100" r="24" fill={theme.darker} />
-        )}
-        <g clipPath={isTera ? "url(#spc-clip-poke-hex)" : "url(#spc-clip-poke-circle)"}>
-          <image
-            href="/reference/ui/ballground.webp"
-            x="78"
-            y="78"
-            width="44"
-            height="44"
-            preserveAspectRatio="xMidYMid meet"
-          />
-          <image
-            href={showArt ? pImg : undefined}
-            x="78"
-            y="78"
-            width="44"
-            height="44"
-            preserveAspectRatio="xMidYMid meet"
-          />
-        </g>
+        {/* 8 已移除: 寶可夢圈 (含太晶的六角框與圈底) 都烤在官方卡面裡。
+            太晶拍組的框形狀因此也由官方決定, 我方 isTera 的 11→17 筆缺漏不再影響卡面長相。 */}
       </svg>
 
       {showName && (
@@ -527,6 +490,7 @@ export const SyncPairCard = memo(function SyncPairCard({
           )}
         >
           <div className="font-semibold truncate">
+            {isNewPair(pair) ? <NewTag /> : null}
             {pair.trainerNameZh ?? pair.trainerName}
           </div>
           <div className="text-muted-foreground truncate">

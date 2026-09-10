@@ -40,7 +40,14 @@ export async function syncMemberPair(
    * 兩條寫入路徑都要維持: 本人自己改走這裡, 管理員代改走 set_member_pair。
    */
   level = 1,
-  promotion?: number
+  promotion?: number,
+  /**
+   * 拍檔石盤 (0063) 與 EX 體系解鎖 (0065) —— 同樣是 member_pairs 的鏡像。
+   * 拍檔石盤的上限 (索引 = 寶數) 在這裡一起夾, 與 set_member_pair 的 RPC 同一條規則:
+   * 兩條寫入路徑都要自己夾, 只夾一邊的話另一條就會寫進遊戲裡不可能的組合。
+   */
+  syncGrid?: number,
+  exRoleUnlocked?: boolean
 ): Promise<void> {
   if (!gym?.memberId) return;
   const grade = gradeOf(potential, superAwakening);
@@ -55,6 +62,11 @@ export async function syncMemberPair(
     return;
   }
   const sa = Math.max(0, Math.min(5, superAwakening));
+  // 超覺醒時寶數視為 5 (與 RPC 的 v_pot 同一條), 所以上限用夾過的寶數算
+  const potForCap = sa > 0 ? 5 : Math.max(0, Math.min(5, potential));
+  // 上限索引 = 寶數 (2026-09-10 使用者更正: 寶1 到 62 … 寶5 到 70; 第一版每段都多開一格)
+  const gridCap = potForCap;
+  const grid = syncGrid == null ? null : Math.max(0, Math.min(gridCap, syncGrid));
   // 寶0 = 不持有 → 直接刪列, 不要留 grade=0 的幽靈列
   // (成員管理頁的「持有 N」與道館持有率都是數列數, 留著會算進去)
   if (grade === 0) {
@@ -70,7 +82,12 @@ export async function syncMemberPair(
   const { error } = existing && existing.length > 0
     ? await supabase
         .from("member_pairs")
-        .update({ grade, super_awakening: sa, ex_style_worn: exStyleWorn, level, promotion: promotion ?? null })
+        .update({
+          grade, super_awakening: sa, ex_style_worn: exStyleWorn, level,
+          promotion: promotion ?? null,
+          sync_grid: grid,
+          ex_role_unlocked: exRoleUnlocked ?? null,
+        })
         .eq("id", existing[0].id)
     : await supabase.from("member_pairs").insert({
         gym_id: gym.gymId,
@@ -82,6 +99,8 @@ export async function syncMemberPair(
         ex_style_worn: exStyleWorn,
         level,
         promotion: promotion ?? null,
+        sync_grid: grid,
+        ex_role_unlocked: exRoleUnlocked ?? null,
       });
   if (error) console.warn("member_pairs 同步失敗:", error.message);
 }

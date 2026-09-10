@@ -117,7 +117,7 @@ export default function PrivacyPage() {
             <p>你可以隨時：</p>
             <ul className="mt-1.5 list-disc space-y-1.5 pl-5">
               <li>在「個人設定」查看與修改你的名稱與頭貼</li>
-              <li>在「拍組」與「我的資源」修改或清除你的遊戲資料</li>
+              <li>在「拍組」與「我的背包」修改或清除你的遊戲資料</li>
               <li>停用分享連結、重設資料連線金鑰</li>
               <li>要求刪除整個帳號（請以下方聯絡方式告知）</li>
             </ul>

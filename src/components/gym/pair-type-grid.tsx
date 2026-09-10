@@ -6,11 +6,12 @@
 
 import { memo, startTransition, useCallback, useEffect, useMemo, useState } from "react";
 
-import { SyncPairCard } from "@/components/sync-pair-card";
+import { NewTag, SyncGridTag, SyncPairCard } from "@/components/sync-pair-card";
 import { TypeBadge } from "@/components/sync-pair-badges";
 import { PairWallSkeleton } from "@/components/skeletons";
 import { ALL_TYPES } from "@/data/sync-pairs";
-import { pairComparator, pairName, type PairSortKey } from "@/lib/pairs/name";
+import { SYNC_GRID_CAPS } from "@/lib/collection-entry";
+import { isNewPair, pairComparator, pairName, type PairSortKey } from "@/lib/pairs/name";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import type { SyncPairType } from "@/lib/supabase/types";
 
@@ -34,11 +35,17 @@ export type GridItem = {
   onClick?: () => void;
   /** 左下角計數點擊 (寶數 +1 → 超覺醒 → 循環) */
   onCountClick?: () => void;
+  /** 升星 (右鍵 / 長按) */
+  onPromote?: () => void;
+  /** 拍檔石盤段數索引 0-5; 0 (未升級) 不畫 */
+  syncGrid?: number;
+  /** 這個人已解鎖 EX 體系 → 卡面左緣多一顆體系圖示 */
+  exRoleUnlocked?: boolean;
 };
 
 /**
  * SSR HTML 就帶 href 的張數 (跨屬性連續數)。
- * 這是「張數」不是「列數」, 而每列幾張隨螢幕寬變: 桌機約 13 張/列, 手機只有 3 張/列。
+ * 這是「張數」不是「列數」, 而每列幾張隨螢幕寬變: 桌機約 13 張/列, 手機 4 張/列。
  * 給 60 的話桌機是 4-5 列 (剛好一屏), 手機卻是 20 列 ≈ 4 個螢幕高 — 等於在最該省流量的
  * 裝置上先下載 120 張圖。給 24: 桌機 SSR 就填滿前兩列, 手機約一屏; 其餘由 hydration 後的
  * IntersectionObserver + 800px 預載邊界接手, 使用者捲到時圖已經在了。
@@ -53,32 +60,44 @@ const DEFAULT_EAGER_COUNT = 24;
 const GridCell = memo(function GridCell({
   item,
   size,
-  showExRole,
   eager,
   scrollRoot,
   onSelect,
   onCount,
+  onPromote,
   first = false,
 }: {
   item: GridItem;
   size: "sm" | "md";
-  showExRole: boolean;
   eager: boolean;
   scrollRoot?: Element | null;
   onSelect?: (key: string) => void;
   onCount?: (key: string) => void;
+  onPromote?: (key: string) => void;
   /** 整面牆的第一張 — 使用教學要框的目標 (只標一張, 645 張都標沒有意義) */
   first?: boolean;
 }) {
   const key = item.key;
   const select = useCallback(() => onSelect?.(key), [onSelect, key]);
   const count = useCallback(() => onCount?.(key), [onCount, key]);
+  const promote = useCallback(() => onPromote?.(key), [onPromote, key]);
   // grid 級 handler 優先; 沒給才退回 GridItem 自己的 (兩種都留著, 呼叫端擇一)
   const handleClick = onSelect ? select : item.onClick;
   const handleCount = onCount ? count : item.onCountClick;
+  // 升星只對**持有的卡**有意義 —— 沒有這隻拍組卻把它設成 6★EX 是遊戲裡不存在的狀態
+  // (2026-09-10 使用者:「未持有是不是就不該讓他設定星數那些」, 側板那邊也是同一條)。
+  // 灰卡不掛這個手勢, 右鍵就回到瀏覽器原本的選單, 不會變成「按了沒反應」。
+  const handlePromote = item.owned ? (onPromote ? promote : item.onPromote) : undefined;
 
   return (
-    <div className="relative w-24" data-tour={first ? "pair-card" : undefined}>
+    <div
+      className="relative w-[24%] max-w-24 sm:w-24"
+      // 給 QA 腳本抓的穩定 hook —— **不要用樣式 class 當選擇器**
+      // (前科 2026-09-10: qa:click 用 `div.relative.w-24`, 手機版面一改成
+      //  `w-[24%] max-w-24 sm:w-24` 就整批抓不到, 四條檢查連帶沒跑到)
+      data-pair-cell=""
+      data-tour={first ? "pair-card" : undefined}
+    >
       {item.corner ? (
         <span className="pointer-events-none absolute -right-0.5 -top-0.5 z-10 leading-none drop-shadow">
           {item.corner}
@@ -96,18 +115,19 @@ const GridCell = memo(function GridCell({
           superAwakening={item.superAwakening}
           awakenable={item.pair.hasAwakening}
           ex={item.ex}
-          showExRole={showExRole}
+          exRoleUnlocked={item.exRoleUnlocked}
           onClick={handleClick}
           onCountClick={handleCount}
+          onPromote={handlePromote}
           eager={eager}
           scrollRoot={scrollRoot}
-          className="w-24"
+          className="h-auto w-full"
         />
       ) : (
         <button
           type="button"
           onClick={handleClick}
-          className="flex h-24 w-24 items-center justify-center rounded-xl border border-dashed p-1 text-center text-[10px] leading-tight text-muted-foreground hover:bg-accent/40"
+          className="flex aspect-square w-full items-center justify-center rounded-xl border border-dashed p-1 text-center text-[10px] leading-tight text-muted-foreground hover:bg-accent/40"
           title="圖鑑未收錄此拍組"
         >
           {item.fallbackLabel ?? "未知拍組"}
@@ -117,13 +137,17 @@ const GridCell = memo(function GridCell({
           固定兩行高 (leading-tight × 2 = 2.5em): 名字一行/兩行的卡混在一起時,
           下面的持有率長條才會對齊在同一條水平線上。 */}
       <div
-        className="mt-0.5 line-clamp-2 h-[2.5em] w-24 text-center text-[10px] leading-tight text-muted-foreground"
+        className="mt-0.5 line-clamp-2 h-[2.5em] w-full text-center text-[10px] leading-tight text-muted-foreground"
         title={item.pair ? pairName(item.pair) : item.fallbackLabel}
       >
+        {/* NEW 畫在名稱前面 (2026-09-09 使用者指定) —— 名稱這一區本來就是固定兩行高,
+            所以有沒有 NEW 都不影響卡牆的對齊, 也不會蓋到官方卡面。 */}
+        {item.pair && isNewPair(item.pair) ? <NewTag /> : null}
+        {item.syncGrid ? <SyncGridTag cap={SYNC_GRID_CAPS[item.syncGrid]!} /> : null}
         {item.pair ? pairName(item.pair) : (item.fallbackLabel ?? "")}
       </div>
       {item.footer ? (
-        <div className="w-24 text-center text-[10px] leading-tight">{item.footer}</div>
+        <div className="w-full text-center text-[10px] leading-tight">{item.footer}</div>
       ) : null}
     </div>
   );
@@ -134,9 +158,9 @@ export const PairTypeGrid = memo(function PairTypeGrid({
   size = "sm",
   emptyText = "沒有符合的拍組。",
   sortBy = "release-desc",
-  showExRole = false,
   onSelect,
   onCount,
+  onPromote,
   eagerCount = DEFAULT_EAGER_COUNT,
   ssrEagerOnly = false,
   scrollRoot,
@@ -147,11 +171,12 @@ export const PairTypeGrid = memo(function PairTypeGrid({
   /** 組內排序 (預設最新上架優先) */
   sortBy?: PairSortKey;
   /** 顯示 EX role 第二徽章 (由頁面的全域開關控制) */
-  showExRole?: boolean;
   /** 點卡片 (grid 級穩定 handler, 收 GridItem.key); 沒給就用 GridItem.onClick */
   onSelect?: (key: string) => void;
   /** 點左下角計數 (同上, 沒給就用 GridItem.onCountClick) */
   onCount?: (key: string) => void;
+  /** 右鍵 / 長按升星 (同上, 沒給就用 GridItem.onPromote) */
+  onPromote?: (key: string) => void;
   /** 前幾張跳過延遲判定直接載圖 (跨屬性連續數); 給太少會讓首屏下半在 hydration 前是空的 */
   eagerCount?: number;
   /**
@@ -245,17 +270,21 @@ export const PairTypeGrid = memo(function PairTypeGrid({
           <div className="mb-2.5 flex items-center gap-2 border-b border-border/60 pb-1.5">
             <TypeBadge type={type} />
           </div>
-          <div className="flex flex-wrap gap-2.5">
+          {/* 手機一列四張、間距 4px、整列置中 (2026-09-10 使用者:「間隔可以再小一點…
+              不要都靠左然後右邊空很大一塊」)。數字照參考站的 mobile.css:
+              `#syncPairs { gap: 4px }` + `.syncPair { max-width: 24% }` + `justify-content: center`。
+              **桌機維持原樣** (左對齊 / gap 10px / 一列 13 張) —— 那個數字是 eagerCount 在算的。 */}
+          <div className="flex flex-wrap justify-center gap-1 sm:justify-start sm:gap-2.5">
             {list.map((it, i) => (
               <GridCell
                 key={it.key}
                 item={it}
                 size={size}
-                showExRole={showExRole}
                 eager={offset + i < eagerCount}
                 scrollRoot={scrollRoot}
                 onSelect={onSelect}
                 onCount={onCount}
+                onPromote={onPromote}
                 first={offset + i === 0}
               />
             ))}
@@ -264,13 +293,11 @@ export const PairTypeGrid = memo(function PairTypeGrid({
       ))}
       {/* 還沒畫的部分先擺骨架 — 與真實卡牆同構 (96px 卡 + 兩行卡名 + 屬性徽章列),
           hydration 補上真卡時位置對得起來, 不會整頁往下彈。
-          數量只是「下面還有東西」的提示, 不鋪滿 621 張 (那等於把省下的 HTML 又長回來)。 */}
+          數量只是「下面還有東西」的提示, 不鋪滿 621 張 (那等於把省下的 HTML 又長回來);
+          2026-09-10 再收斂成一段 8 張 —— 使用者回報骨架太多「看起來很怪」。 */}
       {wall.hidden > 0 ? (
         <>
-          <PairWallSkeleton
-            sections={wall.hidden > 13 ? 2 : 1}
-            cards={Math.min(13, wall.hidden)}
-          />
+          <PairWallSkeleton sections={1} cards={Math.min(8, wall.hidden)} />
           <noscript>
             <p className="text-sm text-muted-foreground">
               其餘 {wall.hidden} 張拍組卡與篩選功能需要 JavaScript 才能顯示。

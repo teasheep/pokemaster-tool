@@ -1,4 +1,4 @@
-import { pairName } from "@/lib/pairs/name";
+import { isUpcomingPair, pairName } from "@/lib/pairs/name";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 
 /**
@@ -59,14 +59,22 @@ export type HomePairRow = {
 };
 
 /**
- * 從 catalog 挑最新上架的幾組, 配上隨機的持有人數。
+ * 從 catalog 挑最新**已經上架**的幾組, 配上隨機的持有人數。
  *
- * 傳進來的一定要是 `loadPairsForClient()` 的結果 —— 它是所有對外輸出的唯一收口,
- * 「還沒公布」的那批在那裡就被濾掉了, 絕對不會冒到首頁上 (AGENTS.md「還不能對外送的拍組」)。
+ * 傳進來的一定要是 `loadPairsForClient()` 的結果 —— 它是所有對外輸出的唯一收口。
+ *
+ * ⚠ **這裡要自己再濾一次「還沒到上架日」** (2026-09-09):
+ *   判準 B 原本在 loadPairsForClient() 就把未來日期的拍組擋掉, 所以這支腳本以前
+ *   什麼都不用做。現在那條改成「標示不擋住」(見 lib/pairs/name.ts 的 isUpcomingPair),
+ *   未上架拍組會正常出現在 /pairs 與道館頁 —— 但**首頁不行**:
+ *   它是全站僅有的兩個可被搜尋引擎收錄的頁面之一 (AGENTS.md「SEO」那節),
+ *   而且訪客沒登入就看得到。不濾的話這塊看板會整排都是還沒上架的拍組,
+ *   等於把未公布內容擺在最公開的位置。看板要演的是「大家手上有什麼」,
+ *   拿還沒開放的拍組配一個假的持有人數也講不通。
  */
 export function pickLatestPairRows(catalog: ClientPairRecord[]): HomePairRow[] {
   return catalog
-    .filter((p) => p.releaseDate && p.basePotential >= MIN_BASE_POTENTIAL)
+    .filter((p) => p.releaseDate && !isUpcomingPair(p) && p.basePotential >= MIN_BASE_POTENTIAL)
     // pairId 當決勝鍵: 同一天上架好幾組時排序才是穩定的
     .sort((a, b) => b.releaseDate!.localeCompare(a.releaseDate!) || b.pairId.localeCompare(a.pairId))
     .slice(0, BOARD_ROWS)

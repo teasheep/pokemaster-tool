@@ -1,0 +1,309 @@
+{
+	"_note": [
+		"拍組的**初上線日**登記簿 —— 全站唯一的手寫日期入口 (2026-09-09 建立)。",
+		"",
+		"releaseDate 的語意是「這個拍組第一次在遊戲裡登場」, 復刻、二次開放、活動檔期開始日都不算",
+		"(使用者指定:「就只顯示初次登場日, 其他資料就留著」)。",
+		"",
+		"為什麼不用 scripts/patch-pomatools-meta.mjs 的 RELEASED_OVERRIDES:",
+		"那張表以 trainerId 為鍵, 而這裡 18 筆有 9 筆坐在「同一位訓練家有 2 到 11 個拍組」的 id 上",
+		"(例: ch0101_42_mei 的四季鹿春/夏是兩個拍組, 只有夏天那筆的日期要改), 表達不了。",
+		"",
+		"每一筆的欄位:",
+		"  debut       正確的初上線日 (ISO yyyy-mm-dd, 一律用台北/日本側的日期)",
+		"  was         建檔當下 catalog 裡的值 —— 與 debut 相同表示「本來就對」, 留著當防漂移的錨點",
+		"  why         判定依據 (一句話)",
+		"  otherDates  查到的其他日期: 復刻、活動檔期、系統上線日。留著當資料, 不顯示",
+		"  sources     來源網址。**沒有來源就不要進這張表** —— 下一個人要能自己複查",
+		"",
+		"⚠ 這張表是「已經查證過」的清單, 不是「猜測」的清單。tests/debut-dates.test.ts 會要求",
+		"  「我方與 pomasters 的每一筆日期歧異都在這裡登記過」—— 資料更新後多出新的歧異就會變紅。",
+		"  **紅了要做的是逐筆查證後補一筆進來, 不是改測試的數字。**"
+	],
+	"entries": {
+		"10002900000": {
+			"label": "琴音（冠軍） & 炎帝",
+			"debut": "2026-06-02",
+			"was": "2026-06-01",
+			"why": "對方正確。Bulbapedia 的 Lyra 出場表直接寫「Lyra EX Master Fair | June 2 to July 6, 2026 | Debut」。Bulbagarden 新聞則寫該 EX Master Fair Scout 從 6/1 23:00 (PDT) 開到 7/5 22:59 (PDT) —— 23:00 PDT 6/1 = 06:00 UTC 6/2 = 台北 6/2 14:00。我方的 2026-06-",
+			"otherDates": [
+				"2026-06-01 (官方英文站 PT 公告日 = 我方現值)",
+				"2026-07-06 (該卡池結束日, UTC)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Lyra_(Masters)",
+				"https://bulbagarden.net/threads/lyra-debuts-her-new-sync-pair-with-entei-in-pokemon-masters-ex-in-a-new-ex-master-fair-scout-take-on-ethan-and-lyra-in-a-new-special-battle-event.310716/",
+				"https://www.pocketmonsters.net/news/9291"
+			]
+		},
+		"10008000001": {
+			"label": "莉佳 & 蔓藤怪",
+			"debut": "2021-05-27",
+			"was": "2021-05-31",
+			"why": "這五筆是同一個事件: 2021/05/27 15:00 (JST) 的 ver.2.9.0 更新導入「バトルポイント / どうぐ交換(バトルpt)」系統, 同時把第一批 5 組 BP 交換拍組放進交換所 —— 那天就是它們第一次在遊戲裡出現。我方的 2021-05-31 對應的是官方公告裡另一個日期:「バトルポイント獲得イベント」預定 2021/05/31 15:00 開始 (英文版寫 May 30, 2021 at 11:00 p.m",
+			"otherDates": [
+				"2021-05-31 (JST 15:00) — 首個「バトルポイント獲得イベント」開始日 = 玩家最早能累積 BP 換券的日子 (= 我方原值, 建議保留為附註資料)",
+				"2023-03-29 — 開放 6★EX (無 EX Style), 已存在於 exStyleDate 欄位"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Erika_(Masters)",
+				"https://pokemonmasters-game.com/ja-JP/announcements/Update_3050_1W_1",
+				"https://pokemonmasters-game.com/en-US/announcements/Update_3050_1W_1",
+				"https://pente.koro-pokemon.com/pokemonmasters/battle-points.shtml"
+			]
+		},
+		"10017000001": {
+			"label": "葉子 & 皮可西",
+			"debut": "2023-08-30",
+			"was": "2023-08-30",
+			"why": "我方正確, 但成因與上面三筆不同 —— 這組不是抽卡拍組而是訓練家旅館 (Trainer Lodge) 的親密度獎勵。Bulbapedia 的 Leaf 條目寫「This pair can be obtained by reaching Friendship Level 100 with Leaf in the Trainer Lodge beginning on August 30, 2023.」; 葉子開放邀請進旅館是 2023-0",
+			"otherDates": [
+				"2023-09-01 = 6★EX 開放日 (對方記的那個日期)",
+				"2023-08-29 23:00 PDT = 葉子可邀請進訓練家旅館 (= 多數時區的 2023-08-30)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Leaf_(Masters)",
+				"https://pokemon.fandom.com/wiki/Leaf_(Masters)",
+				"https://bulbapedia.bulbagarden.net/wiki/Trainer_Lodge",
+				"https://pokemon-masters-ex-game.fandom.com/wiki/Trainer_Lodge/Leaf"
+			]
+		},
+		"10035000001": {
+			"label": "馬志士 & 雷丘",
+			"debut": "2021-05-27",
+			"was": "2021-05-31",
+			"why": "與莉佳 & 蔓藤怪 同一批 (ver.2.9.0, 2021/05/27 15:00 JST 導入 BP 交換所時的第一批 5 組)。Bulbapedia 逐組明寫「Lt. Surge & Raichu can be teamed up with by exchanging a BP Sync Pair Voucher in the shop, beginning on May 27, 2021.」; ポケモン王国攻略館 的 BPバディ",
+			"otherDates": [
+				"2021-05-31 (JST 15:00) — BP 獲得活動開始 (= 我方原值)",
+				"2023-03-29 — 開放 6★EX (無 EX Style)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Lt._Surge_(Masters)",
+				"https://pokemonmasters-game.com/ja-JP/announcements/Update_3050_1W_1",
+				"https://pokemonmasters-game.com/en-US/announcements/Update_3050_1W_1",
+				"https://pente.koro-pokemon.com/pokemonmasters/battle-points.shtml"
+			]
+		},
+		"10062000001": {
+			"label": "梨花 & 月亮伊布",
+			"debut": "2021-05-27",
+			"was": "2021-05-31",
+			"why": "同一批。Bulbapedia:「Karen & Umbreon can be teamed up with by exchanging a BP Sync Pair Voucher in the shop, beginning on May 27, 2021.」; ポケモン王国攻略館 標 2021/05/27 (カリン&ブラッキー); SyncPairsTracker 2021-05-27。52poke 中文 wiki 這次抓不到 (4",
+			"otherDates": [
+				"2021-05-31 (JST 15:00) — BP 獲得活動開始 (= 我方原值)",
+				"2023-03-29 — 開放 6★EX (無 EX Style)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Karen_(Masters)",
+				"https://pokemonmasters-game.com/ja-JP/announcements/Update_3050_1W_1",
+				"https://pente.koro-pokemon.com/pokemonmasters/battle-points.shtml"
+			]
+		},
+		"10095000000": {
+			"label": "嘉德麗雅 & 人造細胞卵",
+			"debut": "2019-10-31",
+			"was": "2019-10-30",
+			"why": "對方正確。Bulbapedia 的 Caitlin 出場表寫「Caitlin Spotlight Scout | October 31 to November 14, 2019 | Debut」, 內文也明講首次登場為 2019-10-31。官方英文站的首發卡池窗是 10/30 23:00 – 11/13 22:59 (PT) → 23:00 PDT 10/30 = 06:00 UTC 10/31 = 台北 10/31 14:00。錯值",
+			"otherDates": [
+				"2019-10-30 (官方英文站 PT 公告日 = 我方現值)",
+				"2021-03-22 ~ 2021-04-02 (復刻: Spotlight Scout, 官方寫 3/21 23:00 – 4/1 22:59 PT)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Caitlin_(Masters)",
+				"https://pokemonmasters-game.com/en-US/announcements/Scout_3020_4W_2",
+				"https://www.pocketmonsters.net/news/3847"
+			]
+		},
+		"10101420001": {
+			"label": "鳴依（學院） & 四季鹿（夏天的樣子）",
+			"debut": "2025-09-22",
+			"was": "2025-03-31",
+			"why": "對方 (pomasters) 是對的, 我方 2025-03-31 確實是春天那筆的日期被複製過來。",
+			"otherDates": [
+				"2025-03-31 = 春天的樣子 (10101420000) 的首次登場日 + 活動第一次舉辦日 — 我方誤植的來源, 這個值在 10101420000 上是對的",
+				"2025-09-21 23:00 PDT = 官方 EN 公告的開放時刻 (= 台北 2025-09-22 14:00)",
+				"2025-10-10 (官方 EN: 10/9 22:59 PDT) = 第二次舉辦的結束日",
+				"2025-04-18 = 第一次舉辦的結束日"
+			],
+			"sources": [
+				"https://pokemonmasters-game.com/en-US/announcements/Event_7080_4W_1",
+				"https://bulbapedia.bulbagarden.net/wiki/Rosa_(Masters)",
+				"https://bulbagarden.net/threads/rosa-deerling-debut-their-new-summer-form-for-the-re-run-of-the-pasio-academy-opening-academy-event-plus-returning-scouts-for-rei-and-lacey.308440/",
+				"https://x.com/SerebiiNet/status/1970006295160750308"
+			]
+		},
+		"10112910000": {
+			"label": "阿響（冠軍） & 雷公",
+			"debut": "2026-05-31",
+			"was": "2026-05-30",
+			"why": "對方正確。Bulbapedia 的 Ethan 出場表寫「Ethan EX Master Fair | May 31 to July 6, 2026 | Debut」。Bulbagarden 新聞寫 EX Master Fair Scout 從 5/30 23:00 (PDT) 到 7/5 22:59 (PDT) → 23:00 PDT 5/30 = 06:00 UTC 5/31 = 台北 5/31 14:00。我方 2026-05-3",
+			"otherDates": [
+				"2026-05-30 (官方英文站 PT 公告日 = 我方現值)",
+				"2026-07-06 (該卡池結束日, UTC)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Ethan_(Masters)",
+				"https://bulbagarden.net/threads/rising-thunder-and-flames-neo-champions-event-launches-in-pokemon-masters-ex-alongside-the-debut-of-ethans-new-ex-master-sync-pair-with-raikou.310701/",
+				"https://bulbagarden.net/threads/pokemon-masters-ex-updates-to-ver-2-69-0-new-neo-champions-event-previewed-together-with-ex-master-sync-pairs-for-ethan-raikou-and-lyra-entei.310691/"
+			]
+		},
+		"10120000000": {
+			"label": "露莎米奈 & 費洛美螂",
+			"debut": "2020-09-10",
+			"was": "2020-09-09",
+			"why": "對方正確。Bulbapedia 的 Lusamine 頁直寫「The sync pair can be obtained through the sync pair scout starting on September 10, 2020」, 出場表的首發卡池是「Lusamine Spotlight Scout + Present, September 10 to October 1, 2020」。上游 pomatools 的時間戳 1",
+			"otherDates": [
+				"2020-09-09 (官方英文站 PT 公告日 = 我方現值)",
+				"2020-10-01 (首發卡池結束日)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Lusamine_(Masters)",
+				"https://www.serebii.net/pokemonmasters/syncpairs/lusamine.shtml",
+				"https://pokemon-masters-ex-game.fandom.com/wiki/Lusamine_and_Pheromosa"
+			]
+		},
+		"10129000001": {
+			"label": "希嘉娜 & 暴飛龍",
+			"debut": "2021-05-27",
+			"was": "2021-05-31",
+			"why": "同一批。Bulbapedia:「Zinnia & Salamence can be teamed up with by exchanging a BP Sync Pair Voucher in the shop, beginning on May 27, 2021.」(並註明這是 Zinnia 唯一一組走 BP 交換的拍組, 與 2020-01-30 的 希嘉娜 & 烈空坐 明確分開); ポケモン王国攻略館 標 2021/05/27 (",
+			"otherDates": [
+				"2021-05-31 (JST 15:00) — BP 獲得活動開始 (= 我方原值)",
+				"2023-03-29 — 開放 6★EX (無 EX Style)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Zinnia_(Masters)",
+				"https://pokemonmasters-game.com/ja-JP/announcements/Update_3050_1W_1",
+				"https://pente.koro-pokemon.com/pokemonmasters/battle-points.shtml"
+			]
+		},
+		"10148000001": {
+			"label": "松葉 & 夢妖魔",
+			"debut": "2021-05-27",
+			"was": "2021-05-31",
+			"why": "同一批。Bulbapedia:「Morty & Mismagius can be teamed up with by exchanging a BP Sync Pair Voucher in the shop, beginning on May 27, 2021.」; ポケモン王国攻略館 標 2021/05/27 (マツバ&ムウマージ); SyncPairsTracker 2021-05-27。注意不要與松葉的另一組交換拍組混淆 —— ",
+			"otherDates": [
+				"2021-05-31 (JST 15:00) — BP 獲得活動開始 (= 我方原值)",
+				"2023-03-29 — 開放 6★EX (無 EX Style)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Morty_(Masters)",
+				"https://pokemonmasters-game.com/ja-JP/announcements/Update_3050_1W_1",
+				"https://pente.koro-pokemon.com/pokemonmasters/battle-points.shtml"
+			]
+		},
+		"10157000000": {
+			"label": "瑪綉 & 仙子伊布",
+			"debut": "2020-02-25",
+			"was": "2020-02-24",
+			"why": "對方正確。這是劇情拍組 (4★, acquisitions=story), Bulbapedia 只寫「completing Chapter 23 of the PML arc」不給日期, 所以要看主線 22–24 章的更新日。Nintendo Everything 引官方公告寫「February 24 at 10 PM PT」—— 2020 年 2 月是 PST (UTC-8), 22:00 PST 2/24 = 06:00 UTC ",
+			"otherDates": [
+				"2020-02-24 (官方英文站 PT 公告日 = 我方現值)"
+			],
+			"sources": [
+				"https://nintendoeverything.com/pokemon-masters-new-main-story-chapters-valerie-being-added-next-week/",
+				"https://bulbapedia.bulbagarden.net/wiki/Valerie_(Masters)",
+				"https://www.pocketmonsters.net/news/4041",
+				"https://www.serebii.net/news/2020/23-February-2020.shtml"
+			]
+		},
+		"10183000000": {
+			"label": "馬睿因 & 三地鼠",
+			"debut": "2020-10-08",
+			"was": "2020-10-07",
+			"why": "對方正確。同樣是劇情拍組 (第 26 章 The Future Is Now!), Bulbapedia 只寫章節不給日期。官方公告的時間是「October 7, 2020 at 11:00 p.m.」(PT) → 23:00 PDT 10/7 = 06:00 UTC 10/8 = 台北 10/8 14:00; Pokémon Blog 報導「now available」的發文日正是 2020-10-08, 與換算一致。Fandom w",
+			"otherDates": [
+				"2020-10-07 (官方英文站 PT 公告日 = 我方現值)"
+			],
+			"sources": [
+				"https://pokemonblog.com/2020/10/08/new-main-story-chapters-featuring-new-sync-pair-molayne-alolan-dugtrio-now-available-in-pokemon-masters-ex/",
+				"https://bulbapedia.bulbagarden.net/wiki/Molayne_(Masters)",
+				"https://www.pocketmonsters.net/news/4412",
+				"https://www.serebii.net/pokemonmasters/chapters/chapter26.shtml"
+			]
+		},
+		"10243410000": {
+			"label": "小優（2025週年慶） & 閃焰王牌",
+			"debut": "2025-08-28",
+			"was": "2025-08-28",
+			"why": "我方正確, 對方記的是「個人專屬卡池」開始日不是首次登場日。Bulbapedia 明寫「This pair can be obtained through an EX Master Fair sync pair scout beginning on August 28, 2025.」, 並列出兩個卡池: 「Six-Year Anniversary Paid-Gem Scout ×25 EX Master Fair」(2025-08-28",
+			"otherDates": [
+				"2025-09-01 = 小優個人 EX Master Fair 開始 (~2025-10-07)",
+				"2025-08-28 ~ 2025-10-07 = 六週年 ×25 付費寶石 EX Master Fair (首發池)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Gloria_(Masters)",
+				"https://pokemonmasters-game.com/en-US/announcements/Other_7070_5W_1",
+				"https://x.com/PokemonMasters/status/1960178486712127989",
+				"https://pokemonblog.com/2025/09/01/gloria-ex-master-fair-event-featuring-gloria-anniversary-2025-cinderace-as-a-new-sync-pair-now-underway-in-pokemon-masters-ex-until-october-6/"
+			]
+		},
+		"10285410000": {
+			"label": "珠貝（2025週年慶） & 火爆獸",
+			"debut": "2025-08-28",
+			"was": "2025-08-28",
+			"why": "我方正確, 與小優同一個成因。Bulbapedia 的 Irida 條目把「Six-Year Anniversary Paid-Gem Scout ×25 EX Master Fair」(2025-08-28 ~ 10-07) 直接標註為「Debut; available using paid gems only」, 另列「Irida EX Master Fair」(2025-08-30 ~ 10-07) 與「Daily Scout」(",
+			"otherDates": [
+				"2025-08-30 = 珠貝個人 EX Master Fair 開始 (~2025-10-07)",
+				"2025-08-28 ~ 2025-10-07 = 六週年 ×25 付費寶石 EX Master Fair (首發池)",
+				"2025-12-01 = 進入 Daily Scout"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Irida_(Masters)",
+				"https://pokemonmasters-game.com/en-US/announcements/Other_7070_5W_1",
+				"https://pokemonblog.com/2025/08/30/irida-ex-master-fair-featuring-irida-anniversary-2025-hisuian-typhlosion-as-a-new-sync-pair-now-underway-in-pokemon-masters-ex-until-october-6/",
+				"https://x.com/PokemonMasters/status/1961836426485457136"
+			]
+		},
+		"10287400000": {
+			"label": "小青（2026週年慶） & 太樂巴戈斯",
+			"debut": "2026-02-28",
+			"was": "2026-02-28",
+			"why": "我方正確, 一模一樣的成因 (這波是 6.5 週年 / 寶可夢 30 週年, 不是 8 月的正週年, 所以日期落在 2/28)。Bulbapedia 的 Juliana 條目給 Debut Date = February 28, 2026, 卡池列表為: 「6.5 Year Celebration! 48-Hour Paid-Gem Scout ×25 EX Master Fair」(2026-02-28 ~ 03-02, 註明「Deb",
+			"otherDates": [
+				"2026-03-02 = 小青個人 EX Master Fair 開始 (~2026-04-09)",
+				"2026-02-28 ~ 2026-03-02 = 6.5 週年 48 小時 ×25 付費寶石 EX Master Fair (首發池)",
+				"2026-06-01 = 進入 Daily Scout"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Juliana_(Masters)",
+				"https://pokemonmasters-game.com/en-US/announcements/Other_8010_5W_5",
+				"https://www.pocketmonsters.net/news/9047"
+			]
+		},
+		"10291400000": {
+			"label": "小照（2026夏季） & 瑪納霏",
+			"debut": "2026-06-30",
+			"was": "2026-07-30",
+			"why": "對方 (pomasters) 是對的, 我方寫在 scripts/patch-pomatools-meta.mjs:166 RELEASED_OVERRIDES 的 2026-07-30 是**月份打錯** (06 → 07), 日的部分 30 完全吻合。",
+			"otherDates": [
+				"2026-06-29 23:00 PDT = 官方卡池開放時刻 (= 台北 2026-06-30 14:00), 部分英文來源以此記為 6/29",
+				"2026-07-22 (官方 EN: 7/21 22:59 PDT) = 主季節卡池與劇情活動結束日",
+				"2026-07-28 (官方 EN 22:59 PDT) = 追加的 Featured / Guaranteed 票券卡池結束日",
+				"2026-07-30 = 我方 RELEASED_OVERRIDES 的手寫值, 查無對應事件 (最接近的是 7/28 票券卡池結束、7/31 莎莉娜 & 西獅海壬 進 Mix Scout), 判定為 06→07 月份誤植"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Akari_(Masters)",
+				"https://bulbagarden.net/threads/akari-debuts-her-new-seasonal-sync-pair-with-manaphy-in-pokemon-masters-ex-alongside-the-seas-legend-and-raging-souls-story-event.310969/",
+				"https://bulbagarden.net/threads/pokemon-masters-ex-updates-to-ver-2-70-0-summer-story-event-previewed-together-with-seasonal-sync-pairs-for-akari-manaphy-and-arezu-basculegion.310965/",
+				"https://www.serebii.net/news/2026/June.shtml"
+			]
+		},
+		"10295900000": {
+			"label": "阿爾套裝也慈 & 晶光花",
+			"debut": "2026-07-20",
+			"was": "2026-07-19",
+			"why": "對方正確。Bulbapedia 的 Geeta 出場表寫「Geeta Arc Suit Fair | July 20 to August 25, 2026 | Debut」。Bulbagarden 於 2026-07-20 發文說「make their debut today」, 並寫卡池開到 8/24 22:59 (PDT) —— 22:59 PDT 8/24 = 05:59 UTC 8/25, 正好對上 Bulbapedia 的 8",
+			"otherDates": [
+				"2026-07-19 (官方英文站 PT 公告日 = 我方現值)",
+				"2026-08-25 (卡池結束日, UTC)"
+			],
+			"sources": [
+				"https://bulbapedia.bulbagarden.net/wiki/Geeta_(Masters)",
+				"https://bulbagarden.net/threads/arc-suit-geeta-glimmora-make-their-debut-in-pokemon-masters-ex-in-a-set-of-arc-suit-fair-scouts.311128/",
+				"https://gonintendo.com/contents/62906-arc-suit-diantha-and-arc-suit-geeta-arrive-in-pokemon-masters-ex-july-2026",
+				"https://www.pocketmonsters.net/news/9374"
+			]
+		}
+	}
+}

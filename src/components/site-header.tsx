@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Upload, BookOpen, Candy, Shield } from "lucide-react";
+import { Upload, BookOpen, Backpack, Shield } from "lucide-react";
 
 import { getSessionUser } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -52,9 +52,9 @@ export async function SiteHeader() {
               </Button>
               {/* 糖果之類的個人資源 — 原本擠在拍組頁上方, 卡片牆被壓得很難看 */}
               <Button asChild variant="ghost" size="sm">
-                <Link href="/resources" title="我的資源" data-tour="nav-resources">
-                  <Candy className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">我的資源</span>
+                <Link href="/resources" title="我的背包" data-tour="nav-resources">
+                  <Backpack className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">我的背包</span>
                 </Link>
               </Button>
             </>

@@ -31,11 +31,6 @@ const records = (catalogJson as unknown as { records: PairRecord[] }).records;
  */
 export { CATALOG_VERSION } from "@/data/catalog-version";
 
-/** 台北日期 YYYY-MM-DD — Workers 跑 UTC, 直接 new Date() 會慢 8 小時 (同 lib/gym/types.ts 的寫法) */
-function taipeiToday(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" });
-}
-
 /**
  * 還不能對外送的拍組 —— **兩條各自獨立的判準, 命中任何一條就擋**:
  *
@@ -46,30 +41,26 @@ function taipeiToday(): string {
  *        - 只看 `series === "upcoming"`: 誤殺 11 個已上市的新拍組 (upcoming 是「上架時間」標記
  *          不是系列, 見 AGENTS.md), 例如 2026-08-16 的 蓋伊 & 大竺葵。
  *
- *   B. `releaseDate` 晚於今天 (台北) = 官方還沒上架的未來拍組。
- *      **2026-09-01 補上這條的原因**: fandom roster 會收 datamine 先行列, reconcile 因此給了
- *      它們 `verifiedSources: ["wiki"]` → 判準 A 一筆都擋不到。那次更新有 7 筆這種拍組
- *      (竹蘭&冰伊布 9/12、小光（冠軍）&帕路奇亞 9/12、明輝（冠軍）&帝牙盧卡 9/14、
- *      赤日&瑪狃拉 9/16、夥星/歲星/鎮星 9/16) 直接進了 public/catalog/<指紋>.json —— 而那個檔
- *      由 Workers Assets 直送、不經 Worker, 訪客沒登入就抓得到。交叉查證 Bulbapedia 與官方公告:
- *      這 7 筆全是「Datamined future release」, 官方一個字都還沒公布。
- *      **這是收緊不是放寬** (AGENTS.md 只禁止放寬); 已上市的拍組不受任何影響。
+ * ⚠ **2026-09-09 起「還沒上架」不再是擋住的理由, 改成標示** (使用者指定:「提前上線現在也沒關係,
+ *    就把能上的都上一上, 就只是把上架日寫成未來就好」)。原本的判準 B (`releaseDate` 晚於今天)
+ *    搬到 `lib/pairs/name.ts` 的 `isUpcomingPair()`, 由畫面標成「尚未上線」, 不再從輸出裡拿掉。
  *
- * 對外輸出一律不含它們 —— 收口只有一個: loadPairsForClient()。
+ *    留著判準 A 的理由跟「還沒上架」無關: 那 10 筆 (9 筆 19999* 佔位 id + 七雄&木棉球)
+ *    是 **datamine 的空殼**, 沒有來源、沒有日期、`sharedKit` 為真, 而且獨立的第三方
+ *    (pomasters) 也一筆都沒收、一張官方卡面都沒有。它們不是「還沒上架的拍組」,
+ *    上了就是 10 張查無此物的幽靈卡。
+ *
+ * 對外輸出的收口仍然只有一個: loadPairsForClient()。
  * `npm run data:catalog` 每次都會把被擋下的清單印出來, 誤傷看得見。
  */
 // ⚠ 判準 A 的語意是「外部來源還沒收錄」, 不完全等於「官方還沒公布」: 剛實裝但上游還沒跟上的
 // 新拍組會暫時被擋在外面 —— 那是**安全的方向**(寧可晚一天上架也不要提前外洩)。修法是重跑資料
 // 管線讓來源補上, 不要放寬判準。
 export function isUnreleasedPair(
-  rec: Pick<PairRecord, "verifiedSources" | "releaseDate">,
-  today: string = taipeiToday()
+  rec: Pick<PairRecord, "verifiedSources" | "releaseDate">
 ): boolean {
-  const releaseDate = rec.releaseDate ?? null;
-  // A: datamine 先行, 沒來源也沒日期
-  if ((rec.verifiedSources?.length ?? 0) === 0 && releaseDate === null) return true;
-  // B: 有日期但還沒到 (ISO YYYY-MM-DD 字串可直接字典序比較)
-  return releaseDate !== null && releaseDate > today;
+  // datamine 空殼: 沒來源也沒日期 (兩個條件缺一不可, 理由見上面的註解)
+  return (rec.verifiedSources?.length ?? 0) === 0 && (rec.releaseDate ?? null) === null;
 }
 
 /**
@@ -109,12 +100,6 @@ export function loadPairsById(): Promise<Map<string, PairRecord>> {
 //
 // ⚠ 靜態資產是**建置時**產的: 改了下面的過濾就要重跑 `npm run data:catalog`
 //    (指紋會跟著換 → 新網址; 腳本同時刪掉 public/catalog 底下的舊檔, 舊網址在下次部署後 404)。
-//
-// ⚠ 快取以「台北日期」為 key: isUnreleasedPair 的判準 B 會隨日期改變 (上架日一到就該放行),
-//    而 Workers 的 isolate 可以活很久 —— 不帶日期的話, 拍組上架當天有些 isolate 會整天不放行。
-//    每天最多重算一次, CPU 成本可以忽略 (免費方案每請求 10ms 上限)。
-//    靜態資產那條路徑是**建置時**產的, 不會自己更新 → 新拍組上架當天要重跑
-//    `npm run data:catalog` 並重新部署, 「全圖鑑」才看得到 (SSR 頁面則會自動放行)。
 /**
  * 一筆記錄 → client 投影。**只是欄位挑選, 不含任何「能不能對外送」的判斷** ——
  * 那個判斷在 `loadPairsForClient()` 的 filter, 不要搬進來。
@@ -132,15 +117,14 @@ export function toClientPair(r: PairRecord): ClientPairRecord {
   return out as ClientPairRecord;
 }
 
-let clientCache: { day: string; value: Promise<ClientPairRecord[]> } | null = null;
+// 2026-09-09 起這個快取不再需要以日期為 key —— 過濾條件 (isUnreleasedPair) 只看
+// verifiedSources 與 releaseDate 是不是 null, 與「今天幾號」無關。
+// 「還沒到初上線日」改由畫面用 name.ts 的 isUpcomingPair() 標示, 不影響輸出內容。
+let clientCache: Promise<ClientPairRecord[]> | null = null;
 export function loadPairsForClient(): Promise<ClientPairRecord[]> {
-  const day = taipeiToday();
-  if (!clientCache || clientCache.day !== day) {
-    const value = loadPairs().then((records) =>
-      // 還不能對外送的拍組一律濾掉 (判準見 isUnreleasedPair)
-      records.filter((r) => !isUnreleasedPair(r, day)).map(toClientPair)
-    );
-    clientCache = { day, value };
-  }
-  return clientCache.value;
+  clientCache ??= loadPairs().then((records) =>
+    // 還不能對外送的拍組一律濾掉 (判準見 isUnreleasedPair)
+    records.filter((r) => !isUnreleasedPair(r)).map(toClientPair)
+  );
+  return clientCache;
 }

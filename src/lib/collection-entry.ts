@@ -43,6 +43,8 @@ export function defaultEntry(pair: ClientPairRecord): CollectionEntry {
     potential: 0,
     superAwakening: 0,
     exUnlocked: false,
+    syncGrid: 0,
+    exRoleUnlocked: false,
     exStyleWorn: false,
     notes: null,
   };
@@ -64,6 +66,64 @@ export function cycleEntry(entry: CollectionEntry, awakenable: boolean): Collect
     potential = potential + 1;
   }
   return { ...entry, potential, superAwakening };
+}
+
+/**
+ * 星數循環 (卡片右鍵 / 長按) —— 原始星級 → … → 5★ → 6★EX → 繞回原始星級。
+ *
+ * 三件事:
+ *  - **下限是原始星級**, 不是 1。星星只能從遊戲給的起點往上升, 5★ 拍組沒有 3★/4★ 這種狀態。
+ *  - 6★EX 只有 `hasSixEx` 的拍組才進得去 (= 星數 6, AGENTS「6★EX 就是星數 6」)。
+ *  - **會繞回去**。遊戲裡不能降星, 但誤點的人總要有辦法退回來, 而側板不是每個畫面都開得了。
+ *    左下角的寶數循環本來就是繞回 0 的, 這裡跟它同一個心智模型。
+ *
+ * `exUnlocked` 一律跟著算出來的星數走 (6 = true), 不要讓兩者各自為政 ——
+ * 側板的星數下拉也是這樣寫的 (pair-edit-panel.tsx 的 onValueChange)。
+ */
+export function cyclePromotion(
+  current: number,
+  basePotential: number,
+  hasSixEx: boolean
+): { promotion: number; exUnlocked: boolean } {
+  const base = Math.max(1, Math.min(5, basePotential || 5));
+  const max = hasSixEx ? 6 : 5;
+  const from = Math.max(base, Math.min(max, current || base));
+  const next = from >= max ? base : from + 1;
+  return { promotion: next, exUnlocked: next >= 6 };
+}
+
+/**
+ * 拍檔石盤 (官方名稱; 那個數字是「力量」的上限) —— 索引 0-5 對應 60 / 62 / 64 / 66 / 68 / 70。
+ *
+ * 遊戲規則 (2026-09-10 使用者更正, 他是實際在玩的人):
+ *   **能升到第幾段受寶數限制** —— **上限索引 = 寶數** (夾在 0-5)。
+ *   寶1 到 62、寶2 到 64、寶3 到 66、寶4 到 68、寶5 (或任何超覺醒) 才到 70;
+ *   **寶0 只有 60**, 也就是還沒開始升。
+ *   ⚠ 這條 2026-09-09 第一版寫成 `索引 = 寶數`, 每一段都多開了一格
+ *   (使用者:「上限應該都多 2」) —— 那會讓資料出現遊戲裡不可能的狀態, 而畫面照樣渲染得出來。
+ *   寶數退回去時石盤也要跟著夾回來。
+ *
+ * 索引 0 (= 60) 是**每個拍組的起點**, 畫面上刻意不畫 ——
+ * 一整面牆如果每張卡都掛一顆「60」, 那個徽章就不帶任何資訊了。
+ * 只有真的升過的才顯示, 這是照 pomasters 的做法 (他們用 CSS 把第一張圖藏起來)。
+ */
+export const SYNC_GRID_CAPS = [60, 62, 64, 66, 68, 70] as const;
+
+/** 這個寶數最多能升到第幾段 (索引) —— 索引就等於寶數 */
+export function maxSyncGrid(potential: number): number {
+  return Math.min(5, Math.max(0, potential));
+}
+
+/** 循環到下一段; 超過上限就繞回 0 (與寶數循環同一個心智模型) */
+export function cycleSyncGrid(current: number, potential: number): number {
+  const max = maxSyncGrid(potential);
+  const from = Math.max(0, Math.min(max, current || 0));
+  return from >= max ? 0 : from + 1;
+}
+
+/** 寶數變動後把石盤夾回合法範圍 (寶數退回去時石盤要跟著降) */
+export function clampSyncGrid(current: number, potential: number): number {
+  return Math.max(0, Math.min(maxSyncGrid(potential), current || 0));
 }
 
 /** owned 一律由寶數/超覺醒推導 — 寶0 = 沒有這隻拍組 */

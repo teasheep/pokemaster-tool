@@ -13,6 +13,7 @@
 
 import { useSyncExternalStore } from "react";
 
+import { dropPendingCoalescedWrites } from "@/lib/pairs/use-coalesced-write";
 import { setTourWritesBlocked, swallowedWrites } from "@/lib/supabase/tour-writes";
 import type { TourTrack } from "./tour-steps";
 
@@ -80,7 +81,12 @@ export function openTour(auto = false) {
  *      必須清掉, 否則使用者會以為那些調整存下來了 (使用者:「教學完不要留著這些資料」)。
  */
 export function closeTour() {
-  const dirty = swallowedWrites() > 0;
+  // ⚠ **先丟掉還在等的合併寫入, 再解除攔截** —— 順序反了就會漏水:
+  // 連點合併之後那一趟 fetch 是延後才發的 (lib/pairs/use-coalesced-write.ts),
+  // 攔截先關掉的話, 計時器醒來時那一筆就真的寫進資料庫, 而且 swallowedWrites() 還是 0,
+  // 連重新載入清樂觀更新都不會做。教學裡的寫入本來就不該進資料庫, 所以是丟掉不是沖出去。
+  const dropped = dropPendingCoalescedWrites();
+  const dirty = swallowedWrites() > 0 || dropped > 0;
   setTourWritesBlocked(false);
   set(CLOSED);
   if (dirty && typeof window !== "undefined") window.location.reload();

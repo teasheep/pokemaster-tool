@@ -162,8 +162,10 @@ export const TRACKS: TourTrackDef[] = [
       {
         target: "side-panel",
         at: "/pairs",
-        title: "這裡設星數與寶數",
-        body: "星數只能從原始星級升到 6★EX。寶數與超覺醒是同一條軸：未持有 → 寶1-5 → 超覺醒1-5。放心改，教學期間什麼都不會存進資料庫。",
+        title: "這裡設練度",
+        // 2026-09-10 起未持有時只有寶數那一格能動 (其餘灰掉), 所以文案要先講「先設寶數」——
+        // 不然使用者照著標題去點星數, 會發現點不動而以為壞了。
+        body: "寶數與超覺醒是同一條軸：未持有 → 寶1-5 → 超覺醒1-5。先把寶數設起來，星數、等級、拍檔石盤那幾格才會亮；沒有這張卡的時候它們是鎖住的。放心改，教學期間什麼都不會存進資料庫。",
         advance: { on: "next" },
         extra: {
           ifTarget: "gym-pair-toggle",
@@ -208,7 +210,7 @@ export const TRACKS: TourTrackDef[] = [
       {
         target: "nav-resources",
         at: "/resources",
-        title: "最後：我的資源",
+        title: "最後：我的背包",
         body: "糖果庫存記在這裡，另外可以複選「想投入資源的屬性」與「已投入較多資源的屬性」，安排道館戰的人看得到。",
         advance: { on: "next" },
       },
@@ -304,7 +306,7 @@ const HOP = {
   resources: {
     target: "nav-resources",
     to: "/resources",
-    title: "先進「我的資源」",
+    title: "先進「我的背包」",
     body: "框起來的就是入口 —— 桌機在最上面那排、手機在螢幕最下面那排。點它。",
   },
   tabMembers: {

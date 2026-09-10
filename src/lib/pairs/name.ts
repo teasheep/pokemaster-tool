@@ -57,10 +57,39 @@ export function seriesLabel(series?: string | null): string {
 
 const HALF_YEAR_MS = 183 * 86400 * 1000;
 
-/** 半年內上架 = 新拍組 (卡片標 NEW) */
+/**
+ * 台北日期 YYYY-MM-DD —— Workers 跑 UTC, 直接 new Date() 會慢 8 小時。
+ * (loader.ts 有一份同樣的私有函式給 server 用; 這裡是 client 也要用的那份。)
+ */
+function taipeiToday(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" });
+}
+
+/** 半年內初上線 = 新拍組 (卡片標 NEW) */
 export function isNewPair(p: Pick<ClientPairRecord, "releaseDate">): boolean {
   if (!p.releaseDate) return false;
   return Date.now() - new Date(p.releaseDate).getTime() < HALF_YEAR_MS;
+}
+
+/**
+ * 還沒到初上線日 —— **這是顯示狀態不是過濾條件**, 這種拍組照樣對外輸出。
+ *
+ * 2026-09-09 之前這條是 loader.ts 的「判準 B」, 會把拍組整個從對外輸出裡拿掉;
+ * 使用者指定改成「提前上線也沒關係, 只要把日期寫成未來就好」, 所以它降級成一個標示。
+ *
+ * 放在 name.ts 而不是 loader.ts: loader 第一行 `import "server-only"`, client 元件碰不得,
+ * 而這個判斷正是側板與卡片要用的。它跟 isNewPair 是同一類東西 —— 從日期折出來的顯示狀態。
+ *
+ * ⚠ 不要折成 client 投影的衍生欄位: 它跟著日期走, 而 public/catalog/<指紋>.json 是
+ *   **建置時**產的, 烤進去隔天就過期。releaseDate 本來就在 CLIENT_PAIR_FIELDS 裡。
+ */
+export function isUpcomingPair(
+  p: Pick<ClientPairRecord, "releaseDate">,
+  today: string = taipeiToday()
+): boolean {
+  const releaseDate = p.releaseDate ?? null;
+  // ISO YYYY-MM-DD 字串可直接字典序比較
+  return releaseDate !== null && releaseDate > today;
 }
 
 /** 屬性分組內的排序: 越新排越前 (無日期的排最後), 同日期按名稱穩定 */

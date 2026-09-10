@@ -122,7 +122,9 @@ try {
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await page.waitForTimeout(800);
   // 從頭像選單叫教學 (入口只有這一個)
-  await page.getByRole("button", { name: /帳號|頭像|選單/ }).first().click().catch(() => {});
+  // ⚠ 不要 .catch(() => {}) —— 選擇器過期時會靜靜點不到, 然後在下一條檢查變成
+  // 「找不到使用教學」這種看起來像功能壞掉的紅字 (2026-09-10 就這樣誤判了一次)。
+  await page.getByRole("button", { name: "帳號選單" }).click();
   await page.waitForTimeout(500);
   const tourItem = page.getByRole("menuitem", { name: /使用教學/ });
   if (await tourItem.count()) {
