@@ -7,7 +7,7 @@
 //                  (defaultType = 該關弱點屬性排最前, 但可切到任何屬性選隊 —
 //                   超能關選電系隊也是合法需求)
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,6 +31,7 @@ import { TypeIcon } from "@/components/sync-pair-badges";
 import { ALL_TYPES, TYPE_LABELS } from "@/data/sync-pairs";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useCoalescedWrite } from "@/lib/pairs/use-coalesced-write";
 import { TEAM_TAG_LABELS } from "@/lib/gym/types";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import type { Database, SyncPairType, TeamTag } from "@/lib/supabase/types";
@@ -310,11 +311,38 @@ export function TeamLibrary({
   /** 正在原地編輯拍組的隊伍 — 卡片寬度不變, 內部長出搜尋區 (compact PairPicker) */
   const [openPairs, setOpenPairs] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  /** 儲存佇列 — 連點寶數會連發儲存, 不排隊會互相踩到 (unique 撞列) */
+  /** 儲存佇列 — 同一隊連續兩個合併視窗還是可能重疊, 排隊才不會互相踩到 (unique 撞列) */
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  /**
+   * 樂觀的隊伍拍組 (teamId → 已選的三格)。**點下去畫面就要動**, 網路那一段另外合併。
+   *
+   * 2026-09-10 使用者:「隊伍庫那邊加寶數還是會卡頓, 拍組那邊好一點, 你不是處理過了嗎?」
+   * —— /pairs 那邊處理過了 (use-coalesced-write), 這裡沒有, 而且這裡更慢:
+   * PairPicker 是**全受控**的 (picked 是 prop, 沒有本地鏡像), 所以按一下寶數要等
+   * upsert → delete → 重抓整份 teams+team_pairs 三趟跨太平洋的往返回來, 數字才會動。
+   * 按到寶5 就是五次那樣的等待, 而且它們還在 saveQueue 裡排隊。
+   */
+  const [draftPairs, setDraftPairs] = useState<Record<string, PickedPair[]>>({});
 
-  const pairsOf = (teamId: string) =>
-    teamPairs.filter((p) => p.team_id === teamId).sort((a, b) => a.slot - b.slot);
+  /**
+   * 這一隊現在該畫什麼 —— 有樂觀值就用樂觀值。
+   * **id 沿用同一格的舊列**: React key 一換 SyncPairCard 就會重新掛載, 圖跟著重載閃一下。
+   */
+  const pairsOf = useCallback(
+    (teamId: string): TeamPairRow[] => {
+      const rows = teamPairs.filter((p) => p.team_id === teamId).sort((a, b) => a.slot - b.slot);
+      const draft = draftPairs[teamId];
+      if (!draft) return rows;
+      return draft.map((d, i) => ({
+        id: rows.find((r) => r.slot === i + 1)?.id ?? `draft-${teamId}-${i + 1}`,
+        team_id: teamId,
+        slot: i + 1,
+        pair_id: d.pairId,
+        min_grade: d.minGrade,
+      }));
+    },
+    [teamPairs, draftPairs]
+  );
   const applied = new Set(appliedTeamIds);
 
   /**
@@ -346,38 +374,69 @@ export function TeamLibrary({
   }
 
   /**
+   * 真正送出去的那一趟 (被 useCoalescedWrite 節流過, 同一隊 450ms 內只送最後一次)。
+   *
    * 三格拍組 = 依 slot upsert + 刪掉多出來的格子。
-   * 用 upsert 而不是「整組刪掉再寫入」: 連點寶數 (寶5→超覺1→超覺2) 會連發兩次儲存,
-   * delete/insert 交錯會撞 unique(team_id, slot) — upsert 天生冪等, 外加佇列保險。
+   * 用 upsert 而不是「整組刪掉再寫入」: delete/insert 交錯會撞 unique(team_id, slot) —
+   * upsert 天生冪等, 外加佇列保險。
+   *
+   * ⚠ **成功之後不要重抓** (與 members-client 的 writeGrade 同一條規矩):
+   * 樂觀值已經是正確的答案, 每存一次就重抓整份 teams + team_pairs 等於再排一串往返。
+   * 只有失敗才把樂觀值丟掉並重抓 —— 那時候畫面該退回伺服器的真相。
    */
-  function saveTeamPairs(teamId: string, picked: PickedPair[]) {
-    saveQueue.current = saveQueue.current.then(async () => {
-      try {
-        if (picked.length > 0) {
-          const { error } = await supabase.from("gym_team_pairs").upsert(
-            picked.map((p, i) => ({
-              team_id: teamId,
-              gym_id: gymId,
-              slot: i + 1,
-              pair_id: p.pairId,
-              min_grade: p.minGrade,
-            })),
-            { onConflict: "team_id,slot" }
+  const flushTeamPairs = useCallback(
+    async (teamId: string, payload: { picked: PickedPair[] }) => {
+      const { picked } = payload;
+      saveQueue.current = saveQueue.current.then(async () => {
+        try {
+          // 兩句**沒有重疊的列**: upsert 寫 slot 1..n, delete 砍 slot > n → 可以平行送,
+          // 不必等第一趟回來 (省一趟往返)。
+          // PostgrestFilterBuilder 是 thenable 不是 Promise → 型別寫 PromiseLike
+          const jobs: PromiseLike<{ error: { message: string } | null }>[] = [];
+          if (picked.length > 0) {
+            jobs.push(
+              supabase.from("gym_team_pairs").upsert(
+                picked.map((p, i) => ({
+                  team_id: teamId,
+                  gym_id: gymId,
+                  slot: i + 1,
+                  pair_id: p.pairId,
+                  min_grade: p.minGrade,
+                })),
+                { onConflict: "team_id,slot" }
+              )
+            );
+          }
+          jobs.push(
+            supabase.from("gym_team_pairs").delete().eq("team_id", teamId).gt("slot", picked.length)
           );
-          if (error) throw error;
+          for (const r of await Promise.all(jobs)) if (r.error) throw r.error;
+        } catch (e) {
+          toast.error("儲存拍組失敗", { description: e instanceof Error ? e.message : undefined });
+          // 失敗 → 丟掉這一隊的樂觀值, 讓畫面退回伺服器的真相
+          setDraftPairs((d) => {
+            const next = { ...d };
+            delete next[teamId];
+            return next;
+          });
+          await onChanged();
         }
-        const { error: delErr } = await supabase
-          .from("gym_team_pairs")
-          .delete()
-          .eq("team_id", teamId)
-          .gt("slot", picked.length);
-        if (delErr) throw delErr;
-        await onChanged();
-      } catch (e) {
-        toast.error("儲存拍組失敗", { description: e instanceof Error ? e.message : undefined });
-      }
-    });
-    return saveQueue.current;
+      });
+      return saveQueue.current;
+    },
+    [gymId, onChanged, supabase]
+  );
+
+  /** 同一隊 450ms 內連點只送最後一次 (見 lib/pairs/use-coalesced-write.ts) */
+  const scheduleTeamPairs = useCoalescedWrite<{ picked: PickedPair[] }>(
+    flushTeamPairs,
+    (_prev, next) => next
+  );
+
+  /** 畫面立刻動 (樂觀), 網路那一段合併之後才送 */
+  function saveTeamPairs(teamId: string, picked: PickedPair[]) {
+    setDraftPairs((d) => ({ ...d, [teamId]: picked }));
+    scheduleTeamPairs(teamId, { picked });
   }
 
   /** 新增 = 直接建一張空隊伍卡並展開拍組選擇 (不跳到另一個表單) */

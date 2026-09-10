@@ -152,6 +152,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   RLS 看的是 request 的 JWT 不是我們送的欄位。
   ⚠ 管理員代改那條 (`members-client` 的 writeGrade) **成功之後不要重抓** ——
   樂觀更新已經是正確的值, 每點一次就重抓整份 member_pairs 等於再排一串往返。只有失敗才重抓 (回滾)。
+  ⚠ **隊伍庫那條 2026-09-10 才補上** (使用者:「隊伍庫那邊加寶數還是會卡頓, 拍組那邊好一點,
+  你不是處理過了嗎?」)。它原本比 `/pairs` 更慢, 而且是**結構性**的:
+  `PairPicker` 是**全受控**的 (`picked` 是 prop, 沒有本地鏡像), 所以按一下寶數要等
+  `upsert → delete → 重抓整份 teams+team_pairs` **三趟序列往返**回來, 數字才會動 ——
+  按到寶5 就是五次那樣的等待, 而且它們還在 `saveQueue` 裡排隊。
+  三件配套 (`team-sheet.tsx`): `draftPairs` 樂觀狀態 (畫面立刻動) +
+  `useCoalescedWrite` 以 teamId 為 key + **成功之後不重抓**;
+  upsert 與 delete 的列不重疊, 所以**平行送**再省一趟。實測連點 5 下: **2 個請求**。
+  ⚠ 樂觀值的 React key 要沿用同一格的舊列 id —— key 一換 `SyncPairCard` 就重新掛載, 圖跟著閃。
 - **卡片互動標準**: 點卡片 (含灰卡) = 開編輯側板; 點左下角 = 寶數循環 (寶1→5→超覺1→5→歸零)。
   寶0 = 整卡反灰, 沒有「寶0 持有」狀態。
   **可點的左下角靠「六角本身放大」當提示** (2026-09-10 使用者指定), 不要在它後面透出一顆白色圓
@@ -805,6 +814,27 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   卡牆的 `eagerCount` 是**張數不是列數** (桌機 13 張/列、手機 4 張/列) — 調大等於在手機上
   先下載好幾個螢幕的圖。實測 /pairs 全圖鑑: 981 個重圖請求 / 14.7MB → 桌機 208 個 / 2.75MB、
   手機 93 個 / 1.04MB。
+- ⚠ **卡面的淡入不可以只靠 `<image onLoad>`** (2026-09-10 使用者:「從成員與拍組移動到
+  隊伍庫時, 很多拍組圖沒有被載出來, 一定要重新整理才會有」)。
+  卡面圖是「載好才淡入」(`artLoaded ? opacity-100 : opacity-0`), 而 `onLoad` 有兩個洞,
+  **症狀都是整張卡隱形**: SSR 出來的 `<image href>` 在 **hydration 之前**就開始載,
+  快取命中時 load 事件早就燒掉了, React 才掛監聽器 → `artLoaded` 永遠 false;
+  圖 404 時同樣不會有 load。**「透明」與「沒有圖」在畫面上一模一樣**, 所以不會有人
+  講得清楚, 只會說「圖沒出來」。
+  實測 (隔離測試道館, 20 支隊伍 = 60 張卡, 與線上同規模):
+  **軟導覽 60 張只有 11 張看得到, 49 張透明; 硬重整 60 張全透明**。修好之後兩邊都是 60/60。
+  ⚠ **規模小的時候不會重現** —— 2 支隊伍 (6 張卡) 時軟導覽是好的, 一路測到 60 張才炸開來:
+  同一個 tick 要 60 張圖時, 大量 load 事件會落在 React 還在 commit/掛監聽器的空檔。
+  所以**重現這條一定要用真實規模的資料**, 拿三五張卡試會得到「修好了」的假結論 (踩過)。
+  解法在 `sync-pair-card.tsx`: 另外拿一顆**同網址**的 `new Image()` 去問瀏覽器快取
+  (同網址 = 共用同一份快取/同一筆 in-flight 請求, 不會多一個網路請求)。
+  三件事一起才成立:
+  1. **監聽器先掛, `src` 最後才設** —— 反過來寫的話快取命中的圖會在設 src 的當下
+     就把 load 排進去, 而我們還沒訂閱 (等於把原本的洞原封不動搬過來)。
+  2. **`error` 也要放行** —— 載不到就直接顯示, 寧可看到空卡也不要看到隱形的卡。
+  3. 不要在 effect 裡同步 `setState` (`react-hooks/set-state-in-effect` 會擋, 而且是對的)
+     —— 走事件回呼就自然避開了, 不要用 `probe.complete` + `queueMicrotask` 繞規則。
+  `tests/card-art.test.ts` 釘住這三條。
 - **卡片的 `<defs>` 已經整個刪掉** (2026-09-10)。`components/sync-pair-defs.tsx` 與那 10 個
   固定 id (spc-clip-card / spc-clip-poke-circle|hex / spc-frame-3|4|5 / spc-bg-3|4|5 /
   spc-bg-ex) 在卡面換成官方成品卡之後**全站零引用** —— 外框、底色、寶可夢圈的遮罩全都

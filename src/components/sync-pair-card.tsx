@@ -256,6 +256,38 @@ export const SyncPairCard = memo(function SyncPairCard({
   const cardTier = isSixEx && pair.hasSixEx ? "EX" : String(Math.min(5, promo));
   const cardUrl = `/reference/card/${pair.pairId}_${cardTier}.webp`;
 
+  /**
+   * 「圖載好了沒」**不能只靠 `<image onLoad>`** —— 那條路有兩個洞, 症狀都是
+   * **卡面整張隱形** (className 停在 opacity-0), 而「透明」與「沒有圖」在畫面上一模一樣。
+   *
+   * ⚠ 前科 (2026-09-10 使用者:「從成員與拍組移動到隊伍庫時, 很多拍組圖沒有被載出來」):
+   *   1. **SSR 的元素會在 hydration 之前就開始載圖**。快取命中時 load 事件早就燒掉了,
+   *      React 才掛上監聽器 → onLoad 永遠不會被呼叫 → artLoaded 卡在 false。
+   *      實測 (線上, 隊伍庫): 硬重整 6/6 張全透明; 軟導覽時 React 自己建元素、
+   *      監聽器先掛好, 所以反而正常 —— 同一張卡的行為取決於它是怎麼被畫出來的。
+   *   2. **圖 404 時 onLoad 不會來**, 卡片就永遠隱形 (連 pair_id 的文字都沒有)。
+   *
+   * 解法: 另外拿一顆同網址的 HTMLImageElement 去問瀏覽器快取 —— 已經在快取裡的話
+   * `complete` 當下就是 true, 不必等任何事件; 沒快取就用它的 load/error 當第二條路。
+   * 同網址所以**不會多一個網路請求** (共用同一份快取/同一筆 in-flight 請求)。
+   * **error 也放行**: 載不到就直接顯示, 寧可看到空卡也不要看到一張隱形的卡。
+   */
+  useEffect(() => {
+    if (!showArt || artLoaded) return;
+    const probe = new Image();
+    const done = () => setArtLoaded(true);
+    // ⚠ **監聽器要先掛, src 最後才設** —— 反過來寫的話, 快取命中的圖會在設 src 的當下
+    // 就把 load 排進去, 而我們可能已經錯過它 (那正是上面第 1 個洞的成因)。
+    // 這樣寫連快取命中都收得到事件, 不必去問 complete, 也就不會在 effect 裡同步 setState。
+    probe.addEventListener("load", done);
+    probe.addEventListener("error", done);
+    probe.src = cardUrl;
+    return () => {
+      probe.removeEventListener("load", done);
+      probe.removeEventListener("error", done);
+    };
+  }, [showArt, artLoaded, cardUrl]);
+
   const dim = { sm: 96, md: 128, lg: 192 }[size];
 
   const Wrapper: "button" | "div" = handleClick ? "button" : "div";
@@ -332,6 +364,7 @@ export const SyncPairCard = memo(function SyncPairCard({
           width="128"
           height="128"
           preserveAspectRatio="xMidYMid meet"
+          // 快路徑而已 —— 真正保證會翻的是上面那個 effect (SSR 的元素收不到這個事件)
           onLoad={() => setArtLoaded(true)}
           className={cn(
             "transition-opacity duration-[120ms] ease-out motion-reduce:transition-none",
@@ -408,6 +441,9 @@ export const SyncPairCard = memo(function SyncPairCard({
             數字轉紅描邊表示「滿了」。onCountClick 有給時整組可點 (寶+1 → 超覺 → 循環)。 */}
         {potential != null && (
           <g
+            /* QA 的穩定把手 —— 這一格沒有可及名稱, 用結構選它 (class/巢狀) 一改版就爛掉
+               (前科: qa:gymcode 的頭像選單靠 role+name 猜, 名稱一沒了就靜默點空) */
+            {...(onCountClick ? { "data-count-hit": "" } : null)}
             onClick={
               onCountClick
                 ? (e) => {
