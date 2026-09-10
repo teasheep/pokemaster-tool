@@ -15,7 +15,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## ⛔ 帳號: 這個專案的每一個外部服務都是**獨立專用帳號**
 
-**GitLab / Cloudflare / Supabase 全部都是**, 一個都不例外。**不要**假設「開發者電腦上現在登入的那個帳號」
+**GitHub / Cloudflare / Supabase 全部都是**, 一個都不例外。**不要**假設「開發者電腦上現在登入的那個帳號」
 就是這個專案要用的帳號 —— 那台機器上同時有本人的帳號與專案專用帳號, 而 CLI 工具預設會用前者。
 
 **動任何雲端操作 (部署 / 改設定 / 查資料) 之前, 先核對帳號 ID**:
@@ -24,7 +24,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 | --- | --- | --- |
 | Cloudflare | Worker `pm-gym` 的 account id 存在 `.cloudflare-account-id` (gitignored) | `npx wrangler whoami` 的 Account ID 必須等於那個檔的內容 |
 | Supabase | `.env.local` 的 `NEXT_PUBLIC_SUPABASE_URL` 那個專案 | 只走 `.env.local`, 不要用其他來源 |
-| GitLab | 專案專用帳號 | `git remote -v` |
+| GitHub | 專案專用帳號 (`teasheep/pokemaster-tool`) | `git remote -v` —— **只有 `github` 這一個 remote** |
 
 ⚠ **前科 (2026-09-02)**: `npx wrangler whoami` 顯示的是**開發者本人的帳號, 不是專案的**,
 而且那個帳號的 memberships 裡看不到專案帳號的任何 zone。當時據此推論「網域被加到別的帳號」
