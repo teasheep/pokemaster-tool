@@ -161,9 +161,25 @@ describe("背包可以直接輸入數字", () => {
     expect(src).toContain("onBlur={() => setDraft(null)}");
   });
 
-  it("夾在 0-999 (DB 的 check 也是這個範圍)", () => {
-    expect(src).toContain("Math.min(999, Number(raw))");
-    expect(src).toContain(".slice(0, 3)");
+  it("**上限與資料庫的 check 是同一個數字**", () => {
+    // 前端夾得比 DB 寬 = 打了 1200 跳一句英文的 check constraint 錯誤;
+    // 夾得比 DB 窄 = 打了 1200 靜靜變成上限。兩種都不會有人回報, 所以釘住。
+    const max = /export const MAX_COUNT = (\d+);/.exec(src)?.[1];
+    expect(max, "candy.tsx 沒有 MAX_COUNT").toBeTruthy();
+    expect(src, "上限要走 MAX_COUNT 不要散落寫死").toContain("Math.min(MAX_COUNT, Number(raw))");
+    expect(src).toContain("String(MAX_COUNT).length");
+
+    // migrations 依檔名排序 = 依套用順序, 所以最後一次定義的那個才是資料庫現在的上限
+    const dir = path.join(process.cwd(), "supabase", "migrations");
+    const sql = fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith(".sql"))
+      .sort()
+      .map((f) => fs.readFileSync(path.join(dir, f), "utf8"))
+      .join("\n");
+    const hits = [...sql.matchAll(/count between 0 and (\d+)/g)];
+    expect(hits.length, "migrations 裡找不到 member_candies 的 count check").toBeGreaterThan(0);
+    expect(hits[hits.length - 1][1], "DB 的上限與前端對不起來").toBe(max);
   });
 
   it("唯讀那條路徑不會長出輸入框", () => {

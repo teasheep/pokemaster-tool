@@ -302,18 +302,19 @@ export function TeamGridSkeleton({ tags = 4 }: { tags?: number }) {
 }
 
 /**
- * 背包 (糖果 7 + 體系與潛力 6) — candy.tsx 的 CandyBar 手機/桌機是兩套版面, 骨架也要兩套,
+ * 背包 (糖果 7 + 體系與潛力 6 + 突破界限 2 + 其他 3) — candy.tsx 的 CandyBar
+ * 手機/桌機是兩套版面, 骨架也要兩套,
  * 否則資料一到手機整排重排:
  *   手機 (sm 以下): 每種各佔滿一列 = 44px 圖 + 名稱 + 兩顆 44px 的 −/＋ (py-1.5 → 56px/列)
  *   桌機: 原本的橫排小卡 (± 鈕平常隱形, 只留位置)
- * ⚠ 這裡的 7/6 與組名那一行是照 candy.tsx 的 CANDY_GROUPS 手抄的 (那邊是 "use client",
+ * ⚠ 這裡的格數與組名那一行是照 candy.tsx 的 CANDY_GROUPS 手抄的 (那邊是 "use client",
  *   這個檔沒有 —— loading.tsx 是 server 元件, import 過來會拿到 client reference)。
  *   加糖或改分組時要回來一起改, 不然資料一到就重排。
  */
 export function CandyBarSkeleton() {
   return (
     <div className="space-y-3">
-      {[7, 6].map((n, gi) => (
+      {[7, 6, 2, 3].map((n, gi) => (
         <div key={gi} className="space-y-1.5">
           {/* 組名 (text-xs = 16px 行高) */}
           <Sk className="h-4 w-14" delay={wave(gi)} />

@@ -726,7 +726,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      **聚焦就全選** (重點是一次改掉, 不是接在後面打);
      ⚠ **空白不等於 0** —— 使用者清空是為了重打, 那一瞬間寫 0 進去會在道館紀錄
      留一筆歸零, 離開時還是空的就退回原本的值;
-     夾在 0-999 (與 DB 的 check 同一個範圍)。每打一個字送一次沒關係, 寫入那一層會合併。
+     ⚠ **上限走 `MAX_COUNT` (0073 起 9999), 而它必須與 `member_candies` 的 check 是同一個數字**:
+     前端夾得比 DB 寬 = 打了大數字跳一句 check constraint 的英文錯誤; 夾得比 DB 窄 =
+     打了大數字靜靜變成上限。兩種都不會有人回報。輸入框收幾位數也吃它, 不要另外寫死位數。
+     **放寬要先套 migration 再上前端** (與 0071 那次相反 —— 那是加欄位, 這是放寬值域);
+     收緊才是先上前端。每打一個字送一次沒關係, 寫入那一層會合併。
      唯讀那條路徑 (`compact || !editable` 的提早 return) **不要長出輸入框**。
   3. **切換 = insert 或 delete, 不要用 upsert** — 這張表只有「有列 / 沒列」兩種狀態,
      0056 沒給 update policy, PostgREST 的 upsert 走 UPDATE 會被 RLS 擋。
@@ -745,6 +749,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      所以標題與單位都跟著改 (「共 N 個」不是「共 N 顆」), 旁邊掛遊戲內的道具袋 icon。
      分組寫在 `candy.tsx` 的 `CANDY_GROUPS` (糖果 / 體系與潛力), `CANDY_TYPES` 是它攤平的全集;
      `/resources` 與道館成員頁的「資源」分頁**用同一份分組**, 不要各排各的。
+     ⚠ **道具的圓盤底色 = 遊戲裡的稀有度, 不是裝飾** (2026-09-11 使用者:「兩個證是紅色的
+     外框, 兩個券是一般藍綠色外框, 只有別針是對的」)。對照神奇寶貝百科「道具列表（Masters）」
+     每一列的稀有度圖示: **0 藍綠 / 3 金 / 8 紅** (另有 1 銅 2 銀 9 彩虹, 目前用不到)。
+     我們原本全部套金盤 —— 因為上游 pomasters 的 items.json 那 12 種剛好都是 gold ——
+     所以 0074 那五種一眼就看得出不對。對照表在 candy.tsx 的 `PLATE`, 沒列到的一律金盤。
+     ⚠ 別針**刻意留金盤**: 百科標它稀有度 0, 但使用者以遊戲內實際畫面為準說金的才對。
+     以百科為參考、以使用者看到的為準。
      ⚠ 加新道具是**三件事同一個 commit**: migration 放寬 `member_candies` 的 check +
      `CANDY_GROUPS`/`CANDY_LABELS` + 圖放進 `public/reference/ui/candy/`。
      少了 migration 就是「按 ＋ 只會 toast 更新失敗」, 少了圖就是破圖 (本機看不出來, 圖還在)。

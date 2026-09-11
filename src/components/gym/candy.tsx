@@ -34,7 +34,13 @@ export type CandyType =
   | "cake_support"
   | "cake_sprint"
   | "cake_field"
-  | "power_up";
+  | "power_up"
+  // 突破界限的兩種證明 + 兌換/保護類 (0074)
+  | "proof_excellence"
+  | "proof_perfection"
+  | "ever_pin"
+  | "cake_voucher"
+  | "daily_ticket";
 
 /**
  * 背包的分組 —— 照 pomasters 背包分頁的分類 (2026-09-09 使用者指定抄那個版面)。
@@ -50,9 +56,22 @@ export const CANDY_GROUPS: { key: string; label: string; types: CandyType[] }[] 
     types: ["universal", "strike", "tech", "support", "sprint", "field", "superawakening"],
   },
   {
+    // 2026-09-11 使用者:「把蛋糕券歸類在體系, 把金票放在其他, 這樣體系與潛力就直接改成體系」
+    // —— 兌換券換到的就是體系蛋糕捲, 跟它們放一起; 金票 (5★ 成長潛力券) 與體系無關。
     key: "role",
-    label: "體系與潛力",
-    types: ["cake_strike", "cake_tech", "cake_support", "cake_sprint", "cake_field", "power_up"],
+    label: "體系",
+    types: ["cake_strike", "cake_tech", "cake_support", "cake_sprint", "cake_field", "cake_voucher"],
+  },
+  {
+    key: "limit",
+    label: "突破界限",
+    types: ["proof_excellence", "proof_perfection"],
+  },
+  {
+    // 剩下的共通點只有「不是練度素材」, 所以就叫其他
+    key: "misc",
+    label: "其他",
+    types: ["power_up", "ever_pin", "daily_ticket"],
   },
 ];
 
@@ -76,6 +95,16 @@ export const CANDY_LABELS: Record<CandyType, string> = {
   cake_sprint: "體系蛋糕捲 (橙)",
   cake_field: "體系蛋糕捲 (紫)",
   power_up: "5★ 成長潛力券",
+  // 0074. 名稱一律照官方 zh-TW 的用字 (神奇寶貝百科「道具列表（Masters）」對過日文與英文):
+  //   極致之證 極致の証 Certificate of Excellence / 超越之證 超越の証 Plaque of Perfection
+  //   不變別針 かわらずのピン Ever Pin (鎖住技能裝備的標籤與追加效果各一個)
+  //   體系蛋糕捲獎牌兌換券 ロールケーキのメダル引換券 Roll Cake Coin Voucher
+  //   每日券 デイリーチケット Daily Ticket
+  proof_excellence: "極致之證",
+  proof_perfection: "超越之證",
+  ever_pin: "不變別針",
+  cake_voucher: "體系蛋糕捲獎牌兌換券",
+  daily_ticket: "每日券",
 };
 
 /**
@@ -118,7 +147,31 @@ export function CandyIcon({
 }
 
 /**
- * 遊戲內道具袋的金色圓盤底座 (`item_bg_gold`) —— 糖果圖疊在它上面就是背包裡那一格的長相。
+ * 道具底盤的顏色 —— 遊戲裡每個道具坐在哪一種圓盤上是**固定的**, 它就是道具的稀有度。
+ *
+ * 2026-09-11 使用者:「兩個證是紅色的外框, 兩個券是一般藍綠色外框, 只有別針是對的」。
+ * 對照神奇寶貝百科「道具列表（Masters）」每一列的稀有度圖示:
+ *   稀有度 0 = 藍綠 (一般) / 3 = 金 / 8 = 紅, 另有 1 銅 2 銀 9 彩虹 (目前用不到)。
+ * 我們原本**所有道具都套金盤** (上游 pomasters 的 items.json 12 種全是 gold),
+ * 所以新加的五種一眼就看得出不對。
+ *
+ * ⚠ 沒列在這裡的一律金盤 —— 現有那 13 種 (糖果與體系蛋糕捲) 在百科上都是稀有度 3, 對得上。
+ */
+const PLATE: Partial<Record<CandyType, "red" | "teal">> = {
+  proof_excellence: "red",
+  proof_perfection: "red",
+  cake_voucher: "teal",
+  daily_ticket: "teal",
+};
+
+const PLATE_SRC = {
+  gold: "/reference/ui/item_plate.webp",
+  red: "/reference/ui/item_plate_red.webp",
+  teal: "/reference/ui/item_plate_teal.webp",
+} as const;
+
+/**
+ * 遊戲內道具袋的圓盤底座 (`item_bg_*`) —— 糖果圖疊在它上面就是背包裡那一格的長相。
  * 2026-09-09 使用者指定抄 pomasters 的背包分頁版面。
  *
  * 底座**只是裝飾**, 所以 aria-hidden 且不進無障礙樹; 真正的名稱在 CandyIcon 的 alt。
@@ -141,7 +194,7 @@ export function CandyPlate({
       style={{ width: size, height: size }}
     >
       <img
-        src="/reference/ui/item_plate.webp"
+        src={PLATE_SRC[PLATE[type] ?? "gold"]}
         alt=""
         aria-hidden
         width={size}
@@ -155,6 +208,14 @@ export function CandyPlate({
 }
 
 export type CandyCounts = Partial<Record<CandyType, number>>;
+
+/**
+ * 數量上限 —— **與 `member_candies` 的 check 必須是同一個數字** (0073 從 999 放寬到 9999)。
+ * 前端夾得比資料庫寬 = 打了 1200 會跳一句 check constraint 的英文錯誤;
+ * 夾得比資料庫窄 = 打了 1200 靜靜變成上限。兩種都不會有人回報。
+ * 輸入框收幾位數也吃它 (String(MAX_COUNT).length), 不要另外寫死位數。
+ */
+export const MAX_COUNT = 9999;
 
 /**
  * 可以直接打字的數量格 (2026-09-11 使用者:「背包除了 +- 以外要多可以輸入數字的功能,
@@ -198,9 +259,9 @@ function CountInput({
         e.currentTarget.select();
       }}
       onChange={(e) => {
-        const raw = e.target.value.replace(/\D/g, "").slice(0, 3);
+        const raw = e.target.value.replace(/\D/g, "").slice(0, String(MAX_COUNT).length);
         setDraft(raw);
-        if (raw !== "") onChange(Math.min(999, Number(raw)));
+        if (raw !== "") onChange(Math.min(MAX_COUNT, Number(raw)));
       }}
       onBlur={() => setDraft(null)}
       onKeyDown={(e) => {
@@ -285,7 +346,7 @@ export function CandyBar({
     );
   }
 
-  const clamp = (n: number, delta: number) => Math.max(0, Math.min(999, n + delta));
+  const clamp = (n: number, delta: number) => Math.max(0, Math.min(MAX_COUNT, n + delta));
 
   // 外層包一顆單純的 div: 呼叫端有人把 CandyBar 放在 space-y-* 容器裡,
   // 直接回傳 Fragment (兩個子節點) 會多長出一段間距。
@@ -326,12 +387,12 @@ export function CandyBar({
                 type={t}
                 value={n}
                 onChange={(next) => onChange?.(t, next)}
-                className="h-11 w-14 text-lg"
+                className="h-11 w-16 text-lg"
               />
               <button
                 type="button"
                 onClick={() => bump(1)}
-                disabled={n >= 999}
+                disabled={n >= MAX_COUNT}
                 aria-label={`${CANDY_LABELS[t]} +1`}
                 className={cn(
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl font-bold leading-none text-muted-foreground transition-all",
@@ -379,14 +440,14 @@ export function CandyBar({
                   type={t}
                   value={n}
                   onChange={(next) => onChange?.(t, next)}
-                  className="w-12 text-lg leading-tight"
+                  className="w-14 text-lg leading-tight"
                 />
               </span>
               {/* ＋ 鈕 */}
               <button
                 type="button"
                 onClick={() => bump(1)}
-                disabled={n >= 999}
+                disabled={n >= MAX_COUNT}
                 aria-label={`${CANDY_LABELS[t]} +1`}
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full border pointer-coarse:h-11 pointer-coarse:w-11 text-base font-bold leading-none text-muted-foreground transition-all",
@@ -406,6 +467,26 @@ export function CandyBar({
 
 /** 一次寫入要送的東西。**gym/member 放在 payload 裡不是閉包裡** —— 見 flush 的註解。 */
 type CandyWrite = { gymId: string; memberId: string; type: CandyType; count: number };
+
+/**
+ * 資料庫拒絕時要講人話 (2026-09-11 使用者:「超過 9999 的時候右上角會跳資料庫的錯誤,
+ * 可以弄個合理一點的錯誤訊息」)。
+ *
+ * 預設的 `error.message` 是 Postgres 的原文, 長這樣:
+ *   new row for relation "member_candies" violates check constraint "member_candies_count_check"
+ * —— 對使用者完全沒有意義, 而且看起來像站壞了。
+ *
+ * ⚠ 這是**保底**不是主要防線: 正常情況下 CountInput 與 +/- 都夾在 MAX_COUNT 以內,
+ * 根本送不出超過的值。會走到這裡只有兩種情況, 兩種都該講清楚是什麼事:
+ *   1. 前端已經上線但 migration 還沒套 (上限或道具種類還是舊的);
+ *   2. 有人繞過 UI 直接打 API。
+ */
+function candyErrorText(err: { message?: string; code?: string }): string {
+  const m = err.message ?? "";
+  if (/member_candies_count_check/.test(m)) return `數量只能填 0 到 ${MAX_COUNT}`;
+  if (/member_candies_candy_type_check/.test(m)) return "這個道具還沒開放, 稍後再試一次";
+  return m || "請再試一次";
+}
 
 /** 自己的糖果庫存 (載入 + 樂觀更新), 給我的拍組頁用 */
 export function useMyCandies(gymId: string | null, memberId: string | null) {
@@ -450,7 +531,7 @@ export function useMyCandies(gymId: string | null, memberId: string | null) {
           { gym_id: w.gymId, member_id: w.memberId, candy_type: w.type, count: w.count },
           { onConflict: "member_id,candy_type" }
         );
-        if (error) toast.error("更新失敗", { description: error.message });
+        if (error) toast.error("更新失敗", { description: candyErrorText(error) });
       });
       queues.current.set(key, tail);
       return tail;
