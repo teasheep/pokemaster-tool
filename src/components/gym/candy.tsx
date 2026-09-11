@@ -157,6 +157,69 @@ export function CandyPlate({
 export type CandyCounts = Partial<Record<CandyType, number>>;
 
 /**
+ * 可以直接打字的數量格 (2026-09-11 使用者:「背包除了 +- 以外要多可以輸入數字的功能,
+ * 否則一個一個點會很累」)。
+ *
+ * 一次拿到幾十顆糖是常態, 而 ＋ 一下加一 —— 要從 0 點到 40 就是 40 下。
+ *
+ * 幾個刻意的選擇:
+ *  - **type="text" + inputMode="numeric"**: 手機叫得出數字鍵盤, 但沒有 number 那顆
+ *    上下箭頭 (它在這個尺寸裡會把版面擠歪), 而且值由我們自己正規化, 不會出現
+ *    "1e5"、"-3"、"007" 這種瀏覽器允許但我們不想要的東西。
+ *  - **聚焦就全選**: 這個功能的重點是「一次改掉」, 不是在既有數字後面接著打。
+ *  - **空白不等於 0**: 使用者清空是為了重打, 那一瞬間不要寫 0 進資料庫 (那會留下一筆
+ *    歸零的紀錄)。離開時還是空的就退回原本的值。
+ *  - 每打一個字就送一次 —— 沒關係, 寫入那一層會合併 (見 useMyCandies 的註解),
+ *    打 "40" 只會送出最後的 40。
+ */
+function CountInput({
+  type,
+  value,
+  onChange,
+  className,
+}: {
+  type: CandyType;
+  value: number;
+  onChange: (next: number) => void;
+  className?: string;
+}) {
+  /** null = 沒在編輯, 直接顯示 value */
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      value={draft ?? String(value)}
+      aria-label={`${CANDY_LABELS[type]} 數量`}
+      title={`${CANDY_LABELS[type]}: 可以直接輸入數字`}
+      onFocus={(e) => {
+        setDraft(String(value));
+        e.currentTarget.select();
+      }}
+      onChange={(e) => {
+        const raw = e.target.value.replace(/\D/g, "").slice(0, 3);
+        setDraft(raw);
+        if (raw !== "") onChange(Math.min(999, Number(raw)));
+      }}
+      onBlur={() => setDraft(null)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
+      }}
+      className={cn(
+        "shrink-0 rounded-md bg-transparent text-center font-bold tabular-nums",
+        // 平常看起來就是那個數字; hover/聚焦才長出可以打字的樣子
+        "cursor-text transition-colors hover:bg-accent/60 focus:bg-accent focus:outline-none",
+        "focus:ring-2 focus:ring-primary/40",
+        value === 0 && "text-muted-foreground",
+        className
+      )}
+    />
+  );
+}
+
+
+/**
  * 糖果庫存列。
  * 增減: hover 每顆糖時左右浮出 −/＋ 鈕 (桌機); 觸控裝置 (pointer-coarse)
  * 沒有 hover, −/＋ 常駐顯示。editable=false 時純顯示 (看別人的庫存)。
@@ -259,14 +322,12 @@ export function CandyBar({
               >
                 −
               </button>
-              <span
-                className={cn(
-                  "w-10 shrink-0 text-center text-lg font-bold tabular-nums",
-                  n === 0 && "text-muted-foreground"
-                )}
-              >
-                {n}
-              </span>
+              <CountInput
+                type={t}
+                value={n}
+                onChange={(next) => onChange?.(t, next)}
+                className="h-11 w-14 text-lg"
+              />
               <button
                 type="button"
                 onClick={() => bump(1)}
@@ -314,14 +375,12 @@ export function CandyBar({
               </button>
               <span className="flex flex-col items-center px-0.5">
                 <CandyPlate type={t} size={60} dim={n === 0} />
-                <span
-                  className={cn(
-                    "tabular-nums text-lg font-bold leading-tight",
-                    n === 0 && "text-muted-foreground"
-                  )}
-                >
-                  {n}
-                </span>
+                <CountInput
+                  type={t}
+                  value={n}
+                  onChange={(next) => onChange?.(t, next)}
+                  className="w-12 text-lg leading-tight"
+                />
               </span>
               {/* ＋ 鈕 */}
               <button

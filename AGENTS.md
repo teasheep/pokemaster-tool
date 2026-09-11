@@ -719,6 +719,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
      ⚠ `gymId`/`memberId` 要走 payload 不走閉包: 這支 hook 的 memberId 會變 (管理員換人看),
      而 `useCoalescedWrite` 記住的是最新那顆 flush → 用閉包會把還在等的那一筆寫到**別人**身上。
      實測連點 6 下: **6 個並行請求 → 1 個**, 紀錄也從一串跳號變成乾淨的一筆 `0→6`。
+  2c. **數量格可以直接打字, 不是只有 +/-** (2026-09-11 使用者:「否則一個一個點會很累」)。
+     一次拿到幾十顆糖是常態, 從 0 點到 40 就是 40 下。`CountInput` 的四個選擇都是刻意的:
+     **type="text" + inputMode="numeric"** (手機叫得出數字鍵盤, 但沒有 number 那兩顆
+     會擠歪版面的箭頭, 而且值由我們自己正規化, 不會冒出 "1e5"/"-3"/"007");
+     **聚焦就全選** (重點是一次改掉, 不是接在後面打);
+     ⚠ **空白不等於 0** —— 使用者清空是為了重打, 那一瞬間寫 0 進去會在道館紀錄
+     留一筆歸零, 離開時還是空的就退回原本的值;
+     夾在 0-999 (與 DB 的 check 同一個範圍)。每打一個字送一次沒關係, 寫入那一層會合併。
+     唯讀那條路徑 (`compact || !editable` 的提早 return) **不要長出輸入框**。
   3. **切換 = insert 或 delete, 不要用 upsert** — 這張表只有「有列 / 沒列」兩種狀態,
      0056 沒給 update policy, PostgREST 的 upsert 走 UPDATE 會被 RLS 擋。
      連點兩下的 23505 (unique_violation) 當成成功, 不要 toast 錯誤。

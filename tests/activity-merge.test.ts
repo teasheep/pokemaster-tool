@@ -141,6 +141,37 @@ describe("背包的寫入", () => {
   });
 });
 
+describe("背包可以直接輸入數字", () => {
+  // 2026-09-11 使用者:「背包除了 +- 以外要多可以輸入數字的功能, 否則一個一個點會很累」
+  // —— 一次拿到幾十顆糖是常態, 從 0 點到 40 就是 40 下。
+  const src = read("src/components/gym/candy.tsx");
+
+  it("數字格是 input 不是純文字", () => {
+    expect(src).toContain("function CountInput");
+    expect(src).toContain('inputMode="numeric"');
+  });
+
+  it("聚焦全選 — 重點是「一次改掉」不是接在後面打", () => {
+    expect(src).toContain("e.currentTarget.select()");
+  });
+
+  it("**空白不等於 0** — 清空是為了重打, 不可以當下就寫 0 進去", () => {
+    // 寫 0 的話會在道館紀錄留一筆歸零, 而使用者只是要重打
+    expect(src).toContain('if (raw !== "") onChange(');
+    expect(src).toContain("onBlur={() => setDraft(null)}");
+  });
+
+  it("夾在 0-999 (DB 的 check 也是這個範圍)", () => {
+    expect(src).toContain("Math.min(999, Number(raw))");
+    expect(src).toContain(".slice(0, 3)");
+  });
+
+  it("唯讀那條路徑不會長出輸入框", () => {
+    // compact / !editable 提早 return, 那一段只有 span
+    expect(src).toContain("if (compact || !editable) {");
+  });
+});
+
 describe("activity-filters 仍然是中立模組", () => {
   it("不可以標 use client — page.tsx 要 import 它 (整頁掛掉的前科)", () => {
     expect(
