@@ -26,6 +26,30 @@ export function isPendingMember(m: { status?: string | null }): boolean {
   return !isActiveMember(m);
 }
 
+/**
+ * 道館正式成員上限 (0075)。遊戲內的「訓練家道館」是 20 人公會。
+ *
+ * ⚠ **這個數字必須與 migration 0075 的 trigger 裡那個 20 一致** ——
+ * 前端夾得比資料庫鬆, 管理員就會看到一句 `GYM_FULL` 的英文例外;
+ * 夾得比資料庫緊, 就是按了沒反應而且沒人知道為什麼。
+ * `tests/member-seat-cap.test.ts` 會把兩邊掃出來對。
+ *
+ * 誰佔名額: status = 'active' 且 role ≠ 'advisor'。
+ * 顧問是唯讀觀察者不佔名額 (0028/0072), 管理員佔 (他也是公會的一員),
+ * 待確認的不佔 (還沒放行, 所以滿員時照樣排得進來)。
+ */
+export const GYM_SEAT_CAP = 20;
+
+/** 這一列佔不佔名額 */
+export function occupiesSeat(m: { role?: string | null; status?: string | null }): boolean {
+  return m.role !== "advisor" && isActiveMember(m);
+}
+
+/** 從一份成員清單算出目前佔掉幾個名額 */
+export function countSeats(list: ReadonlyArray<{ role?: string | null; status?: string | null }>): number {
+  return list.filter(occupiesSeat).length;
+}
+
 /** 我送出的、還在等確認的加入申請 (0071)。型別放這裡: 「我的道館」清單是 client 元件, 不該 import 到 server 專用的 queries.ts。 */
 export type PendingGym = {
   gymId: string;

@@ -294,6 +294,23 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   端對端證明: `npm run qa:advisor` (顧問讀得到 / 寫不進去 / 管理員也不能寫到他那一列 /
   降級留資料但擋寫入 / 改回成員又能寫)。乾跑: `scripts/dev/dryrun-0072.node.mjs`。
 - **登入只有 Google 一條路, 但有兩個觸發** (2026-09-01): 按鈕 `GoogleSignInButton`
+- ⚠ **道館正式成員上限 20 人** (0075, 2026-09-20 成員回報「道館可以超過 20 人」)。
+  查下來**不是壞掉, 是從來沒有實作過**: join_gym 沒檢查、`gym_members` 沒 constraint 也沒 trigger、
+  核准那顆勾勾就是一句 `update({status:'active'})`。線上「九彩」9/12 滿 20, 9/19 由管理員放行第 21 人
+  (資料是乾淨的 —— 沒有重複列、沒有孤兒列, 就是沒有人在擋)。程式碼裡其他的「20 人」全是描述遊戲規則的註解,
+  唯一寫死的 `HOME_GYM_MEMBERS = 20` 只給首頁的示範假資料用。
+  1. **誰佔名額**: `status = 'active'` 且 `role <> 'advisor'`。顧問是唯讀觀察者不佔 (0028/0072),
+     管理員佔 (他也是公會的一員), 待確認不佔 —— 所以**滿員時照樣排得進來**, 擋的是核准那一步,
+     申請人不會白跑一趟。數字與判斷收在 `lib/gym/membership.ts` 的 `GYM_SEAT_CAP` / `countSeats`。
+  2. ⚠ **trigger 只檢查「這一列變成佔名額」, 絕對不要寫成「這一館不得超過 20」**:
+     九彩現在就是 21 人, 寫成後者的話那一館的管理員連改個名字、改個練度都會撞 `GYM_FULL`,
+     **整館動不了**。條件是「原本不佔名額 → 現在要佔」(pending→active、advisor→member) 才擋, 既有超額沿用。
+  3. **兩條路各夾一次** (與拍檔石盤上限同一個道理): 前端先擋是為了**給得出理由**
+     (資料庫只會丟 `GYM_FULL` 這五個字, 管理員看不懂要做什麼); 資料庫保底是因為 RLS policy
+     攔不到 security definer、前端也繞得過去。前端還要接住 `GYM_FULL` —— 兩個管理員同時按勾勾時,
+     兩邊的前端都還以為有名額。
+  `tests/member-seat-cap.test.ts` 釘住「前端的數字 = migration 裡的數字」與上面那個守門條件;
+  乾跑 `node scripts/dev/dryrun-0075.node.mjs` (BEGIN → 套 → 驗 11 條 → ROLLBACK)。
   (整頁導向 → `/auth/callback`) 與 Google One Tap `components/google-one-tap.tsx`
   (`signInWithIdToken` → `/auth/one-tap`)。One Tap 是**捷徑不是第二種登入方式**, 按鈕永遠要留著 ——
   FedCM 生效後 `isDisplayed()`/`getNotDisplayedReason()` 全部不再觸發, 我們**偵測不到它有沒有跳出來**,

@@ -45,6 +45,7 @@ import {
 } from "@/components/gym/type-focus";
 import { SidePanel } from "@/components/ui/side-panel";
 import { setGymPair } from "@/lib/gym/gym-pairs-client";
+import { GYM_SEAT_CAP, countSeats } from "@/lib/gym/membership";
 import { GymPairsClient, type PackedGrades, type GymPairRow } from "../pairs/pairs-client";
 import { PairTypeGrid, type GridItem } from "@/components/gym/pair-type-grid";
 import { PairEditPanel } from "@/components/pair-edit-panel";
@@ -443,13 +444,28 @@ export function MembersClient({
   const [decidingId, setDecidingId] = useState<string | null>(null);
   const decide = useCallback(
     async (m: PendingItem, approve: boolean) => {
+      // 名額上限 (0075): 滿 20 人就不能再放行。**擋在這裡是為了給得出理由** ——
+      // 資料庫那條 trigger 只會丟 `GYM_FULL`, 管理員看到一句英文例外不會知道要做什麼。
+      // 顧問與待確認都不佔名額, 所以 countSeats 要過濾 (members 這份 prop 是含顧問的)。
+      if (approve && countSeats(members) >= GYM_SEAT_CAP) {
+        toast.error(`道館已經滿 ${GYM_SEAT_CAP} 人`, {
+          description: "要先把一位成員移出道館, 才能讓新的人加入。顧問不佔名額。",
+        });
+        return;
+      }
       setDecidingId(m.id);
       try {
         const { error } = approve
           ? await supabase.from("gym_members").update({ status: "active" }).eq("id", m.id)
           : await supabase.from("gym_members").delete().eq("id", m.id);
         if (error) {
-          toast.error(approve ? "確認失敗" : "拒絕失敗", { description: error.message });
+          // 兩個管理員同時按勾勾時, 前端那一關可能都還以為有名額 → 資料庫擋下來的才是真的
+          const full = /GYM_FULL/.test(error.message);
+          toast.error(full ? `道館已經滿 ${GYM_SEAT_CAP} 人` : approve ? "確認失敗" : "拒絕失敗", {
+            description: full
+              ? "剛才可能有別的管理員先放行了一位。重新整理看看目前的人數。"
+              : error.message,
+          });
           return;
         }
         toast.success(approve ? `已讓 ${memberLabel(m)} 加入` : `已拒絕 ${memberLabel(m)}`);
@@ -458,7 +474,7 @@ export function MembersClient({
         setDecidingId(null);
       }
     },
-    [router, supabase]
+    [members, router, supabase]
   );
 
   /** 全館視角要的成員清單 (不含顧問) — memo 掉, 否則 GymPairsClient 每次都收到新陣列 */
