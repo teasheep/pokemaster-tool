@@ -151,23 +151,36 @@ export function CandyIcon({
  *
  * 2026-09-11 使用者:「兩個證是紅色的外框, 兩個券是一般藍綠色外框, 只有別針是對的」。
  * 對照神奇寶貝百科「道具列表（Masters）」每一列的稀有度圖示:
- *   稀有度 0 = 藍綠 (一般) / 3 = 金 / 8 = 紅, 另有 1 銅 2 銀 9 彩虹 (目前用不到)。
+ *   稀有度 0 = 藍綠 (一般) / 3 = 金 / 8 = 紅 / 9 = 彩虹, 另有 1 銅 2 銀 (目前用不到)。
  * 我們原本**所有道具都套金盤** (上游 pomasters 的 items.json 12 種全是 gold),
  * 所以新加的五種一眼就看得出不對。
  *
- * ⚠ 沒列在這裡的一律金盤 —— 現有那 13 種 (糖果與體系蛋糕捲) 在百科上都是稀有度 3, 對得上。
+ * ⚠ 沒列在這裡的一律金盤 —— 其餘糖果與體系蛋糕捲在百科上都是稀有度 3, 對得上。
+ *
+ * 2026-09-21 使用者:「棒棒糖外圍是彩色框欸」—— 又是同一類回報 (講的是遊戲裡的樣子, 我們畫錯)。
+ * 查過我們這邊: 棒棒糖不在 PLATE 裡 → 吃預設金盤, 程式與圖都沒有任何彩色外框, 所以差異是我們少畫了。
+ * 棒棒糖 (超覺醒糖果) 是稀有度 9 = 彩虹, 就是原本註解裡寫「目前用不到」的那一種。
+ * ⚠ `item_plate_rainbow.png` **是百科的原件, 不要自己配色**。第一版我用金盤改色掃一圈色相,
+ * 使用者回「是彩虹框沒錯 但顏色跑掉了」—— 實際的環不是單向漸層: 從 3 點鐘開始順時針是
+ * 紅→橙→黃→綠→青→藍(6 點)→紫(9 點)→深藍→青綠→黃(12 點)→橙→紅, 等於繞一圈跑了兩次光譜, 自己配配不出來。
+ * 取得方式: 神奇寶貝百科的 `File:PM_道具稀有度9_icon.png` (256×256) 縮到 100×100。
+ * 已驗證那是同一套美術 —— 百科的稀有度 3 (金) 與我們原本的 item_plate 逐點對得上
+ * (環色 148,108,35 vs 156,116,40、內盤 223,239,236 vs 223,239,235、白反光與邊界都一致)。
+ * ⚠ 百科擋程式化下載 (curl/WebFetch 都 403), 要用瀏覽器開圖 → canvas → 存檔。
  */
-const PLATE: Partial<Record<CandyType, "red" | "teal">> = {
+const PLATE: Partial<Record<CandyType, "red" | "teal" | "rainbow">> = {
   proof_excellence: "red",
   proof_perfection: "red",
   cake_voucher: "teal",
   daily_ticket: "teal",
+  superawakening: "rainbow",
 };
 
 const PLATE_SRC = {
   gold: "/reference/ui/item_plate.webp",
   red: "/reference/ui/item_plate_red.webp",
   teal: "/reference/ui/item_plate_teal.webp",
+  rainbow: "/reference/ui/item_plate_rainbow.webp",
 } as const;
 
 /**

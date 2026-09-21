@@ -66,18 +66,26 @@ describe("背包道具", () => {
   });
 
   it("底盤顏色要有圖, 沒指定的就是金盤", () => {
-    // 遊戲裡每個道具坐在哪一種圓盤上是固定的 (那就是稀有度): 0 藍綠 / 3 金 / 8 紅。
+    // 遊戲裡每個道具坐在哪一種圓盤上是固定的 (那就是稀有度): 0 藍綠 / 3 金 / 8 紅 / 9 彩虹。
     // 2026-09-11 使用者:「兩個證是紅色的外框, 兩個券是一般藍綠色外框」。
+    // 2026-09-21 使用者:「棒棒糖外圍是彩色框欸」→ 棒棒糖是稀有度 9, 補了彩虹盤。
     const src = fs.readFileSync(path.join(root, "src/components/gym/candy.tsx"), "utf8");
-    for (const c of ["item_plate", "item_plate_red", "item_plate_teal"]) {
+    for (const c of ["item_plate", "item_plate_red", "item_plate_teal", "item_plate_rainbow"]) {
       expect(fs.existsSync(path.join(root, "public/reference/ui", c + ".webp")), "缺底盤: " + c).toBe(true);
       expect(src, "candy.tsx 沒有用到 " + c).toContain(c + ".webp");
     }
     // PLATE 裡列到的 key 都要是真的道具 (打錯字就是靜靜掉回金盤)
+    // ⚠ 這個正規表示式原本寫成 /^s{2}(w+):/ —— 反斜線掉了, 比對到 0 筆, 整條檢查空轉了十天。
+    //   改動這一行時記得它要真的抓到東西, 所以下面多釘一句「至少要有幾筆」。
     const block = src.slice(src.indexOf("const PLATE:"), src.indexOf("const PLATE_SRC"));
-    for (const m of block.matchAll(/^s{2}(w+):/gm)) {
-      expect(CANDY_TYPES as readonly string[], "PLATE 裡的 " + m[1] + " 不是道具").toContain(m[1]);
+    const keys = [...block.matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]);
+    expect(keys.length, "PLATE 一筆都沒解析到 —— 正規表示式或格式壞了").toBeGreaterThanOrEqual(5);
+    for (const k of keys) {
+      expect(CANDY_TYPES as readonly string[], "PLATE 裡的 " + k + " 不是道具").toContain(k);
     }
+    // 棒棒糖 = 超覺醒糖果, 稀有度 9 → 彩虹盤 (使用者以遊戲內實際畫面為準回報的)
+    expect(keys, "棒棒糖應該要在 PLATE 裡").toContain("superawakening");
+    expect(block).toMatch(/superawakening:\s*"rainbow"/);
   });
   it("骨架的格數與分組一致", () => {
     const src = fs.readFileSync(path.join(root, "src/components/skeletons.tsx"), "utf8");
