@@ -18,8 +18,11 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  ACTIVITY_PAGE_SIZE,
+  appendPage,
   isNoop,
   mergeRuns,
+  pageHasMore,
   type ActivityRow,
 } from "@/app/gyms/[id]/activity/activity-filters";
 
@@ -193,5 +196,47 @@ describe("activity-filters 仍然是中立模組", () => {
     expect(
       read("src/app/gyms/[id]/activity/activity-filters.ts").trimStart().startsWith('"use client"')
     ).toBe(false);
+  });
+});
+
+describe("「載入更多」看原始筆數, 不看合併後的列數 (2026-09-26)", () => {
+  // 使用者:「為什麼道館紀錄剩下這麼少? 我現在只看的到 3 筆」——
+  // 蓉與 Opal 9/24 凌晨一小時內改了 100 筆練度, 舊版撈 100 筆 → 併完 64 列 → 拿 64 去比 100,
+  // 「載入更多」就不見了。近 30 天 1478 筆, 畫面只剩 3 組而且沒有路往下翻。
+  const burst: ActivityRow[] = Array.from({ length: ACTIVITY_PAGE_SIZE }, (_, i) => ({
+    id: `r${i}`,
+    member_id: i % 2 ? "hedy" : "opal",
+    actor_id: null,
+    kind: "pair",
+    target: `pair${i % 30}`,
+    target_id: null,
+    old_value: "1",
+    new_value: "2",
+    created_at: new Date(Date.UTC(2026, 8, 23, 17, 0, 0) - i * 1000).toISOString(),
+  }));
+
+  it("一頁撈滿但合併後很少 → 仍然要有下一頁", () => {
+    expect(mergeRuns(burst).length).toBeLessThan(ACTIVITY_PAGE_SIZE);
+    expect(pageHasMore(burst)).toBe(true);
+  });
+
+  it("撈不滿就是到底了", () => {
+    expect(pageHasMore(burst.slice(1))).toBe(false);
+  });
+
+  it("一頁要小於 PostgREST 單發上限 1000, 否則撈滿永遠判不出來", () => {
+    expect(ACTIVITY_PAGE_SIZE).toBeLessThan(1000);
+  });
+
+  it("翻頁時邊界重複的那幾筆要去重", () => {
+    const merged = appendPage(burst.slice(0, 10), burst.slice(8, 12));
+    expect(merged.map((r) => r.id)).toEqual(burst.slice(0, 12).map((r) => r.id));
+  });
+
+  it("畫面不可以再拿合併後的 rows.length 判斷還有沒有下一頁", () => {
+    const src = read("src/app/gyms/[id]/activity/activity-client.tsx");
+    expect(src).not.toMatch(/rows\.length\s*>=/);
+    expect(src).toContain("pageHasMore(page)");
+    expect(src).toContain(".range(");
   });
 });

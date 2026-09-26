@@ -97,6 +97,32 @@ export function mergeRuns(rows: ActivityRow[]): ActivityRow[] {
 }
 
 /**
+ * 一次撈幾筆**原始**紀錄。PostgREST 單發最多回 1000 列 (AGENTS「讀全量要分頁」),
+ * 所以一頁一定要小於它, 再多就走 `.range()` 往後翻。
+ *
+ * ⚠ **「還有沒有下一頁」一律看原始筆數, 不可以看合併後的列數** (2026-09-26 使用者:
+ * 「為什麼道館紀錄剩下這麼少? 我現在只看的到 3 筆」)。舊版撈 100 筆 → mergeRuns →
+ * 拿**合併後**的長度去比 100: 蓉與 Opal 9/24 凌晨一小時內改了 100 筆練度, 併完只剩
+ * 64 列 (< 100), 於是「載入更多」不見了, 近 30 天 1478 筆裡畫面只剩 3 組, 而且沒有任何
+ * 往下翻的路。資料庫一筆都沒少 —— 正是「合併」這個功能本身讓判斷失準。
+ */
+export const ACTIVITY_PAGE_SIZE = 500;
+
+/** 這一頁撈滿了 = 後面可能還有 (撈不滿就是到底了) */
+export function pageHasMore(page: readonly unknown[]): boolean {
+  return page.length >= ACTIVITY_PAGE_SIZE;
+}
+
+/**
+ * 把下一頁接在後面。offset 分頁在翻頁期間有人寫入時列會位移, 邊界那幾筆會重複出現
+ * (AGENTS「走 fetchAllRows 的查詢一律要有穩定排序」同一件事) → 以 id 去重。
+ */
+export function appendPage(prev: ActivityRow[], page: ActivityRow[]): ActivityRow[] {
+  const seen = new Set(prev.map((r) => r.id));
+  return [...prev, ...page.filter((r) => !seen.has(r.id))];
+}
+
+/**
  * 併完之後**起點與終點一樣** = 誤點了又馬上改回來, 預設不顯示
  * (2026-09-10 使用者:「有時候誤點然後馬上改回來… 好像就不需要顯示,
  *  或者要更詳細的資料再顯示就可以」)。

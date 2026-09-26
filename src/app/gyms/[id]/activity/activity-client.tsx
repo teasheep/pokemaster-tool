@@ -14,7 +14,7 @@
 // 這裡只負責寫。日期預設「近 30 天」而不是全部: 20 個人天天在改, 撈全部等於第一頁
 // 就是這個月的洗版, 而且要往下按好幾次「載入更多」才看得到上個月。
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,6 +43,9 @@ import {
   mergeRuns,
   MERGE_WINDOW_MS,
   type ActivityRow,
+  appendPage,
+  pageHasMore,
+  ACTIVITY_PAGE_SIZE,
   ACTIVITY_KINDS,
   ACTIVITY_KIND_LABELS as KIND_LABELS,
   ACTIVITY_LOGGED_KINDS,
@@ -217,7 +220,10 @@ export function ActivityClient({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const pairById = useMemo(() => new Map(catalog.map((p) => [p.pairId, p])), [catalog]);
-  const [rows, setRows] = useState<ActivityRow[]>([]);
+  /** 撈回來的**原始**紀錄 (還沒合併); 畫面用的 rows 由它算出來 */
+  const [raw, setRaw] = useState<ActivityRow[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [memberFilter, setMemberFilter] = useState<string>(initialMember);
   // 預設只看練度 — 出戰/券數會隨每次回報洗版, 想看再切
@@ -225,7 +231,6 @@ export function ActivityClient({
   const [days, setDays] = useState<string>(initialDays);
   const [from, setFrom] = useState<string>(initialFrom);
   const [to, setTo] = useState<string>(initialTo);
-  const [limit, setLimit] = useState(100);
   const [openKey, setOpenKey] = useState<string | null>(null);
   /** 改了又改回來的那些要不要一起列出來 (預設不列, 見 isNoop) */
   const [showNoop, setShowNoop] = useState(false);
@@ -246,17 +251,19 @@ export function ActivityClient({
     [members]
   );
 
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
+  /** 撈第 offset 筆起的一頁**原始**紀錄 (篩選條件就是目前畫面上的那一組) */
+  const fetchPage = useCallback(
+    async (offset: number) => {
       let q = supabase
         .from("gym_activity")
         .select(
           "id, member_id, actor_id, kind, target, target_id, old_value, new_value, created_at"
         )
         .eq("gym_id", gymId)
+        // id 當決勝鍵: offset 分頁要穩定排序, 同一毫秒的兩筆才不會在翻頁時對調
         .order("created_at", { ascending: false })
-        .limit(limit);
+        .order("id", { ascending: false })
+        .range(offset, offset + ACTIVITY_PAGE_SIZE - 1);
       if (memberFilter !== "all") q = q.eq("member_id", memberFilter);
       if (kindFilter !== "all") q = q.eq("kind", kindFilter);
       else q = q.in("kind", [...ACTIVITY_LOGGED_KINDS]);
@@ -269,15 +276,40 @@ export function ActivityClient({
         if (since) q = q.gte("created_at", since);
       }
       const { data, error } = await q;
-      if (!alive) return;
       if (error) toast.error("讀取紀錄失敗", { description: error.message });
-      setRows(mergeRuns(data ?? []));
+      return (data ?? []) as ActivityRow[];
+    },
+    [supabase, gymId, memberFilter, kindFilter, days, from, to]
+  );
+
+  // 篩選一換就從第一頁重來; 翻到一半換篩選的話, 還在路上的那一頁要丟掉
+  const fetchRef = useRef(fetchPage);
+  useEffect(() => {
+    fetchRef.current = fetchPage;
+    let alive = true;
+    void fetchPage(0).then((page) => {
+      if (!alive) return;
+      setRaw(page);
+      setHasMore(pageHasMore(page));
       setLoading(false);
-    })();
+    });
     return () => {
       alive = false;
     };
-  }, [supabase, gymId, memberFilter, kindFilter, days, from, to, limit]);
+  }, [fetchPage]);
+
+  const loadMore = async () => {
+    const fetcher = fetchPage;
+    setLoadingMore(true);
+    const page = await fetcher(raw.length);
+    setLoadingMore(false);
+    if (fetchRef.current !== fetcher) return;
+    setRaw((prev) => appendPage(prev, page));
+    setHasMore(pageHasMore(page));
+  };
+
+  // 合併要對「目前撈到的全部原始紀錄」做 —— 跨頁的同一串連點才併得起來
+  const rows = useMemo(() => mergeRuns(raw), [raw]);
 
   const noopCount = useMemo(() => rows.filter(isNoop).length, [rows]);
   const groups = useMemo(
@@ -536,9 +568,10 @@ export function ActivityClient({
               </div>
             );
           })}
-          {rows.length >= limit ? (
-            <Button variant="outline" onClick={() => setLimit((n) => n + 100)}>
-              載入更多
+          {/* 看原始那一頁有沒有撈滿, 不是看合併後的列數 (見 ACTIVITY_PAGE_SIZE) */}
+          {hasMore ? (
+            <Button variant="outline" disabled={loadingMore} onClick={() => void loadMore()}>
+              {loadingMore ? "載入中…" : "載入更多"}
             </Button>
           ) : null}
         </div>
