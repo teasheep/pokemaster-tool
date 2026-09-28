@@ -44,6 +44,12 @@ export type PairRecord = {
   exStyleImagePath?: string | null;
   /** **初上線日** (ISO yyyy-mm-dd) — 拍組第一次在遊戲裡登場, 復刻與二次開放不算。對不到的為 null。 */
   releaseDate?: string | null;
+  /**
+   * 上架日是從上游 (pomasters) 補來的、還沒有其他來源證實 → 畫面標「未確定」。
+   * 由 scripts/patch-upstream-facets.mjs 在我方所有來源都沒有日期時寫入 (2026-09-28);
+   * 上游對未上市拍組的日期常與官方公告差幾天, 所以不能當成確定值顯示。
+   */
+  releaseDateUncertain?: boolean;
   /** 系列標籤 (每拍組唯一): arc/exmaster/master/fair/limited/... 見 SERIES_LABELS */
   series?: string;
   /**
@@ -85,7 +91,7 @@ export const CLIENT_PAIR_FIELDS = [
   "roleAsset", "exRole", "change", "moveTypes", "pairKind",
   "weakType", "themes", "tags",
   "hasSixEx", "hasExRole", "hasAwakening",
-  "releaseDate", "series", "acquisitions",
+  "releaseDate", "releaseDateUncertain", "series", "acquisitions",
 ] as const;
 
 export type ClientPairRecord = Pick<PairRecord, (typeof CLIENT_PAIR_FIELDS)[number]> & {

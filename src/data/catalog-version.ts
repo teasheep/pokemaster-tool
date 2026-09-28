@@ -8,6 +8,6 @@
 //
 // 這個檔 client / server 都會 import, 所以只能放純常數 (不要 import server-only 的東西)。
 
-export const CATALOG_VERSION = "1ipd95e";
+export const CATALOG_VERSION = "1hhu690";
 
-export const CATALOG_ASSET_PATH = "/catalog/1ipd95e.json";
+export const CATALOG_ASSET_PATH = "/catalog/1hhu690.json";

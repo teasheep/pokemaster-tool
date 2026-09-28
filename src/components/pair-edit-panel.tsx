@@ -182,6 +182,10 @@ export function PairEditPanel({
         {pair.releaseDate ? (
           <span>
             初上線 {pair.releaseDate}
+            {/* 日期取自上游、還沒有其他來源證實 (與官方公告常差幾天) — releaseDateUncertain */}
+            {pair.releaseDateUncertain ? (
+              <span className="text-muted-foreground">（未確定）</span>
+            ) : null}
             {isUpcomingPair(pair) ? (
               <span className="ml-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 尚未上線

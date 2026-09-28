@@ -92,10 +92,13 @@ async function main() {
 
   const { all, isUnreleasedPair } = await loadPairModule();
 
-  // 判準 A = 沒來源也沒日期。這裡刻意只排 A 不排 B:
-  //   判準 B (還沒到上架日) 的拍組**要**留在對照表裡 —— 上架當天圖就已經對好了,
-  //   擋它們的是「產不產圖」那一步 (convert 階段), 不是這張表。
-  const blockedA = all.filter((r) => (r.verifiedSources?.length ?? 0) === 0 && !r.releaseDate);
+  // 只排 datamine 空殼 (sharedKit = 9 筆 19999* 佔位 id): 它們與莉莉艾/鳴依/小光/阿響
+  // 共用 trainerId, 留著會把第 3 段拖成多義。
+  // ⚠ 2026-09-28 前是「整個判準 A 都排」—— 結果 datamine 先撈到、上游 (pomasters) 已經收錄的
+  //   新拍組也對不到卡面, 而 5b2 要靠這張表才拿得到上游的上架日 → 永遠卡在判準 A 出不來。
+  //   使用者:「能找到正確的圖片就上站, 還不確定的東西就標不確定就好, 以我們找資料的那些站為準」。
+  //   上游沒收的 (例: 七雄&木棉球) 照樣對不到 → 照樣沒日期 → 照樣被判準 A 擋, 不受影響。
+  const blockedA = all.filter((r) => r.sharedKit === true);
   const blockedASet = new Set(blockedA.map((r) => r.pairId));
   const ours = all.filter((r) => !blockedASet.has(r.pairId));
 
@@ -140,8 +143,15 @@ async function main() {
   const nTrainerUnique = matched.size - nExact - nProtagonist;
 
   // ── 結果 ──
-  const missing = ours.filter((o) => !matched.has(o.pairId));
+  // 還被判準 A 擋著的 (沒來源也沒日期) 對不到上游是正常的: 上游沒收 = 5b2 拿不到日期 =
+  // 它照樣不對外, 不會變成空卡 → 只提示。**對外可見的**對不到才是要擋的事。
+  const unmatched = ours.filter((o) => !matched.has(o.pairId));
+  const hiddenUnmatched = unmatched.filter((o) => isUnreleasedPair(o));
+  const missing = unmatched.filter((o) => !isUnreleasedPair(o));
   const leftover = rows.filter((r) => !usedRows.has(r));
+  if (hiddenUnmatched.length) {
+    console.log(`  上游沒收、照樣不對外 ${hiddenUnmatched.length} 筆: ${hiddenUnmatched.map((o) => `${o.trainerNameZh ?? o.trainerName}&${o.pokemonNameZh ?? o.pokemonName}`).join(" / ")}`);
+  }
 
   console.log("=== 官方卡面對照表 ===");
   console.log(`  母體       ${ours.length} 筆 (catalog ${all.length} 扣掉判準A ${blockedA.length})`);
@@ -173,6 +183,8 @@ async function main() {
   const nameMismatch = [];
 
   for (const rec of ours) {
+    // 對不到的只剩「上游沒收、照樣不對外」那幾筆 (對外可見的對不到在上面已經 exit 了)
+    if (!matched.has(rec.pairId)) continue;
     const { row, via } = matched.get(rec.pairId);
     const tiers = tiersOf(row);
     // 星級階梯: 從原始星級到 5 星每一階都要有

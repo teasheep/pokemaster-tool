@@ -139,3 +139,32 @@ describe("server 內部查表刻意不過濾", () => {
     for (const id of unreleasedIds) expect(byId.has(id), `${id} 在 by-id 查表裡消失了`).toBe(true);
   });
 });
+
+describe("上架日取自上游 = 標「未確定」而不是擋住 (2026-09-28)", () => {
+  // 使用者:「能找到正確的圖片就上站, 還不確定的東西就標不確定就好, 以我們找資料的那些站為準」。
+  // datamine 先撈到、我方來源 (pomatools / wiki / 登記簿) 都還沒日期, 但上游 pomasters 已收錄
+  // (有官方卡面) 的拍組: 5b2 用上游的日期並標 releaseDateUncertain → 判準 A 不再擋。
+  // 上游對未上市拍組的日期常與官方公告差幾天 (v2.73.0 那一波實測差 1-4 天), 所以旗標一定要跟著。
+  const uncertain = source.filter((r) => r.releaseDateUncertain === true);
+
+  it("有旗標的一定有日期, 而且沒有被擋掉 (上站了)", () => {
+    for (const r of uncertain) {
+      expect(r.releaseDate, `${r.pairId} 標了未確定卻沒有日期`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(isUnreleasedPair(r), `${r.pairId} 標了未確定卻還被擋`).toBe(false);
+    }
+  });
+
+  it("旗標會送到 client (畫面才標得出「未確定」)", async () => {
+    const client = await loadPairsForClient();
+    const byId = new Map(client.map((p) => [p.pairId, p]));
+    for (const r of uncertain) {
+      expect(byId.get(r.pairId)?.releaseDateUncertain, `${r.pairId} 的旗標沒進 client 投影`).toBe(true);
+    }
+  });
+
+  it("有我方來源證實的拍組不會被標未確定 (旗標只給「日期只有上游有」的)", () => {
+    for (const r of uncertain) {
+      expect(r.verifiedSources ?? [], `${r.pairId} 有我方來源卻被標未確定`).toEqual([]);
+    }
+  });
+});

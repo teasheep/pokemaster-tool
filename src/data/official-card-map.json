@@ -4,16 +4,16 @@
 		"上游來源與授權見 src/data/upstream-pin.json; 上游資料鏡像在 src/data/pomasters/syncpairs.json。",
 		"files 的 key 是星級 (3/4/5/EX), value 是上游檔名。下載時一律改名成 <pairId>_<星級>.png。"
 	],
-	"generatedFrom": "pomasters/SyncPairsTracker@511aeb9132a48e3798ba57dba523b024d70c86a3",
-	"upstreamVersion": "v2.72.0",
+	"generatedFrom": "pomasters/SyncPairsTracker@0dfe96ce8153d4ba4b6db5ef1e5417345a125e63",
+	"upstreamVersion": "v2.73.0",
 	"counts": {
-		"catalog": 664,
-		"blockedA": 10,
-		"mapped": 654,
-		"withEx": 634,
-		"files": 1497,
+		"catalog": 673,
+		"blockedA": 9,
+		"mapped": 663,
+		"withEx": 643,
+		"files": 1516,
 		"via": {
-			"exact": 610,
+			"exact": 619,
 			"protagonist": 11,
 			"trainerUnique": 33
 		}
@@ -355,6 +355,18 @@
 			"files": {
 				"5": "icons/Lyra_0231_5.png",
 				"EX": "icons/Lyra_0231_EX.png"
+			}
+		},
+		{
+			"pairId": "10002410001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Marill",
+			"files": {
+				"5": "icons/Lyra_0183_5.png",
+				"EX": "icons/Lyra_0183_EX.png"
 			}
 		},
 		{
@@ -779,6 +791,19 @@
 			"files": {
 				"5": "icons/Korrina_0701_5.png",
 				"EX": "icons/Korrina_0701_EX.png"
+			}
+		},
+		{
+			"pairId": "10012000002",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": false,
+			"exPose": true,
+			"upstreamPokemonName": "Machoke",
+			"files": {
+				"4": "icons/Korrina_0067_4.png",
+				"5": "icons/Korrina_0067_5.png",
+				"EX": "icons/Korrina_0067_EX.png"
 			}
 		},
 		{
@@ -5652,6 +5677,18 @@
 			}
 		},
 		{
+			"pairId": "10192400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Ting-Lu",
+			"files": {
+				"5": "icons/Maxie_1003_5.png",
+				"EX": "icons/Maxie_1003_EX.png"
+			}
+		},
+		{
 			"pairId": "10193000000",
 			"via": "exact",
 			"basePotential": 5,
@@ -5661,6 +5698,18 @@
 			"files": {
 				"5": "icons/Archie_0382_5.png",
 				"EX": "icons/Archie_0382_EX.png"
+			}
+		},
+		{
+			"pairId": "10193400000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Wo-Chien",
+			"files": {
+				"5": "icons/Archie_1001_5.png",
+				"EX": "icons/Archie_1001_EX.png"
 			}
 		},
 		{
@@ -5712,6 +5761,18 @@
 			}
 		},
 		{
+			"pairId": "10195100000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Chien-Pao",
+			"files": {
+				"5": "icons/Ghetsis_1002_5.png",
+				"EX": "icons/Ghetsis_1002_EX.png"
+			}
+		},
+		{
 			"pairId": "10196000000",
 			"via": "exact",
 			"basePotential": 5,
@@ -5733,6 +5794,18 @@
 			"files": {
 				"5": "icons/Lysandre_0721_5.png",
 				"EX": "icons/Lysandre_0721_EX.png"
+			}
+		},
+		{
+			"pairId": "10196110000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Chi-Yu",
+			"files": {
+				"5": "icons/Lysandre_1004_5.png",
+				"EX": "icons/Lysandre_1004_EX.png"
 			}
 		},
 		{
@@ -5917,6 +5990,18 @@
 			}
 		},
 		{
+			"pairId": "10221000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Camerupt",
+			"files": {
+				"5": "icons/Tabitha_0323_5.png",
+				"EX": "icons/Tabitha_0323_EX.png"
+			}
+		},
+		{
 			"pairId": "10222000000",
 			"via": "trainer-unique",
 			"basePotential": 5,
@@ -5926,6 +6011,30 @@
 			"files": {
 				"5": "icons/Courtney_0323_5.png",
 				"EX": "icons/Courtney_0323_EX.png"
+			}
+		},
+		{
+			"pairId": "10223000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sharpedo",
+			"files": {
+				"5": "icons/Matt_0319_5.png",
+				"EX": "icons/Matt_0319_EX.png"
+			}
+		},
+		{
+			"pairId": "10224000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Sharpedo",
+			"files": {
+				"5": "icons/Shelly_0319_5.png",
+				"EX": "icons/Shelly_0319_EX.png"
 			}
 		},
 		{

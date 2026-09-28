@@ -19,7 +19,7 @@ import { memo, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { regionLabel } from "@/data/sync-pairs";
-import { isNewPair } from "@/lib/pairs/name";
+import { isNewPair, isUpcomingPair } from "@/lib/pairs/name";
 import { useNearViewport } from "@/lib/pairs/use-near-viewport";
 import { usePromoteGesture } from "@/lib/pairs/use-promote-gesture";
 import type { ClientPairRecord } from "@/lib/pairs/types";
@@ -81,6 +81,28 @@ export function NewTag({ className }: { className?: string }) {
       NEW
     </span>
   );
+}
+
+/** 還沒到初上線日 —— 與 NEW 同一個位置、同一個尺寸 (卡牆的名稱區是固定兩行高, 不影響對齊) */
+export function UpcomingTag({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "mr-1 inline-block rounded-full bg-amber-500 px-1 py-px align-[0.05em]",
+        "text-[0.85em] font-extrabold leading-none text-white",
+        className
+      )}
+    >
+      未上線
+    </span>
+  );
+}
+
+/** 卡片名稱前的狀態標籤: 未上線 / NEW / 無 —— 兩處卡牆共用, 不要各寫各的判斷 */
+export function PairStatusTag({ pair }: { pair: Pick<ClientPairRecord, "releaseDate"> }) {
+  if (isUpcomingPair(pair)) return <UpcomingTag />;
+  if (isNewPair(pair)) return <NewTag />;
+  return null;
 }
 
 type Props = {
@@ -526,7 +548,7 @@ export const SyncPairCard = memo(function SyncPairCard({
           )}
         >
           <div className="font-semibold truncate">
-            {isNewPair(pair) ? <NewTag /> : null}
+            <PairStatusTag pair={pair} />
             {pair.trainerNameZh ?? pair.trainerName}
           </div>
           <div className="text-muted-foreground truncate">

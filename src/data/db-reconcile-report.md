@@ -1,25 +1,34 @@
 # 多來源資料校正/交叉驗證報告
 
-> 我們自己的 DB 原地修補; 來源(可擴充): pomatools, wiki, serebii。2026-09-01T03:27:20.323Z
+> 我們自己的 DB 原地修補; 來源(可擴充): pomatools, wiki, serebii。2026-09-28T14:06:00.843Z
 
 | 項目 | 值 |
 | --- | ---: |
-| 本地拍組 | 664 |
+| 本地拍組 | 673 |
 | pomatools 驗證 | 610 |
 | wiki 驗證 | 653 |
 | serebii 驗證 | 10 |
 | 至少一來源驗證 | 654 |
 | 多來源 (≥2) 驗證 | 609 |
-| 太晶化 / 超覺醒 | 11 / 124 |
-| 有圖 / 缺圖 | 653 / 11 |
+| 太晶化 / 超覺醒 | 11 / 126 |
+| 有圖 / 缺圖 | 662 / 11 |
 | sharedKit | 9 |
 | 欄位歧異 | 39 |
-| 疑似雜質 | 1 |
+| 疑似雜質 | 10 |
 | 候選新拍組 (待補) | 41 |
 
 ## 疑似雜質 (三來源皆查無)
 
+- Lyra (Special Costume) & Marill (10002410001)
+- Korrina & Machoke (10012000002)
 - Parker & Cottonee (10074000000)
+- Maxie (Fall 2026) & Ting-Lu (10192400000)
+- Archie (Fall 2026) & Wo-Chien (10193400000)
+- Sygna Suit Ghetsis & Chien-Pao (10195100000)
+- Sygna Suit Lysandre (Alt.) & Chi-Yu (10196110000)
+- Tabitha & Camerupt (10221000000)
+- Matt & Sharpedo (10223000000)
+- Shelly & Sharpedo (10224000000)
 
 ## 欄位歧異 (跨站不一致, 待確認)
 

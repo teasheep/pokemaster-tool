@@ -6,12 +6,12 @@
 
 import { memo, startTransition, useCallback, useEffect, useMemo, useState } from "react";
 
-import { NewTag, SyncGridTag, SyncPairCard } from "@/components/sync-pair-card";
+import { PairStatusTag, SyncGridTag, SyncPairCard } from "@/components/sync-pair-card";
 import { TypeBadge } from "@/components/sync-pair-badges";
 import { PairWallSkeleton } from "@/components/skeletons";
 import { ALL_TYPES } from "@/data/sync-pairs";
 import { SYNC_GRID_CAPS } from "@/lib/collection-entry";
-import { isNewPair, pairComparator, pairName, type PairSortKey } from "@/lib/pairs/name";
+import { pairComparator, pairName, type PairSortKey } from "@/lib/pairs/name";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import type { SyncPairType } from "@/lib/supabase/types";
 
@@ -142,7 +142,7 @@ const GridCell = memo(function GridCell({
       >
         {/* NEW 畫在名稱前面 (2026-09-09 使用者指定) —— 名稱這一區本來就是固定兩行高,
             所以有沒有 NEW 都不影響卡牆的對齊, 也不會蓋到官方卡面。 */}
-        {item.pair && isNewPair(item.pair) ? <NewTag /> : null}
+        {item.pair ? <PairStatusTag pair={item.pair} /> : null}
         {item.syncGrid ? <SyncGridTag cap={SYNC_GRID_CAPS[item.syncGrid]!} /> : null}
         {item.pair ? pairName(item.pair) : (item.fallbackLabel ?? "")}
       </div>

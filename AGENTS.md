@@ -1171,6 +1171,25 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   **不要再寫第二套名稱比對**。它**只讀本機檔不連網**: 鏡像要不要更新是另一個決定
   (`src/data/upstream-pin.json` 釘了 sha, `npm run data:pomasters` 才會動它)。
   與既有面向重複的值在腳本那一層就丟掉 (屬性/地區/系列/取得管道), 不要在 pair-facets.ts 復活。
+- ⚠ **跑完更新一定要跟 HEAD 比, 不要只看 update-report** (2026-09-28 踩過三個一起的坑):
+  報告比的是「這一趟開跑前」的 catalog —— 第一趟壞掉之後第二趟就看不出來了。
+  1. `add-protagonist-pairs` / `add-wiki-pairs` import 了已被移除的 `toTrainer128`
+     (09-08 立繪重做時拿掉), soft 階段靜靜失敗 → **主角拍組 11 筆從 catalog 消失**,
+     流程照樣「✅ 更新完成」。4d 已改 soft:false, `tests/trainer-art.test.ts` 擋 import 名字。
+  2. `apply-debut-dates` (初上線日登記簿) 自稱最後一階, 但**從來沒排進 update-catalog** ——
+     查證過的日期每跑一次就被上游蓋回去 (4 隻已上市拍組 releaseDate 變 null = 被判準 A 擋掉)。已排成 5a。
+  3. stage 1 從 brybry 重建 catalog 時會丟掉手動拍組, 所以主角拍組**從來不會經過 4c** ——
+     取得管道 (`acq`) 要寫在 add-protagonist-pairs 的 PAIRS 裡, 不能指望 pomatools 補。
+  另外: fandom wiki 目前對 curl 回 403 (stage 2 soft, 沿用舊資料)。
+- **能對到上游 (pomasters) 官方卡面的新拍組就上站, 日期標「未確定」** (2026-09-28 使用者:
+  「能找到正確的圖片就上站, 還不確定的東西就標不確定就好, 以我們找資料的那些站為準」)。
+  我方來源 (pomatools / wiki / 登記簿) 都沒日期時, 5b2 用上游的並寫 `releaseDateUncertain: true`,
+  側板顯示「初上線 X（未確定）」, 卡牆照 isUpcomingPair 標「未上線」(不是 NEW)。
+  上游對未上市拍組的日期常與官方差 1-4 天, 所以**旗標一定要跟著**; 之後我方來源跟上就自然換成確定值。
+  判準 A 只剩「上游也沒有」的 datamine 空殼 (10 筆)。卡面對照表只排 `sharedKit` 空殼, 不再排整個判準 A。
+  **新拍組的完整步驟** (update-catalog 還沒包含後面三步):
+  `data:pomasters -- --bump` → `data:update:fast` → `data:cardmap` → `data:facets` → `data:catalog` → `data:cards`
+  → 最後**一定要跟 HEAD 比對** (見上一條)。
 - 稽核工具: 對 catalog↔pomatools↔wiki 做日期交叉與反向漏配掃描 (歷史版本在 scratchpad/series-audit.mjs);
   反向清單中的進化型列與 Player 主角拍組是 by design 不收。
 

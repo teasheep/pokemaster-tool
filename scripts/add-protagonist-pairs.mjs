@@ -15,7 +15,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
-import { toTrainer128 } from "./lib-trainer-image.mjs";
+// 立繪只在檔案不存在時才產 —— 既有那張是 /dev/trainer-art 逐張調過的 (src/data/trainer-art.json),
+// 要重調請用那頁或 `npm run art:trainer`, 不是這裡。
+// ⚠ 2026-09-08 lib 重做時把 toTrainer128 拿掉了, 這裡沒跟著改 → 這支一跑就 import 失敗,
+//   而它在管線裡是 soft 階段, 主角拍組 11 筆就默默從 catalog 消失 (2026-09-28 更新時抓到)。
+import { alignToNative } from "./lib-trainer-image.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, "..");
@@ -36,16 +40,20 @@ const PLAYER_IMAGE =
  * star = 原始星級, six = 可 6★EX, awak = 可超覺醒
  */
 const PAIRS = [
-  { dex: 25, en: "Pikachu", zh: "皮卡丘", type: "electric", roleAsset: "ROLE_001S", star: 3, six: true, awak: true, released: "2019-08-29", series: "story" },
-  { dex: 255, en: "Torchic", zh: "火稚雞", type: "fire", roleAsset: "ROLE_002", star: 3, six: false, awak: false, released: "2019-11-07", series: "story" },
-  { dex: 791, en: "Solgaleo", zh: "索爾迦雷歐", type: "steel", roleAsset: "ROLE_001P", star: 5, six: true, awak: false, released: "2020-01-01", series: "legendary" },
-  { dex: 377, en: "Regirock", zh: "雷吉洛克", type: "rock", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2021-05-27", series: "master" },
-  { dex: 638, en: "Cobalion", zh: "勾帕路翁", type: "fighting", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2021-05-27", series: "master" },
-  { dex: 481, en: "Mesprit", zh: "艾姆利多", type: "psychic", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2022-08-28", series: "master" },
-  { dex: 379, en: "Registeel", zh: "雷吉斯奇魯", type: "steel", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2023-08-28", series: "master" },
-  { dex: 869, en: "Alcremie", zh: "霜奶仙", type: "fairy", roleAsset: "ROLE_002", star: 4, six: false, awak: false, released: "2024-02-14", series: "event" },
-  { dex: 243, en: "Raikou", zh: "雷公", type: "electric", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2024-08-28", series: "master" },
-  { dex: 794, en: "Buzzwole", zh: "爆肌蚊", type: "bug", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2025-08-28", series: "master" },
+  // acq = 取得管道 (篩選的「取得管道」面向吃它)。⚠ **每一筆都要寫** (2026-09-28 補):
+  // 以前指望 4c 從 pomatools 補, 但 stage 1 從 brybry 重建 catalog 時會把主角拍組丟掉,
+  // 這一步才補回來 —— 它們從來不會經過 4c, 沒寫就是「取得管道」篩選永遠找不到主角拍組。
+  // 值取自當時線上的 catalog (以前的流程由 pomatools 補上的)。
+  { dex: 25, en: "Pikachu", zh: "皮卡丘", type: "electric", roleAsset: "ROLE_001S", star: 3, six: true, awak: true, released: "2019-08-29", series: "story", acq: ["story"] },
+  { dex: 255, en: "Torchic", zh: "火稚雞", type: "fire", roleAsset: "ROLE_002", star: 3, six: false, awak: false, released: "2019-11-07", series: "story", acq: ["story"] },
+  { dex: 791, en: "Solgaleo", zh: "索爾迦雷歐", type: "steel", roleAsset: "ROLE_001P", star: 5, six: true, awak: false, released: "2020-01-01", series: "legendary", acq: ["legendary"] },
+  { dex: 377, en: "Regirock", zh: "雷吉洛克", type: "rock", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2021-05-27", series: "master", acq: ["bp"] },
+  { dex: 638, en: "Cobalion", zh: "勾帕路翁", type: "fighting", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2021-05-27", series: "master", acq: ["bp"] },
+  { dex: 481, en: "Mesprit", zh: "艾姆利多", type: "psychic", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2022-08-28", series: "master", acq: ["bp"] },
+  { dex: 379, en: "Registeel", zh: "雷吉斯奇魯", type: "steel", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2023-08-28", series: "master", acq: ["bp"] },
+  { dex: 869, en: "Alcremie", zh: "霜奶仙", type: "fairy", roleAsset: "ROLE_002", star: 4, six: false, awak: false, released: "2024-02-14", series: "event", acq: ["event"] },
+  { dex: 243, en: "Raikou", zh: "雷公", type: "electric", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2024-08-28", series: "master", acq: ["bp"] },
+  { dex: 794, en: "Buzzwole", zh: "爆肌蚊", type: "bug", roleAsset: "ROLE_002", star: 5, six: false, awak: false, released: "2025-08-28", series: "master", acq: ["bp"] },
   // 2026 週年慶 (BP 兌換)。datamine 佐證: Trainer.json 18000021021 —
   // type=8(毒) / role=2(support) / rarity=5 / exScheduleId=NEVER / 不在 TrainerExRole 也不在
   // TrainerSpecialAwaking → six=false, awak=false; scheduleId chara_8080_0828 接續
@@ -100,7 +108,7 @@ const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
 // ── 主角立繪 (共用) ──
 const tPath = pub("reference", "trainer", `${PLAYER_TRAINER_ID}_128.png`);
 if (!existsSync(tPath)) {
-  writeFileSync(tPath, await toTrainer128(await download(PLAYER_IMAGE, true)));
+  writeFileSync(tPath, await alignToNative(await download(PLAYER_IMAGE, true)));
   console.log(`主角立繪已下載 → ${PLAYER_TRAINER_ID}_128.png`);
 }
 

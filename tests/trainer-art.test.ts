@@ -124,3 +124,33 @@ describe("訓練家立繪的取景", () => {
     ).toEqual([]);
   }, 120_000);
 });
+
+describe("用到 lib-trainer-image 的腳本, import 的名字都要還在", () => {
+  // 2026-09-28: 09-08 重做取景時把 toTrainer128 拿掉了, add-protagonist-pairs / add-wiki-pairs
+  // 沒跟著改 → 一跑就 SyntaxError。兩支在管線裡原本都是 soft 階段, 於是「✅ 更新完成」,
+  // 主角拍組 11 筆卻默默從圖鑑消失。tsc / lint 都不看 .mjs 腳本, 只能在這裡擋。
+  const lib = fs.readFileSync(path.join(process.cwd(), "scripts/lib-trainer-image.mjs"), "utf8");
+  const exported = new Set(
+    [...lib.matchAll(/^export\s+(?:async\s+)?(?:function|const|let)\s+([A-Za-z0-9_]+)/gm)].map((m) => m[1])
+  );
+  const scriptsDir = path.join(process.cwd(), "scripts");
+  const users = fs
+    .readdirSync(scriptsDir)
+    .filter((f) => f.endsWith(".mjs"))
+    .map((f) => [f, fs.readFileSync(path.join(scriptsDir, f), "utf8")] as const)
+    .filter(([, src]) => src.includes("./lib-trainer-image.mjs"));
+
+  it("找得到呼叫端 (測試本身沒有失效)", () => {
+    expect(users.map(([f]) => f)).toEqual(
+      expect.arrayContaining(["add-protagonist-pairs.mjs", "add-wiki-pairs.mjs"])
+    );
+  });
+
+  it.each(users)("%s", (_f, src) => {
+    for (const m of src.matchAll(/import\s*\{([^}]+)\}\s*from\s*"\.\/lib-trainer-image\.mjs"/g)) {
+      for (const name of m[1]!.split(",").map((s) => s.trim().split(/\s+as\s+/)[0]!).filter(Boolean)) {
+        expect(exported, `lib-trainer-image.mjs 沒有匯出 ${name}`).toContain(name);
+      }
+    }
+  });
+});

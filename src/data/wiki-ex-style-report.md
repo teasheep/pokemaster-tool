@@ -1,7 +1,7 @@
 # EX Style 抓取與比對報告
 
 > 來源: [Pokémon Masters EX Wiki](https://pokemon-masters-ex-game.fandom.com/wiki/6%E2%98%85_EX) — 6★ EX 頁面 + Sync Pairs/List
-> 產生時間: 2026-09-01T02:26:08.250Z
+> 產生時間: 2026-09-28T14:05:52.828Z
 
 ## 抓取統計 (wiki 權威值)
 
@@ -21,7 +21,7 @@
 | 主角拍組 (pomatools 不收錄) | 17 |
 | 其他對不上 | 0 |
 | pomatools 原 hasSixEx 為真 | 303 |
-| **hasSixEx 修正後為真 (wiki 權威)** | **631** |
+| **hasSixEx 修正後為真 (wiki 權威)** | **639** |
 
 **關鍵發現**: pomatools 的 `hasSixEx` 與 `hasExRole` 同為 303, 實際上只追到 *EX role* 解鎖, 嚴重低估真正可達 6★ EX 的數量 (wiki: 598)。本次以 wiki 為準補正, 並新增 `hasExStyle` 欄位 (pomatools 原本完全沒有)。
 
@@ -29,19 +29,28 @@
 
 | 項目 | 值 |
 | --- | ---: |
-| pomatools 紀錄總數 | 653 |
+| pomatools 紀錄總數 | 662 |
 | 直接由 wiki 補正 | 642 |
 | 重複紀錄繼承手足 (wiki-sibling) | 1 |
-| **hasExStyle 欄位覆蓋** | **653/653** |
+| **hasExStyle 欄位覆蓋** | **662/662** |
 | └ hasExStyle = true | 457 |
-| hasSixEx = true (補正後) | 631 |
-| 仍未覆蓋 (wiki 無此筆) | 10 |
+| hasSixEx = true (補正後) | 639 |
+| 仍未覆蓋 (wiki 無此筆) | 19 |
 
-### 仍未覆蓋的 10 筆 (wiki 不收錄)
+### 仍未覆蓋的 19 筆 (wiki 不收錄)
 
 多為主角學園共用 kit 變體 (19999 系) 與遊戲原創角色, fandom wiki 未列為獨立拍組:
 
+- Lyra (Special Costume) & Marill (10002410001)
+- Korrina & Machoke (10012000002)
 - Parker & Cottonee (10074000000)
+- Maxie (Fall 2026) & Ting-Lu (10192400000)
+- Archie (Fall 2026) & Wo-Chien (10193400000)
+- Sygna Suit Ghetsis & Chien-Pao (10195100000)
+- Sygna Suit Lysandre (Alt.) & Chi-Yu (10196110000)
+- Tabitha & Camerupt (10221000000)
+- Matt & Sharpedo (10223000000)
+- Shelly & Sharpedo (10224000000)
 - Lillie & Squirtle (19999000009)
 - Rosa & Bulbasaur (19999000010)
 - Lillie & Totodile (19999000012)

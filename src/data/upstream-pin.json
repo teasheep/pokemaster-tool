@@ -8,9 +8,9 @@
   ],
   "repo": "pomasters/SyncPairsTracker",
   "branch": "main",
-  "sha": "511aeb9132a48e3798ba57dba523b024d70c86a3",
-  "upstreamVersion": "v2.72.0",
-  "pinnedAt": "2026-09-09",
+  "sha": "0dfe96ce8153d4ba4b6db5ef1e5417345a125e63",
+  "upstreamVersion": "v2.73.0",
+  "pinnedAt": "2026-09-28",
   "license": "none",
   "_licenseNote": [
     "對方 repo 沒有 LICENSE 檔 (GitHub license API 回 404) = 預設保留所有權利。",

@@ -122,8 +122,19 @@ const META_STAGES = [
   { name: "4c. 日期/徽章/系列 (pomatools)", script: "patch-pomatools-meta.mjs", extra: [], soft: false },
   // 主角 (Player) 拍組 — brybry/pomatools 都不收, 但道館賽常用。
   // 排在 4c 之後: 它自帶 series/releaseDate, 不要被 pomatools 的 patch 蓋掉。
-  { name: "4d. 補主角拍組", script: "add-protagonist-pairs.mjs", extra: [], soft: true },
+  // ⚠ **soft:false** (2026-09-28 改): stage 1 會從 brybry 重建 catalog, 這 11 筆只靠這一步補回來 ——
+  //   它失敗就等於 11 筆拍組從圖鑑消失 (成員收藏裡的那幾張跟著變灰字)。以前是 soft, 結果
+  //   import 壞掉 (toTrainer128 被移除) 時流程照樣「✅ 更新完成」, 只在報告的「從來源消失」裡露一行。
+  //   它不連外 (立繪已存在就不抓), 沒有「來源暫時掛掉」這種該容忍的失敗。
+  { name: "4d. 補主角拍組", script: "add-protagonist-pairs.mjs", extra: [], soft: false },
   { name: "5. 多來源交叉驗證 (pomatools+wiki+serebii)", script: "reconcile-db.mjs", extra: [], soft: false },
+  // 初上線日登記簿 (src/data/pair-debut-dates.json, 全站唯一手寫、附來源的日期入口) ——
+  // **一定要排在所有會寫 releaseDate 的階段之後** (2 wiki / 4c pomatools / 4d 主角)。
+  // ⚠ 2026-09-28 才排進來: 那支腳本自稱「資料管線最後一階」, 但從來沒有被這裡呼叫過 ——
+  //   每跑一次更新, 查證過的日期就被上游蓋回去 (那次有 4 隻已上市拍組的 releaseDate 變 null,
+  //   沒有其他來源背書時會被判準 A 當成「未上架」擋掉 = 從站上消失)。
+  //   soft:false — 登記簿指到不存在的 pairId 時它會 exit 1, 那是要人看的。
+  { name: "5a. 初上線日登記簿", script: "apply-debut-dates.mjs", extra: [], soft: false },
   // 最後才改名 — 前面每一階段都是用名字比對來源的, 早改會對不到 (前科: 四季鹿掉了 acquisitions)
   { name: "5b. 同名拍組補形態名", script: "disambiguate-pair-names.mjs", extra: [], soft: true },
   // 上游 (pomasters) 的篩選面向: 弱點 / 主題 / 標籤 / 真正的招式屬性。

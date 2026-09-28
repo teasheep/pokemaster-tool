@@ -180,7 +180,8 @@ const PAIRS = [
   },
 ];
 
-import { toTrainer128 } from "./lib-trainer-image.mjs";
+// 立繪只在檔案不存在時才產 (見 add-protagonist-pairs.mjs 同一段註解: toTrainer128 已於 2026-09-08 移除)
+import { alignToNative } from "./lib-trainer-image.mjs";
 
 async function download(url, useOriginal) {
   const res = await fetch(useOriginal ? orig(url) : url, WIKI_UA);
@@ -224,8 +225,8 @@ for (const { record, images } of PAIRS) {
   const tPath = pub("reference", "trainer", `${record.trainerId}_128.png`);
   const tExPath = pub("reference", "trainer-ex", `${record.trainerId}_ex.png`);
   const pPath = pub("reference", "pokemon", `${record.pokemonId}_128.png`);
-  if (!existsSync(tPath)) writeFileSync(tPath, await toTrainer128(await download(images.trainer, true)));
-  if (!existsSync(tExPath)) writeFileSync(tExPath, await toTrainer128(await download(images.trainerEx, true)));
+  if (!existsSync(tPath)) writeFileSync(tPath, await alignToNative(await download(images.trainer, true)));
+  if (!existsSync(tExPath)) writeFileSync(tExPath, await alignToNative(await download(images.trainerEx, true)));
   if (!existsSync(pPath)) {
     const art = await download(images.pokemon, false);
     writeFileSync(

@@ -172,9 +172,14 @@ async function main() {
   const missingId = records.findIndex((r) => !r?.pairId);
   if (missingId >= 0) throw new Error(`第 ${missingId} 筆沒有 pairId`);
 
-  const version = catalogVersion(fields, records);
+  // 指紋一律對「**寫出去的樣子**」算 (先 JSON 來回一次): 投影在記憶體裡會留著值是 undefined 的 key,
+  // 寫成 JSON 就消失了 —— catalogVersion 的形狀取的是 records[0] 的 key, 兩邊會算出不同指紋,
+  // 測試 (讀檔重算) 就永遠對不上。第一次出事是 2026-09-28 加 releaseDateUncertain
+  // (只有少數拍組有這欄, 第一筆沒有)。
+  const written = JSON.parse(JSON.stringify(records));
+  const version = catalogVersion(fields, written);
   const assetFile = join(OUT_DIR, `${version}.json`);
-  const payload = JSON.stringify({ version, fields, records });
+  const payload = JSON.stringify({ version, fields, records: written });
 
   const wroteAsset = writeIfChanged(assetFile, payload);
 

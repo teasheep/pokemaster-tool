@@ -65,9 +65,12 @@ function taipeiToday(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" });
 }
 
-/** 半年內初上線 = 新拍組 (卡片標 NEW) */
+/**
+ * 半年內初上線 = 新拍組 (卡片標 NEW)。**還沒上線的不算** —— 那些標「未上線」(isUpcomingPair)。
+ * 2026-09-28 前這裡沒排除未來日期: 未來 - 現在是負數, 一律 < 半年 → 10/21 才上市的拍組也標 NEW。
+ */
 export function isNewPair(p: Pick<ClientPairRecord, "releaseDate">): boolean {
-  if (!p.releaseDate) return false;
+  if (!p.releaseDate || isUpcomingPair(p)) return false;
   return Date.now() - new Date(p.releaseDate).getTime() < HALF_YEAR_MS;
 }
 

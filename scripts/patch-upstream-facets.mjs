@@ -62,6 +62,8 @@ const seenThemes = new Set();
 const seenTags = new Set();
 let patched = 0;
 let missed = 0;
+/** 這一趟從上游補上架日 (標未確定) 的拍組 */
+const datedFromUpstream = [];
 
 for (const e of Object.values(map.entries)) {
   const file = Object.values(e.files ?? {})[0];
@@ -96,6 +98,17 @@ for (const e of Object.values(map.entries)) {
   themes.forEach((t) => seenThemes.add(t));
   tags.forEach((t) => seenTags.add(t));
 
+  // 上架日: 我方所有來源 (pomatools / wiki / 登記簿) 都沒有時, 用上游的, 並標「未確定」
+  // (2026-09-28 使用者:「還不確定的東西就標不確定就好, 以我們找資料的那些站為準」)。
+  // 上游對**還沒上市**的拍組寫的日期與官方公告會差 1-4 天 (實測 v2.73.0 那一波), 所以一定要帶旗標;
+  // 之後 pomatools / wiki 跟上、4c 寫進確定的日期時, 這裡就不會再碰它, 旗標自然消失
+  // (stage 1 每次都從 brybry 重建 record, 不會殘留舊旗標)。
+  if (!rec.releaseDate && /^\d{4}-\d{2}-\d{2}$/.test(String(up.releaseDate ?? ""))) {
+    rec.releaseDate = up.releaseDate;
+    rec.releaseDateUncertain = true;
+    datedFromUpstream.push(`${rec.pairId} ${rec.trainerNameZh ?? rec.trainerName} & ${rec.pokemonNameZh ?? rec.pokemonName} → ${up.releaseDate}`);
+  }
+
   rec.weakType = String(up.pokemonWeak ?? "").toLowerCase() || null;
   rec.themes = themes.sort();
   rec.tags = tags.sort();
@@ -105,7 +118,11 @@ for (const e of Object.values(map.entries)) {
 }
 
 fs.writeFileSync(CATALOG, JSON.stringify(catalog, null, 2) + "\n");
-console.log(`已寫入 ${patched} 筆 (對不到上游: ${missed} —— 那是判準 A 擋下的未公布拍組)`);
+console.log(`已寫入 ${patched} 筆 (對不到上游: ${missed})`);
+if (datedFromUpstream.length) {
+  console.log(`上架日取自上游、標「未確定」 ${datedFromUpstream.length} 筆:`);
+  for (const s of datedFromUpstream) console.log(`  ${s}`);
+}
 console.log(`themes ${seenThemes.size} 種 / tags ${seenTags.size} 種`);
 console.log("themes:", [...seenThemes].sort().join(" | "));
 console.log("tags:", [...seenTags].sort().join(" | "));

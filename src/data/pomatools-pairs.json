@@ -1049,6 +1049,62 @@
       ]
     },
     {
+      "pairId": "10002410001",
+      "trainerId": "ch0002_41_kotone",
+      "pokemonId": "pm0183_00_maril",
+      "trainerName": "Lyra (Special Costume)",
+      "pokemonName": "Marill",
+      "trainerNameZh": "琴音（隊員）",
+      "pokemonNameZh": "瑪力露",
+      "type": "water",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_002",
+      "roleAsset": "ROLE_002",
+      "exRole": "ROLE_008",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "water"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0183_00_maril_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0183_00_maril/pm0183_00_maril_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0002_41_kotone_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0002_41_kotone/ch0002_41_kotone_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-09-28",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "poison",
+      "themes": [
+        "Pigtails",
+        "Pokéathlete",
+        "Special Costume"
+      ],
+      "tags": [
+        "AttackMoveSpecial",
+        "AttackMoveStatus",
+        "Master Passive Teamwork",
+        "SyncMovePhysical",
+        "Unique Costume",
+        "isWoman"
+      ]
+    },
+    {
       "pairId": "10002900000",
       "trainerId": "ch0002_90_kotone",
       "pokemonId": "pm0244_00_entei",
@@ -1084,7 +1140,6 @@
       "exStyleImagePath": "/reference/trainer-ex/ch0002_90_kotone_ex.png",
       "exRoleName": "Sprint",
       "exDataSource": "wiki",
-      "releaseDate": "2026-06-02",
       "series": "exmaster",
       "verifiedSources": [
         "wiki"
@@ -1100,6 +1155,7 @@
       "tera": false,
       "imageAvailable": true,
       "sharedKit": false,
+      "releaseDate": "2026-06-02",
       "weakType": "rock",
       "themes": [
         "Champion",
@@ -3785,6 +3841,59 @@
         "Region Circle",
         "SyncMovePhysical",
         "Wish Zone",
+        "isWoman"
+      ]
+    },
+    {
+      "pairId": "10012000002",
+      "trainerId": "ch0012_00_corni",
+      "pokemonId": "pm0067_00_goriky",
+      "trainerName": "Korrina",
+      "pokemonName": "Machoke",
+      "trainerNameZh": "可爾妮",
+      "pokemonNameZh": "豪力",
+      "type": "fighting",
+      "region": null,
+      "group": null,
+      "basePotential": 4,
+      "exMode": 0,
+      "role": "ROLE_004",
+      "roleAsset": "ROLE_004",
+      "exRole": null,
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "electric",
+        "fighting"
+      ],
+      "pairKind": "none",
+      "hasSixEx": false,
+      "hasExRole": false,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0067_00_goriky_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0067_00_goriky/pm0067_00_goriky_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0012_00_corni_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0012_00_corni/ch0012_00_corni_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-10-01",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "flying",
+      "themes": [
+        "Gym Leader",
+        "Passionate Spirit"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "SyncMovePhysical",
         "isWoman"
       ]
     },
@@ -21968,7 +22077,6 @@
       "exStyleImagePath": "/reference/trainer-ex/ch0112_91_hibiki_ex.png",
       "exRoleName": "Field",
       "exDataSource": "wiki",
-      "releaseDate": "2026-05-31",
       "series": "exmaster",
       "verifiedSources": [
         "wiki"
@@ -21984,6 +22092,7 @@
       "tera": false,
       "imageAvailable": true,
       "sharedKit": false,
+      "releaseDate": "2026-05-31",
       "weakType": "ground",
       "themes": [
         "Champion",
@@ -32578,6 +32687,8 @@
       "tags": [
         "AttackMovePhysical",
         "AttackMoveStatus",
+        "Grid3",
+        "GridExpansion",
         "SyncMovePhysical",
         "Weather",
         "isWoman"
@@ -35641,6 +35752,64 @@
       ]
     },
     {
+      "pairId": "10192400000",
+      "trainerId": "ch0192_40_matsubusa",
+      "pokemonId": "pm1003_00_00_dinlu",
+      "trainerName": "Maxie (Fall 2026)",
+      "pokemonName": "Ting-Lu",
+      "trainerNameZh": "赤焰松（2026秋季）",
+      "pokemonNameZh": "古鼎鹿",
+      "type": "ground",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_002",
+      "roleAsset": "ROLE_002",
+      "exRole": "ROLE_016",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "ground"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm1003_00_00_dinlu_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm1003_00_00_dinlu/pm1003_00_00_dinlu_128.png",
+      "formId": 90026,
+      "trainerImagePath": "/reference/trainer/ch0192_40_matsubusa_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0192_40_matsubusa/ch0192_40_matsubusa_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-10-16",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "water",
+      "themes": [
+        "Glasses",
+        "Seasonal Outfit",
+        "Villain"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "AttackMoveSpecial",
+        "Buddy Move",
+        "Legendary",
+        "SyncMoveSpecial",
+        "Unique Costume",
+        "Wish Zone",
+        "isMan"
+      ]
+    },
+    {
       "pairId": "10193000000",
       "trainerId": "ch0193_00_aogiri",
       "pokemonId": "pm0382_00_kyogre",
@@ -35722,6 +35891,66 @@
         "Master Passive Spirit",
         "SyncMoveSpecial",
         "Weather",
+        "isMan"
+      ]
+    },
+    {
+      "pairId": "10193400000",
+      "trainerId": "ch0193_40_aogiri",
+      "pokemonId": "pm1001_00_00_chionjen",
+      "trainerName": "Archie (Fall 2026)",
+      "pokemonName": "Wo-Chien",
+      "trainerNameZh": "水梧桐（2026秋季）",
+      "pokemonNameZh": "古簡蝸",
+      "type": "grass",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_002",
+      "roleAsset": "ROLE_002",
+      "exRole": "ROLE_016",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "grass",
+        "ground"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm1001_00_00_chionjen_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm1001_00_00_chionjen/pm1001_00_00_chionjen_128.png",
+      "formId": 90016,
+      "trainerImagePath": "/reference/trainer/ch0193_40_aogiri_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0193_40_aogiri/ch0193_40_aogiri_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-10-14",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "bug",
+      "themes": [
+        "Body Builder",
+        "Seasonal Outfit",
+        "Villain"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "AttackMoveSpecial",
+        "Buddy Move",
+        "Legendary",
+        "SyncMovePhysical",
+        "Terrain",
+        "TerrainEX",
+        "Unique Costume",
         "isMan"
       ]
     },
@@ -36049,6 +36278,65 @@
       ]
     },
     {
+      "pairId": "10195100000",
+      "trainerId": "ch0195_10_ghetsis",
+      "pokemonId": "pm1002_00_00_paojian",
+      "trainerName": "Sygna Suit Ghetsis",
+      "pokemonName": "Chien-Pao",
+      "trainerNameZh": "美極套裝魁奇思",
+      "pokemonNameZh": "古劍豹",
+      "type": "ice",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_001",
+      "roleAsset": "ROLE_001P",
+      "exRole": "ROLE_004",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "ice"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": true,
+      "pokemonImagePath": "/reference/pokemon/pm1002_00_00_paojian_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm1002_00_00_paojian/pm1002_00_00_paojian_128.png",
+      "formId": 90023,
+      "trainerImagePath": "/reference/trainer/ch0195_10_ghetsis_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0195_10_ghetsis/ch0195_10_ghetsis_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-09-30",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "fighting",
+      "themes": [
+        "Cape",
+        "Sygna Suit",
+        "Villain"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "AttackMoveStatus",
+        "Buddy Move",
+        "Grid5",
+        "Legendary",
+        "SyncMovePhysical",
+        "Unique Costume",
+        "Wish Zone",
+        "isMan"
+      ]
+    },
+    {
       "pairId": "10196000000",
       "trainerId": "ch0196_00_fleurdelis",
       "pokemonId": "pm0769_00_pokemonY",
@@ -36219,6 +36507,66 @@
         "Buddy Move",
         "Grid5",
         "Mythical",
+        "SyncMoveSpecial",
+        "Unique Costume",
+        "Weather",
+        "isMan"
+      ]
+    },
+    {
+      "pairId": "10196110000",
+      "trainerId": "ch0196_11_fleurdelis",
+      "pokemonId": "pm1004_00_00_yiyui",
+      "trainerName": "Sygna Suit Lysandre (Alt.)",
+      "pokemonName": "Chi-Yu",
+      "trainerNameZh": "美極套裝弗拉達利（異裝）",
+      "pokemonNameZh": "古玉魚",
+      "type": "fire",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_016",
+      "roleAsset": "ROLE_016",
+      "exRole": "ROLE_008",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "fire"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": true,
+      "pokemonImagePath": "/reference/pokemon/pm1004_00_00_yiyui_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm1004_00_00_yiyui/pm1004_00_00_yiyui_128.png",
+      "formId": 90021,
+      "trainerImagePath": "/reference/trainer/ch0196_11_fleurdelis_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0196_11_fleurdelis/ch0196_11_fleurdelis_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-10-02",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "ground",
+      "themes": [
+        "Sunglasses",
+        "Sygna Suit",
+        "Villain"
+      ],
+      "tags": [
+        "AttackMoveSpecial",
+        "AttackMoveStatus",
+        "Buddy Move",
+        "Grid5",
+        "Legendary",
+        "Region Circle",
         "SyncMoveSpecial",
         "Unique Costume",
         "Weather",
@@ -36432,6 +36780,9 @@
       "exDataSource": "wiki",
       "releaseDate": "2026-08-28",
       "series": "master",
+      "acquisitions": [
+        "bp"
+      ],
       "verifiedSources": [
         "wiki"
       ],
@@ -36443,9 +36794,6 @@
       "tera": false,
       "imageAvailable": true,
       "sharedKit": false,
-      "acquisitions": [
-        "bp"
-      ],
       "weakType": "rock",
       "themes": [
         "Battle Facility Foe",
@@ -37466,6 +37814,60 @@
       ]
     },
     {
+      "pairId": "10221000000",
+      "trainerId": "ch0221_00_homura",
+      "pokemonId": "pm0323_00_bakuuda",
+      "trainerName": "Tabitha",
+      "pokemonName": "Camerupt",
+      "trainerNameZh": "火村",
+      "pokemonNameZh": "噴火駝",
+      "type": "ground",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_002",
+      "roleAsset": "ROLE_002",
+      "exRole": "ROLE_008",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "ground"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0323_00_bakuuda_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0323_00_bakuuda/pm0323_00_bakuuda_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0221_00_homura_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0221_00_homura/ch0221_00_homura_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-10-21",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "water",
+      "themes": [
+        "Battle Partner",
+        "Villain"
+      ],
+      "tags": [
+        "AttackMoveSpecial",
+        "AttackMoveStatus",
+        "Region Circle",
+        "SyncMoveSpecial",
+        "isMan"
+      ]
+    },
+    {
       "pairId": "10222000000",
       "trainerId": "ch0222_00_kagari",
       "pokemonId": "pm0323_01_bakuuda",
@@ -37546,6 +37948,116 @@
         "GridMega",
         "SyncMovePhysical",
         "Wish Zone",
+        "isWoman"
+      ]
+    },
+    {
+      "pairId": "10223000000",
+      "trainerId": "ch0223_00_ushio",
+      "pokemonId": "pm0319_00_samehader",
+      "trainerName": "Matt",
+      "pokemonName": "Sharpedo",
+      "trainerNameZh": "阿潮",
+      "pokemonNameZh": "巨牙鯊",
+      "type": "water",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_002",
+      "roleAsset": "ROLE_002",
+      "exRole": "ROLE_008",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "dark",
+        "water"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0319_00_samehader_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0319_00_samehader/pm0319_00_samehader_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0223_00_ushio_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0223_00_ushio/ch0223_00_ushio_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-10-21",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "grass",
+      "themes": [
+        "Battle Partner",
+        "Villain"
+      ],
+      "tags": [
+        "AttackMoveSpecial",
+        "GridMega",
+        "Region Circle",
+        "SyncMoveSpecial",
+        "isMan"
+      ]
+    },
+    {
+      "pairId": "10224000000",
+      "trainerId": "ch0224_00_izumi",
+      "pokemonId": "pm0319_00_samehader",
+      "trainerName": "Shelly",
+      "pokemonName": "Sharpedo",
+      "trainerNameZh": "阿泉",
+      "pokemonNameZh": "巨牙鯊",
+      "type": "water",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_008",
+      "roleAsset": "ROLE_008",
+      "exRole": "ROLE_004",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "water"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0319_00_samehader_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0319_00_samehader/pm0319_00_samehader_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0224_00_izumi_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0224_00_izumi/ch0224_00_izumi_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-10-21",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "bug",
+      "themes": [
+        "Battle Partner",
+        "Villain"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "AttackMoveSpecial",
+        "AttackMoveStatus",
+        "SyncMovePhysical",
+        "Weather",
         "isWoman"
       ]
     },
@@ -46419,7 +46931,6 @@
       "exStyleImagePath": "/reference/trainer-ex/ch0291_40_sho_ex.png",
       "exRoleName": "Sprint",
       "exDataSource": "wiki",
-      "releaseDate": "2026-06-30",
       "series": "seasonal",
       "verifiedSources": [
         "wiki"
@@ -46435,6 +46946,7 @@
       "tera": false,
       "imageAvailable": true,
       "sharedKit": false,
+      "releaseDate": "2026-06-30",
       "weakType": "electric",
       "themes": [
         "Hisui",
@@ -46907,7 +47419,6 @@
       "exStyleImagePath": "/reference/trainer-ex/ch0295_90_omodaka_ex.png",
       "exRoleName": "Support",
       "exDataSource": "wiki",
-      "releaseDate": "2026-07-20",
       "series": "arc",
       "verifiedSources": [
         "wiki"
@@ -46923,6 +47434,7 @@
       "tera": false,
       "imageAvailable": true,
       "sharedKit": false,
+      "releaseDate": "2026-07-20",
       "weakType": "ground",
       "themes": [
         "Arc Suit",
@@ -48996,7 +49508,7 @@
       "exRoleName": "Physical Strike",
       "exDataSource": "wiki",
       "releaseDate": "2026-06-16",
-      "series": "upcoming",
+      "series": "general",
       "verifiedSources": [
         "wiki"
       ],
@@ -50458,7 +50970,7 @@
       "exRoleName": "Field",
       "exDataSource": "wiki",
       "releaseDate": "2026-06-14",
-      "series": "upcoming",
+      "series": "general",
       "verifiedSources": [
         "wiki"
       ],
@@ -52785,11 +53297,11 @@
       "hasExStyle": false,
       "releaseDate": "2024-02-14",
       "series": "event",
-      "pairKind": "none",
-      "manualSource": "protagonist",
       "acquisitions": [
         "event"
       ],
+      "pairKind": "none",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -52843,11 +53355,11 @@
       "hasExStyle": false,
       "releaseDate": "2025-08-28",
       "series": "master",
-      "pairKind": "master",
-      "manualSource": "protagonist",
       "acquisitions": [
         "bp"
       ],
+      "pairKind": "master",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -52900,13 +53412,13 @@
       "hasSixEx": false,
       "hasAwakening": false,
       "hasExStyle": false,
-      "releaseDate": "2021-05-31",
+      "releaseDate": "2021-05-27",
       "series": "master",
-      "pairKind": "master",
-      "manualSource": "protagonist",
       "acquisitions": [
         "bp"
       ],
+      "pairKind": "master",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -52961,11 +53473,11 @@
       "hasExStyle": false,
       "releaseDate": "2022-08-28",
       "series": "master",
-      "pairKind": "master",
-      "manualSource": "protagonist",
       "acquisitions": [
         "bp"
       ],
+      "pairKind": "master",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -53021,11 +53533,11 @@
       "hasExStyle": false,
       "releaseDate": "2019-08-29",
       "series": "story",
-      "pairKind": "none",
-      "manualSource": "protagonist",
       "acquisitions": [
         "story"
       ],
+      "pairKind": "none",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -53146,11 +53658,11 @@
       "hasExStyle": false,
       "releaseDate": "2024-08-28",
       "series": "master",
-      "pairKind": "master",
-      "manualSource": "protagonist",
       "acquisitions": [
         "bp"
       ],
+      "pairKind": "master",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -53204,13 +53716,13 @@
       "hasSixEx": false,
       "hasAwakening": false,
       "hasExStyle": false,
-      "releaseDate": "2021-05-31",
+      "releaseDate": "2021-05-27",
       "series": "master",
-      "pairKind": "master",
-      "manualSource": "protagonist",
       "acquisitions": [
         "bp"
       ],
+      "pairKind": "master",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -53265,11 +53777,11 @@
       "hasExStyle": false,
       "releaseDate": "2023-08-28",
       "series": "master",
-      "pairKind": "master",
-      "manualSource": "protagonist",
       "acquisitions": [
         "bp"
       ],
+      "pairKind": "master",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -53325,11 +53837,11 @@
       "hasExStyle": false,
       "releaseDate": "2020-01-01",
       "series": "legendary",
-      "pairKind": "none",
-      "manualSource": "protagonist",
       "acquisitions": [
         "legendary"
       ],
+      "pairKind": "none",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -53395,13 +53907,13 @@
       "hasSixEx": false,
       "hasAwakening": false,
       "hasExStyle": false,
-      "releaseDate": "2019-11-06",
+      "releaseDate": "2019-11-07",
       "series": "story",
-      "pairKind": "none",
-      "manualSource": "protagonist",
       "acquisitions": [
         "story"
       ],
+      "pairKind": "none",
+      "manualSource": "protagonist",
       "verifiedSources": [
         "pomatools",
         "wiki"
@@ -53424,5 +53936,5 @@
     }
   ],
   "source": "brybry",
-  "generatedAt": "2026-09-01T02:25:37.837Z"
+  "generatedAt": "2026-09-28T14:05:36.983Z"
 }
