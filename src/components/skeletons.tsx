@@ -227,6 +227,8 @@ export function StageBoardSkeleton({ stages = 4 }: { stages?: number }) {
             <Sk className="h-5 w-16 rounded-full" delay={wave(i)} />
             <Sk className="h-7 w-[110px]" delay={wave(i)} />
             <Sk className="ml-auto h-5 w-24 rounded-full" delay={wave(i)} />
+            {/* 收合鈕 (stage-board 的 ChevronDown) */}
+            <Sk className="h-5 w-5 rounded-full" delay={wave(i)} />
           </div>
           <div className="space-y-3 p-3">
             <div className="space-y-2">

@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { COARSE_HIT_AREA } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -123,6 +124,20 @@ export function StageBoard(props: StageBoardProps) {
   const showRules = props.showRules ?? false;
 
   /**
+   * 收起來的關卡 (2026-09-28 使用者:「道館跟 Ex 輪也做可以展開收納的功能, 避免太長」)。
+   * 狀態放在這一層不放在卡片裡: 從上面的關卡摘要跳過去時要順便把那一關展開,
+   * 否則跳過去只看到一條標題列, 像是沒跳成功。
+   */
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const toggleCollapsed = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  /**
    * 本輪每關的進度 (已用券 / 我出過沒) — 手機的關卡摘要列用。
    * 手機一欄排 8 關要捲很久, 「我在哪一關、這輪還缺哪關」必須先一眼看完再決定往哪捲。
    */
@@ -147,33 +162,44 @@ export function StageBoard(props: StageBoardProps) {
           <p className="mb-1 text-xs text-muted-foreground">
             本輪 {roundLabel(round)} — 點屬性跳到該關 (✓ = 我出過)
           </p>
-          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+          {/* 4 × 2 格子, 不是左右滑 (2026-09-28 使用者:「左右滑還是有點難用, 也會跟
+              scrollbar 重疊」) —— 8 關一次看完, 跟「我要出刀」側板選關卡的格子同一種排法 */}
+          <div className="grid grid-cols-4 gap-1.5">
             {stages.map((s) => {
               const info = perStage.get(s.id) ?? { used: 0, mine: false };
               return (
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
+                    // 收起來的那一關跳過去要順便展開
+                    setCollapsed((prev) => {
+                      if (!prev.has(s.id)) return prev;
+                      const next = new Set(prev);
+                      next.delete(s.id);
+                      return next;
+                    });
                     document
                       .getElementById(`stage-${s.id}`)
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                  }
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
                   className={cn(
-                    "flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-2.5 text-xs transition-transform active:scale-95",
+                    "flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border px-1 py-1 text-xs transition-transform active:scale-95",
                     info.used > 0
                       ? "bg-background"
                       : "border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-100"
                   )}
                 >
-                  <TypeIcon type={s.weak_type} className="h-4 w-4" />
-                  <span className="font-medium">{TYPE_LABELS[s.weak_type]}</span>
+                  <span className="flex min-w-0 items-center gap-1">
+                    <TypeIcon type={s.weak_type} className="h-4 w-4 shrink-0" />
+                    <span className="truncate font-medium">{TYPE_LABELS[s.weak_type]}</span>
+                  </span>
                   <span className="tabular-nums text-muted-foreground">
                     {info.used > 0 ? `${info.used} 張` : "尚無"}
+                    {info.mine ? (
+                      <span className="ml-0.5 font-semibold text-emerald-600 dark:text-emerald-400">✓</span>
+                    ) : null}
                   </span>
-                  {info.mine ? (
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓</span>
-                  ) : null}
                 </button>
               );
             })}
@@ -181,13 +207,16 @@ export function StageBoard(props: StageBoardProps) {
         </div>
       ) : null}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      {/* items-start: 桌機兩欄時, 收起來的那一關不要被旁邊展開的那張撐成一個空框 */}
+      <div className="grid items-start gap-3 lg:grid-cols-2">
         {stages.map((s) => (
           <StageCard
             key={s.id}
             stage={s}
             templateStage={templateMatch?.byType.get(s.weak_type) ?? null}
             showRules={showRules}
+            collapsed={collapsed.has(s.id)}
+            onToggleCollapsed={() => toggleCollapsed(s.id)}
             {...props}
           />
         ))}
@@ -267,10 +296,14 @@ function StageCard({
   onChanged,
   templateStage,
   showRules,
+  collapsed,
+  onToggleCollapsed,
 }: StageBoardProps & {
   stage: StageRow;
   templateStage: TemplateStageRules | null;
   showRules: boolean;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   // 側板勾過「全圖鑑」之後, 名單外的拍組也要畫得出來 (否則隊伍卡掉成灰字 pair_id)。
@@ -363,6 +396,13 @@ function StageCard({
   const [showAllRounds, setShowAllRounds] = useState(false);
   const visibleRounds = showAllRounds ? allRounds : allRounds.filter((r) => r >= round);
   const hiddenRounds = allRounds.length - visibleRounds.length;
+  /**
+   * 「下一輪」之後的輪次 (開了規則才會出現, 一關最多十幾列) 預設也收起來 ——
+   * 使用者:「Ex 輪也做可以展開收納的功能, 避免太長」。排隊伍要提前看後面的限制時再點開。
+   */
+  const [showFuture, setShowFuture] = useState(false);
+  const futureRounds = visibleRounds.filter((r) => r > round + 1);
+  const shownRounds = showFuture ? visibleRounds : visibleRounds.filter((r) => r <= round + 1);
   const hiddenTickets = allRounds
     .filter((r) => !visibleRounds.includes(r))
     .reduce(
@@ -726,9 +766,22 @@ function StageCard({
                   roundProgress.state === "done" ? " ✓" : ""
                 }`}
         </span>
+        {/* 收合這一關 — 命中區用 COARSE_HIT_AREA 往外擴, 標題列在手機上不會因此變高 */}
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? "展開這一關" : "收合這一關"}
+          className={cn(
+            "relative -my-1 inline-flex shrink-0 items-center justify-center rounded-full p-1 text-foreground/70 transition-colors hover:bg-background/60 hover:text-foreground",
+            COARSE_HIT_AREA
+          )}
+        >
+          <ChevronDown className={cn("h-4 w-4 transition-transform", collapsed && "-rotate-90")} />
+        </button>
       </div>
 
-      <div className="space-y-3 p-3">
+      <div className={cn("space-y-3 p-3", collapsed && "hidden")}>
         {/* 挑戰隊伍 — 一關可多套, 每套各自列出「可打」成員 (排刀就是按隊分配人) */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -840,7 +893,7 @@ function StageCard({
               收合已完成的輪次
             </button>
           ) : null}
-          {visibleRounds.map((r) => {
+          {shownRounds.map((r) => {
             const rLogs = allStageLogs.filter((l) => (l.round ?? 0) === r);
             const rTickets = rLogs.reduce((s, l) => s + l.tickets_used, 0);
             const tr = templateRounds?.get(r);
@@ -1003,6 +1056,18 @@ function StageCard({
               </div>
             );
           })}
+          {futureRounds.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowFuture((v) => !v)}
+              aria-expanded={showFuture}
+              className="flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-left text-xs text-muted-foreground transition-colors hover:bg-accent/50 pointer-coarse:min-h-11"
+            >
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showFuture && "rotate-180")} />
+              {showFuture ? "收合" : "展開"} {roundLabel(futureRounds[0]!)}–
+              {roundLabel(futureRounds[futureRounds.length - 1]!)}
+            </button>
+          ) : null}
         </div>
       </div>
 
