@@ -21,6 +21,7 @@
     "data:debut": "node scripts/apply-debut-dates.mjs",
     "data:facets": "node scripts/patch-upstream-facets.mjs",
     "data:names": "node scripts/normalize-pair-names.mjs",
+    "data:gvg": "node scripts/fetch-gvg-templates.mjs",
     "deploy:cf": "node scripts/deploy-cloudflare.mjs",
     "preview:cf": "node scripts/deploy-cloudflare.mjs --preview",
     "art:preview": "node scripts/preview-trainer-art.mjs",

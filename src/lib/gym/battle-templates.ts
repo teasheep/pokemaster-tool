@@ -7,21 +7,46 @@
 // 各自維護一份同樣的東西, 而且第一個建館的人得自己一格一格填 8 次。
 // (與「糖果制度是查證過的遊戲規則」同一類: 遊戲的東西查證後寫死, 不要讓使用者自己設計。)
 //
-// 資料來源: 這個道館實際打過的三場 (2026-02 / 2026-04 / 2026-08) 的 battle_stages。
-// **之後遊戲開新的一回就在這裡加一筆** —— 順序 = 陣列順序 = 第 1..8 關。
+// 資料來源: 前三回是這個道館實際打過的三場 (2026-02 / 2026-04 / 2026-08) 的 battle_stages;
+// 第四回 (2026-10) 起取自 pomatools 的道館戰資料 —— 前三回拿來對過, 24 關全部吻合。
+// **之後遊戲開新的一回就在這裡加一筆** —— 順序 = 陣列順序 = 第 1..8 關,
+// 再到 scripts/fetch-gvg-templates.mjs 的 EDITIONS 加上 pomatools 的 id, 跑 `npm run data:gvg`。
+//
+// 每關每輪的規則 (2026-09-28 使用者:「詞條限制那些的也要」) 在 src/data/gvg-stage-rules.json,
+// 由上面那支腳本產生, 文字是 pomatools 語系檔裡的**官方繁中** —— 不要手改 JSON, 改腳本重跑。
+// 建立賽事時寫進 stage_round_notes (每關每輪的說明), 管理員之後照樣可以改。
 
 import type { SyncPairType } from "@/lib/supabase/types";
+import GVG_RULES from "@/data/gvg-stage-rules.json";
 
 export type BattleTemplate = {
   /** 識別碼。目前只活在建立賽事對話框的 state 裡 (沒有存進資料庫或網址) */
   id: string;
-  /** 第幾次 —— 三個模板對齊成同一個格式, 挑的時候一眼看得出順序 */
+  /** 第幾次 —— 模板對齊成同一個格式, 挑的時候一眼看得出順序 */
   name: string;
   /** 那一回的副標 (官方的活動名) */
   subtitle: string;
   /** 第 1 關到第 8 關的弱點屬性 */
   types: SyncPairType[];
 };
+
+/** 某一關某一輪的規則 (R1 = 館主與固有被動, R2/R3 = 館主追加的被動, Ex1 起 = 對我方的限制) */
+export type StageRoundRule = { round: number; note: string };
+
+/** 模板那一回的每一關: 館主 + 每輪規則 (順序 = 第 1..8 關) */
+export type TemplateStageRules = {
+  weak: string;
+  leader: string;
+  pokemon: string;
+  notes: StageRoundRule[];
+};
+
+const RULES = GVG_RULES.editions as Record<string, { stages: TemplateStageRules[] } | undefined>;
+
+/** 這個模板每一關的館主與每輪規則; 沒有資料的模板回 null (只套屬性) */
+export function templateStageRules(t: BattleTemplate): TemplateStageRules[] | null {
+  return RULES[t.id]?.stages ?? null;
+}
 
 export const BATTLE_TEMPLATES: BattleTemplate[] = [
   {
@@ -41,6 +66,13 @@ export const BATTLE_TEMPLATES: BattleTemplate[] = [
     name: "第三次道館戰",
     subtitle: "城都館主大集合",
     types: ["ice", "electric", "fighting", "dark", "fairy", "fire", "steel", "dragon"],
+  },
+  {
+    // 2026-10-01 ~ 10-21 (pomatools gvg 8090)
+    id: "r4-sinnoh",
+    name: "第四次道館戰",
+    subtitle: "神奧館主大集合",
+    types: ["grass", "flying", "fairy", "dragon", "dark", "fighting", "poison", "ground"],
   },
 ];
 

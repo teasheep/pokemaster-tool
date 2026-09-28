@@ -26,7 +26,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TypeIcon } from "@/components/sync-pair-badges";
 import { TYPE_LABELS } from "@/data/sync-pairs";
-import { BATTLE_TEMPLATES, battleTemplate, templateBattleName } from "@/lib/gym/battle-templates";
+import {
+  BATTLE_TEMPLATES,
+  battleTemplate,
+  templateBattleName,
+  templateStageRules,
+} from "@/lib/gym/battle-templates";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -70,21 +75,51 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
       // 8 關由 DB trigger 在上面那筆 insert 之後自動開好 (屬性預設 normal),
       // 所以這裡是 upsert 覆蓋而不是新增 —— 走 (battle_id, seq) 的唯一鍵, 一趟就好。
       if (template) {
-        const { error: stageErr } = await supabase.from("battle_stages").upsert(
-          template.types.map((weak_type, i) => ({
-            gym_id: gymId,
-            battle_id: data.id,
-            seq: i + 1,
-            weak_type,
-          })),
-          { onConflict: "battle_id,seq" }
-        );
+        const { data: stages, error: stageErr } = await supabase
+          .from("battle_stages")
+          .upsert(
+            template.types.map((weak_type, i) => ({
+              gym_id: gymId,
+              battle_id: data.id,
+              seq: i + 1,
+              weak_type,
+            })),
+            { onConflict: "battle_id,seq" }
+          )
+          // 每輪規則要掛在 stage_id 上 —— 順便拿回 8 關的 id, 省一趟查詢
+          .select("id, seq");
         // 賽事已經建起來了 —— 屬性沒套用不是致命錯誤, 講清楚讓他自己補就好,
         // 不要把整個動作當成失敗 (那會讓人以為要重建一場)
         if (stageErr) {
           toast.warning("賽事建好了, 但屬性沒套用成功", {
             description: "可以在賽事頁自己選 8 關的屬性。",
           });
+        } else {
+          // 每關每輪的規則 (館主被動 / 輪次限制) → stage_round_notes, 管理員之後照樣可以改
+          const rules = templateStageRules(template);
+          const idBySeq = new Map((stages ?? []).map((s) => [s.seq, s.id]));
+          const rows = (rules ?? []).flatMap((st, i) => {
+            const stageId = idBySeq.get(i + 1);
+            return stageId
+              ? st.notes.map((n) => ({
+                  gym_id: gymId,
+                  battle_id: data.id,
+                  stage_id: stageId,
+                  round: n.round,
+                  note: n.note,
+                }))
+              : [];
+          });
+          if (rows.length) {
+            const { error: noteErr } = await supabase
+              .from("stage_round_notes")
+              .upsert(rows, { onConflict: "stage_id,round" });
+            if (noteErr) {
+              toast.warning("賽事與屬性都建好了, 但每輪規則沒寫進去", {
+                description: "不影響使用; 需要的話可以在各關的輪次說明自己補。",
+              });
+            }
+          }
         }
       }
 
@@ -111,7 +146,7 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
         <DialogHeader>
           <DialogTitle>建立賽事</DialogTitle>
           <DialogDescription>
-            一回帕希歐道館對戰。選一個模板就會把 8 關的弱點屬性一起填好。
+            一回帕希歐道館對戰。選一個模板就會把 8 關的弱點屬性, 連同每一輪的館主被動與限制一起填好。
           </DialogDescription>
         </DialogHeader>
 
@@ -140,12 +175,24 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
                 {/* 8 顆屬性 icon = 這個模板到底會填什麼, 選之前就看得到。
                     自己一列 → 三個模板的屬性列上下對齊, 一眼能比較。 */}
                 <span className="flex items-center gap-1">
-                  {t.types.map((ty, i) => (
-                    // TypeIcon 只吃 type/className, 提示字掛在外層 (第 N 關是哪一屬性)
-                    <span key={i} title={`第 ${i + 1} 關 · ${TYPE_LABELS[ty]}`} className="flex">
-                      <TypeIcon type={ty} className="h-5 w-5" />
+                  {t.types.map((ty, i) => {
+                    const leader = templateStageRules(t)?.[i]?.leader;
+                    return (
+                      // TypeIcon 只吃 type/className, 提示字掛在外層 (第 N 關是哪一屬性、哪位館主)
+                      <span
+                        key={i}
+                        title={`第 ${i + 1} 關 · ${TYPE_LABELS[ty]}${leader ? ` · ${leader}` : ""}`}
+                        className="flex"
+                      >
+                        <TypeIcon type={ty} className="h-5 w-5" />
+                      </span>
+                    );
+                  })}
+                  {templateStageRules(t) ? (
+                    <span className="ml-1 text-[11px] text-muted-foreground max-sm:text-xs">
+                      含每輪規則
                     </span>
-                  ))}
+                  ) : null}
                 </span>
               </button>
             ))}

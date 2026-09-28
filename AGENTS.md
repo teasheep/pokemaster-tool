@@ -1093,6 +1093,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   4. **屬性套用失敗不算建立失敗**: 賽事已經建起來了, 只 toast 提醒他去賽事頁自己選,
      不要讓人以為要重建一場。
   之後遊戲開新的一回, 在那個檔案加一筆就好 (測試會自動涵蓋新的那一筆)。
+  **每關每輪的規則** (2026-09-28 使用者:「詞條限制那些的也要」) 在 `src/data/gvg-stage-rules.json`,
+  由 `npm run data:gvg` 從 pomatools 的道館戰資料產生 (文字是它語系檔裡的官方繁中) —— **不要手改 JSON**。
+  新的一回: 模板加一筆 + 腳本的 `EDITIONS` 加 pomatools 的 id + 重跑。建立賽事時寫進 `stage_round_notes`:
+  R1 = 館主與固有被動、R2/R3 = 追加被動 (關卡特性)、Ex1 起 = 對我方的限制 (輪次限制), 兩種不要混。
+  ⚠ pomatools 的資料路徑是 `/data/gvg/<id>.json`, bundle 裡寫的 `/public/data/...` 會回 200 的 SPA 首頁。
 - **賽事狀態由賽期日期推導** (`battleStatusFromDates`, 台北時區): 沒到開賽日=籌備中,
   過結束日=已結束, 其間=進行中 — **沒有手動狀態下拉**;「目前輪」同樣由 battle_logs
   的最大已回報輪推導。gym_battles.status / current_round 已 drop (0047)。單場看板

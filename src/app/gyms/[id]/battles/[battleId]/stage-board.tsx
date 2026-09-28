@@ -752,7 +752,9 @@ function StageCard({
                     placeholder="敘述…"
                     maxLength={100}
                     onBlur={(e) => void saveRoundNote(r, e.target.value)}
-                    className="h-9 w-24 min-w-0 rounded border border-dashed border-transparent bg-transparent px-1 text-[11px] outline-none transition-all hover:border-input focus:w-44 focus:border-input pointer-coarse:min-h-11 max-sm:text-xs sm:h-6 sm:w-20"
+                    // 寬度跟著內容走 (field-sizing): 模板會預填每輪規則 (「館主 瓢太＆頭蓋龍｜被動：…」),
+                    // 固定 80px 的框只看得到前幾個字 —— 管理員反而是唯一讀不到全文的人
+                    className="field-sizing-content h-9 min-w-20 max-w-full rounded border border-dashed border-transparent bg-transparent px-1 text-[11px] outline-none transition-colors hover:border-input focus:min-w-44 focus:border-input pointer-coarse:min-h-11 max-sm:text-xs sm:h-6"
                   />
                 ) : stageNotes.get(r) ? (
                   // 全文直接排出來 (手機沒有 hover, 截斷+title 等於讀不到) — 長敘述讓列換行
