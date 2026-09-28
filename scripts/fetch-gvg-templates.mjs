@@ -11,6 +11,10 @@
 //   關卡特性 = 館主的被動, R1/R2/R3 各多一個 (addedPassives 逐輪累加)
 //   輪次限制 = 那一輪對我方的規則 (theme), 從 Ex1 開始, 在 8 關之間錯開輪替
 //
+// 產出是**結構化資料**, 由看板畫成 tag (lib/gym/battle-templates.ts 的 matchTemplate)。
+// ⚠ 不要再把它組成一句話寫進 stage_round_notes —— 第一版那樣做, 使用者要的是「tag 跟血量
+//   不要跟文字放一起」: 說明欄是大家寫自己戰術的地方。
+//
 // 弱點屬性是數字 (weak), 用遊戲的標準屬性順序 1 一般 … 18 妖精。
 // 2026-09-28 用前三回對過我們手上的模板 (這個道館實際打過的 battle_stages), 24 關全部吻合。
 import fs from "node:fs";
@@ -24,8 +28,6 @@ const TYPES = [
   "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy",
 ];
 const OUT = path.join(process.cwd(), "src/data/gvg-stage-rules.json");
-/** stage_round_notes.note 的上限 (0044 的 check) */
-const NOTE_MAX = 100;
 
 async function getJson(url) {
   const res = await fetch(url);
@@ -56,10 +58,6 @@ const pokemon = (actor) => {
   if (!alt) throw new Error(`語系檔沒有 ${actor} 的名字`);
   return text(alt);
 };
-const clip = (s) => {
-  if (s.length > NOTE_MAX) throw new Error(`說明超過 ${NOTE_MAX} 字 (DB 會擋): ${s}`);
-  return s;
-};
 
 const out = { source: `${BASE}/#/gvg`, fetchedAt: new Date().toISOString().slice(0, 10), editions: {} };
 for (const [gvgId, templateId] of Object.entries(EDITIONS)) {
@@ -78,26 +76,28 @@ for (const [gvgId, templateId] of Object.entries(EDITIONS)) {
       .filter((p) => !common.has(p))
       .map(passive)
       .filter((n) => !/命中率|抗性\d+$/.test(n));
-    const notes = [];
+    // 每一輪是**當輪全部生效的東西**, 不是「這輪多了什麼」(2026-09-28 使用者:「tag 是追加 XX 的
+    // 就代表那一輪會包含上一輪的限制, 可以都用 tag 的方式加上去, 不要只有一行字」):
+    //   fresh    = 這一輪才加上的館主被動 —— 「到這一輪為止累積的」由 battle-templates.ts 往前加總,
+    //              不存進檔案 (每輪都重複一次的話這個檔從 70KB 胖到 130KB, 而它會被打包進看板頁)
+    //   rules    = 這一輪對我方的限制 (兩條時資料裡是換行分隔)
+    //   hp       = 三隻對手的 HP [館主 (中間), 左, 右] —— stat[0]
+    const rounds = [];
     let prev = new Set();
     for (const r of b.rounds) {
       const added = r.overwrites?.npc1?.addedPassives ?? [];
-      const fresh = added.filter((p) => !prev.has(p)).map(passive);
+      const fresh = added.filter((p) => !prev.has(p));
       prev = new Set(added);
-      let note;
-      if (r.theme) {
-        // 輪次限制 (兩條時是換行分隔, 例: 「物理傷害0\n非效果絕佳時傷害0」)
-        note = text(r.theme).split(/\n+/).join("・");
-      } else {
-        const parts = [];
-        if (r.round === 1) parts.push(`館主 ${trainer(npc.traninerActorId)}＆${pokemon(npc.monsterActorId)}`);
-        if (r.round === 1 && own.length) parts.push(`固有：${own.join("、")}`);
-        if (fresh.length) parts.push(`${r.round === 1 ? "被動" : "追加被動"}：${fresh.join("、")}`);
-        note = parts.join("｜");
-      }
-      if (note) notes.push({ round: r.round, note: clip(note) });
+      const hp = ["npc1", "npc2", "npc3"].map((k) => r.overwrites?.[k]?.stat?.[0] ?? b.base[k]?.stat?.[0]);
+      if (!hp.every(Number.isFinite)) throw new Error(`${gvgId} ${trainer(npc.traninerActorId)} R${r.round}: 讀不到三隻的 HP`);
+      rounds.push({
+        round: r.round,
+        rules: r.theme ? text(r.theme).split(/\n+/).map((s) => s.trim()).filter(Boolean) : [],
+        fresh: fresh.map(passive),
+        hp,
+      });
     }
-    return { weak, leader: trainer(npc.traninerActorId), pokemon: pokemon(npc.monsterActorId), notes };
+    return { weak, leader: trainer(npc.traninerActorId), pokemon: pokemon(npc.monsterActorId), own, rounds };
   });
   out.editions[templateId] = {
     gvgId: Number(gvgId),
@@ -109,5 +109,10 @@ for (const [gvgId, templateId] of Object.entries(EDITIONS)) {
   console.log(`${templateId} (${gvgId}) ${out.editions[templateId].title.join(" / ")}: ${stages.map((s) => `${s.leader}=${s.weak}`).join(" ")}`);
 }
 
-fs.writeFileSync(OUT, JSON.stringify(out, null, 1) + "\n");
+// 一輪一行: 仍然看得懂 diff, 又不會因為每個數字各佔一行而胖成三倍
+const json = JSON.stringify(out, null, 1).replace(
+  /\{\n\s*"round": [\s\S]*?\n\s*\}/g,
+  (m) => JSON.stringify(JSON.parse(m)),
+);
+fs.writeFileSync(OUT, json + "\n");
 console.log(`已寫出 ${path.relative(process.cwd(), OUT)}`);

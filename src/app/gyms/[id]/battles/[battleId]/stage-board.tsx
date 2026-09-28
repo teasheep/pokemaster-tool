@@ -43,6 +43,13 @@ import {
   type TeamRow,
 } from "@/components/gym/team-sheet";
 import { BATTLE_ROLE_LABELS, GRADE_LABELS, TEAM_TAG_LABELS, roundLabel } from "@/lib/gym/types";
+import {
+  formatHp,
+  matchTemplate,
+  stageRounds,
+  type StageRoundState,
+  type TemplateStageRules,
+} from "@/lib/gym/battle-templates";
 import { reportBattleLog } from "@/lib/gym/battle-log";
 import { pairName } from "@/lib/pairs/name";
 import { cn } from "@/lib/utils";
@@ -89,6 +96,8 @@ export type StageBoardProps = {
   roundNotes: { stage_id: string; round: number; note: string }[];
   /** 道館拍組名單 — 隊伍編輯候選池 */
   gymPairsList?: { pairId: string; type: SyncPairType }[];
+  /** 「規則」開關 (在賽事頁標題列, 狀態同步進 `?rules=1`): 開了才畫每一輪的規則 tag */
+  showRules?: boolean;
   onChanged: () => Promise<void>;
 };
 
@@ -100,6 +109,18 @@ export type StageTeamRow = Pick<
 
 export function StageBoard(props: StageBoardProps) {
   const { stages, logs, round, myMemberId } = props;
+
+  /**
+   * 這場是哪一回 (用 8 關弱點屬性認, 見 matchTemplate) → 每一關的館主、每輪限制與對手 HP。
+   * 認不出來 (自訂賽事) 就是 null, 看板照舊只有說明欄。
+   */
+  const templateMatch = useMemo(
+    () => matchTemplate(stages.map((s) => s.weak_type)),
+    [stages]
+  );
+
+  /** 「規則」開關在賽事頁標題列 (battle-client), 這裡只負責畫 */
+  const showRules = props.showRules ?? false;
 
   /**
    * 本輪每關的進度 (已用券 / 我出過沒) — 手機的關卡摘要列用。
@@ -162,9 +183,64 @@ export function StageBoard(props: StageBoardProps) {
 
       <div className="grid gap-3 lg:grid-cols-2">
         {stages.map((s) => (
-          <StageCard key={s.id} stage={s} {...props} />
+          <StageCard
+            key={s.id}
+            stage={s}
+            templateStage={templateMatch?.byType.get(s.weak_type) ?? null}
+            showRules={showRules}
+            {...props}
+          />
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 某一關某一輪的 tag 列 (2026-09-28 使用者:「tag 是追加 XX 的就代表那一輪會包含上一輪的限制,
+ * 可以都用 tag 的方式加上去, 不要只有一行字」):
+ *   限制 (紅) → 對手 HP (綠) → 館主被動 (外框; **累積**的, 這一輪才加上的標「新」)
+ * 被動逐輪累加, 所以 Ex 輪也要把 R1-R3 加上的全部列出 —— 只寫「追加 X」會讓人以為那一輪只有 X。
+ */
+function RoundRuleTags({ state }: { state: StageRoundState }) {
+  const [boss, left, right] = state.hp;
+  const tag = "rounded px-1.5 py-0.5 text-[10px] leading-4 max-sm:text-xs";
+  return (
+    // 縮排對齊輪次標籤後面 (w-10 + gap-1.5), 讓 tag 看起來屬於這一輪而不是下一輪
+    <div className="mt-0.5 flex flex-wrap gap-1 pl-[2.875rem]">
+      {state.rules.map((r) => (
+        <span
+          key={r}
+          className={cn(tag, "bg-rose-500/15 font-semibold text-rose-700 dark:text-rose-300")}
+        >
+          {r}
+        </span>
+      ))}
+      {/* HP 用綠色, 跟紅色的限制、外框的被動一眼分得開 (使用者:「血量 tag 用不同顏色, 明顯一點」) */}
+      <span
+        className={cn(
+          tag,
+          "bg-emerald-500/15 font-semibold tabular-nums text-emerald-800 dark:text-emerald-300"
+        )}
+      >
+        HP 館主 {formatHp(boss)}・
+        {left === right ? `兩側各 ${formatHp(left)}` : `左 ${formatHp(left)}・右 ${formatHp(right)}`}
+      </span>
+      {state.passives.map((p) => (
+        <span
+          key={p.name}
+          className={cn(
+            tag,
+            "border",
+            p.fresh
+              ? "border-amber-500/60 bg-amber-500/10 text-amber-800 dark:text-amber-200"
+              : "text-muted-foreground"
+          )}
+        >
+          {p.fresh ? <span className="mr-0.5 font-semibold">新</span> : null}
+          {p.name}
+        </span>
+      ))}
     </div>
   );
 }
@@ -189,7 +265,13 @@ function StageCard({
   roundNotes,
   gymPairsList,
   onChanged,
-}: StageBoardProps & { stage: StageRow }) {
+  templateStage,
+  showRules,
+}: StageBoardProps & {
+  stage: StageRow;
+  templateStage: TemplateStageRules | null;
+  showRules: boolean;
+}) {
   const supabase = useMemo(() => createClient(), []);
   // 側板勾過「全圖鑑」之後, 名單外的拍組也要畫得出來 (否則隊伍卡掉成灰字 pair_id)。
   // needed: 別人在這個分頁開著的時候把名單外的拍組加進某隊 → refetch 後自動補抓一次整本
@@ -248,12 +330,31 @@ function StageCard({
     return { used, planned, state };
   }, [allStageLogs, round]);
 
-  /** 要顯示的輪次: R1-R3 固定 + 有紀錄的 Ex 輪 + 目前輪 + 下一輪 (方便往前推) */
+  /**
+   * 開了「關卡規則」且認得出模板時: 這一關每一輪全部生效的館主被動 / 限制 / 對手 HP。
+   * 開關關著就是 null —— tag 不畫, 輪次也回到平常那幾列 (見下面 allRounds)。
+   */
+  const templateRounds = useMemo(
+    () =>
+      templateStage && showRules
+        ? new Map(stageRounds(templateStage).map((r) => [r.round, r] as const))
+        : null,
+    [templateStage, showRules]
+  );
+
+  /**
+   * 要顯示的輪次: R1-R3 固定 + 有紀錄的 Ex 輪 + 有說明的輪次 + 目前輪 + 下一輪,
+   * 開了「關卡規則」再加上**模板的每一輪** (2026-09-28 使用者:「把 R1~R15 都列出來」):
+   * 只列到「下一輪」的話, 後面那幾輪的限制要等打到才看得到 —— 那正是排隊伍時最需要提前知道的。
+   * 開關關著時不列, 否則每關平白多出十幾列空白的輪次。
+   */
   const allRounds = useMemo(() => {
     const set = new Set<number>([1, 2, 3, round, round + 1]);
     for (const l of allStageLogs) if (l.round) set.add(l.round);
+    for (const r of stageNotes.keys()) set.add(r);
+    for (const r of templateRounds?.keys() ?? []) set.add(r);
     return [...set].filter((r) => r >= 1 && r <= 20).sort((a, b) => a - b);
-  }, [allStageLogs, round]);
+  }, [allStageLogs, round, stageNotes, templateRounds]);
 
   /**
    * 預設只展開「目前輪/下一輪」— 推到 Ex10 時一關會有 13+ 行,
@@ -598,6 +699,12 @@ function StageCard({
         ) : (
           <span className="inline-flex items-center gap-1 text-sm">弱點 {TYPE_LABELS[stage.weak_type]}</span>
         )}
+        {/* 認得出是哪一回時, 標出這一關的館主 (與遊戲裡看到的對得上) */}
+        {templateStage ? (
+          <span className="text-sm font-medium">
+            {templateStage.leader}＆{templateStage.pokemon}
+          </span>
+        ) : null}
         {/* 本輪進度為主 (缺人一眼看得出), 全期累計退為 tooltip */}
         <span
           title={`本關全期累計使用 ${ticketsUsed} 張挑戰券`}
@@ -736,13 +843,10 @@ function StageCard({
           {visibleRounds.map((r) => {
             const rLogs = allStageLogs.filter((l) => (l.round ?? 0) === r);
             const rTickets = rLogs.reduce((s, l) => s + l.tickets_used, 0);
+            const tr = templateRounds?.get(r);
             return (
-              <div
-                key={r}
-                className={`flex flex-wrap items-center gap-1.5 rounded-md px-1.5 py-1 text-xs ${
-                  r === round ? "bg-accent/50" : ""
-                }`}
-              >
+              <div key={r} className={cn("rounded-md px-1.5 py-1", r === round && "bg-accent/50")}>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
                 <span className="w-10 shrink-0 font-medium tabular-nums">{roundLabel(r)}</span>
                 {/* 這關這輪的敘述 (stage_round_notes) — 管理員直接編, 其他人看文字 */}
                 {isAdmin ? (
@@ -752,8 +856,8 @@ function StageCard({
                     placeholder="敘述…"
                     maxLength={100}
                     onBlur={(e) => void saveRoundNote(r, e.target.value)}
-                    // 寬度跟著內容走 (field-sizing): 模板會預填每輪規則 (「館主 瓢太＆頭蓋龍｜被動：…」),
-                    // 固定 80px 的框只看得到前幾個字 —— 管理員反而是唯一讀不到全文的人
+                    // 寬度跟著內容走 (field-sizing): 固定 80px 的框只看得到前幾個字,
+                    // 管理員反而是唯一讀不到全文的人 (其他人看到的是完整排出來的文字)
                     className="field-sizing-content h-9 min-w-20 max-w-full rounded border border-dashed border-transparent bg-transparent px-1 text-[11px] outline-none transition-colors hover:border-input focus:min-w-44 focus:border-input pointer-coarse:min-h-11 max-sm:text-xs sm:h-6"
                   />
                 ) : stageNotes.get(r) ? (
@@ -893,6 +997,9 @@ function StageCard({
                     </>
                   )}
                 </span>
+              </div>
+              {/* 這一輪全部生效的東西 (模板) — 與上面的說明欄分開, 說明欄留給大家寫戰術 */}
+              {tr ? <RoundRuleTags state={tr} /> : null}
               </div>
             );
           })}

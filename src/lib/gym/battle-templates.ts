@@ -14,7 +14,14 @@
 //
 // 每關每輪的規則 (2026-09-28 使用者:「詞條限制那些的也要」) 在 src/data/gvg-stage-rules.json,
 // 由上面那支腳本產生, 文字是 pomatools 語系檔裡的**官方繁中** —— 不要手改 JSON, 改腳本重跑。
-// 建立賽事時寫進 stage_round_notes (每關每輪的說明), 管理員之後照樣可以改。
+//
+// ⚠ **規則不存進資料庫, 由看板依模板直接畫成 tag** (同一天第二版, 使用者:「tag 跟血量資訊
+// 不要跟文字放一起」)。第一版把規則組成一句話寫進 stage_round_notes, 兩個問題:
+//   1. 說明欄是大家寫自己戰術的地方, 被一長串規則佔掉;
+//   2. 「追加被動 X」只寫了這一輪多的, 看不出這一輪**總共**有哪些 —— 被動是逐輪累加的。
+// 賽事沒有存「用哪個模板」, 看板用 8 關的弱點屬性認 (matchTemplate) —— 四回的屬性組合各不相同,
+// 而且同一回裡 8 關屬性不重複, 所以「這一關是哪位館主」用屬性就對得到, 不必管關卡順序。
+// 好處是既有賽事 (包括沒有用模板、自己一格一格選屬性的) 也自動看得到規則, 不用回填任何資料。
 
 import type { SyncPairType } from "@/lib/supabase/types";
 import GVG_RULES from "@/data/gvg-stage-rules.json";
@@ -30,22 +37,83 @@ export type BattleTemplate = {
   types: SyncPairType[];
 };
 
-/** 某一關某一輪的規則 (R1 = 館主與固有被動, R2/R3 = 館主追加的被動, Ex1 起 = 對我方的限制) */
-export type StageRoundRule = { round: number; note: string };
+/** 資料檔裡的一輪 (fresh = 這一輪才加上的館主被動; 累積的由 stageRound 算) */
+type RawRound = { round: number; rules: string[]; fresh: string[]; hp: number[] };
 
-/** 模板那一回的每一關: 館主 + 每輪規則 (順序 = 第 1..8 關) */
+/** 模板那一回的某一關: 館主 + 每輪規則 (順序 = 第 1..8 關) */
 export type TemplateStageRules = {
-  weak: string;
+  weak: SyncPairType;
   leader: string;
   pokemon: string;
-  notes: StageRoundRule[];
+  /** 館主的固有被動 (從第 1 輪就有, 已排除 8 關都有的通用設定) */
+  own: string[];
+  rounds: RawRound[];
 };
 
-const RULES = GVG_RULES.editions as Record<string, { stages: TemplateStageRules[] } | undefined>;
+/** 某一關某一輪**全部生效**的東西 (畫成 tag) */
+export type StageRoundState = {
+  round: number;
+  /** 這一輪對我方的限制 (Ex1 起) */
+  rules: string[];
+  /** 館主到這一輪為止累積的被動 —— 包含前面幾輪加上的 */
+  passives: { name: string; fresh: boolean }[];
+  /** 三隻對手的 HP: [館主 (中間), 左, 右] */
+  hp: [number, number, number];
+};
+
+const RULES = GVG_RULES.editions as unknown as Record<
+  string,
+  { stages: TemplateStageRules[] } | undefined
+>;
 
 /** 這個模板每一關的館主與每輪規則; 沒有資料的模板回 null (只套屬性) */
 export function templateStageRules(t: BattleTemplate): TemplateStageRules[] | null {
   return RULES[t.id]?.stages ?? null;
+}
+
+/** 這一關每一輪全部生效的東西 (被動往前累加; 固有被動算在每一輪裡) */
+export function stageRounds(st: TemplateStageRules): StageRoundState[] {
+  const acc: string[] = [];
+  return st.rounds.map((r) => {
+    acc.push(...r.fresh);
+    return {
+      round: r.round,
+      rules: r.rules,
+      passives: [
+        ...st.own.map((name) => ({ name, fresh: false })),
+        ...acc.map((name) => ({ name, fresh: r.fresh.includes(name) })),
+      ],
+      hp: [r.hp[0] ?? 0, r.hp[1] ?? 0, r.hp[2] ?? 0],
+    };
+  });
+}
+
+/** 7983360 → 「798萬」; 一億以上 → 「1.2億」 (看板上要一眼比大小, 不需要精確到個位) */
+export function formatHp(n: number): string {
+  return n >= 1e8 ? `${(n / 1e8).toFixed(1).replace(/\.0$/, "")}億` : `${Math.round(n / 1e4)}萬`;
+}
+
+/**
+ * 用一場賽事 8 關的弱點屬性認出是哪一回的模板, 回傳「屬性 → 那一關的規則」。
+ * 至少要有 6 關對得上、而且只有一個模板最符合才算 —— 管理員改錯一兩關的屬性時仍然認得出來
+ * (改錯的那一關就沒有 tag), 但不會把一場自訂的賽事硬套成某一回。
+ */
+export function matchTemplate(
+  types: SyncPairType[]
+): { template: BattleTemplate; byType: Map<SyncPairType, TemplateStageRules> } | null {
+  const have = new Set(types);
+  const scored = BATTLE_TEMPLATES.filter((t) => templateStageRules(t)).map((t) => ({
+    t,
+    score: t.types.filter((ty) => have.has(ty)).length,
+  }));
+  const best = Math.max(0, ...scored.map((s) => s.score));
+  const top = scored.filter((s) => s.score === best);
+  if (best < 6 || top.length !== 1) return null;
+  const template = top[0]!.t;
+  return {
+    template,
+    byType: new Map((templateStageRules(template) ?? []).map((st) => [st.weak, st])),
+  };
 }
 
 export const BATTLE_TEMPLATES: BattleTemplate[] = [

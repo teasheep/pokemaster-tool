@@ -7,6 +7,7 @@ import { fetchGymGrades, getGymContext } from "@/lib/gym/queries";
 import { battleStatusFromDates } from "@/lib/gym/types";
 import { CATALOG_VERSION, loadPairsForClient } from "@/lib/pairs/loader";
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
+import { pickParam } from "@/lib/url-params";
 import type { Database, SyncPairType } from "@/lib/supabase/types";
 import { BattleClient } from "./battle-client";
 
@@ -20,10 +21,13 @@ export const dynamic = "force-dynamic";
 
 export default async function BattlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; battleId: string }>;
+  // 重新整理要留在原本的畫面 —「關卡規則」開關 (stage-board 的 useUrlState 寫 ?rules=1)
+  searchParams: Promise<{ rules?: string }>;
 }) {
-  const { id, battleId } = await params;
+  const [{ id, battleId }, sp] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const user = await getSessionUser();
   if (!user) {
@@ -206,6 +210,7 @@ export default async function BattlePage({
               status: battleStatusFromDates(b.starts_on, b.ends_on),
             }))}
             initialRoundNotes={roundNotes ?? []}
+            initialShowRules={pickParam(sp.rules, ["1", "0"] as const, "0") === "1"}
             gymPairsList={(gymPairRows ?? [])
               .filter((g) => g.pair_id)
               .map((g) => ({ pairId: g.pair_id!, type: g.type as SyncPairType }))}

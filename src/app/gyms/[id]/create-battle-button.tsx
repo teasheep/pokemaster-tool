@@ -74,52 +74,24 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
 
       // 8 關由 DB trigger 在上面那筆 insert 之後自動開好 (屬性預設 normal),
       // 所以這裡是 upsert 覆蓋而不是新增 —— 走 (battle_id, seq) 的唯一鍵, 一趟就好。
+      // 每輪的館主被動 / 限制 / HP **不寫進資料庫** —— 看板依 8 關屬性認出模板直接畫成 tag
+      // (lib/gym/battle-templates.ts 的 matchTemplate)。說明欄 (stage_round_notes) 留給大家寫戰術。
       if (template) {
-        const { data: stages, error: stageErr } = await supabase
-          .from("battle_stages")
-          .upsert(
-            template.types.map((weak_type, i) => ({
-              gym_id: gymId,
-              battle_id: data.id,
-              seq: i + 1,
-              weak_type,
-            })),
-            { onConflict: "battle_id,seq" }
-          )
-          // 每輪規則要掛在 stage_id 上 —— 順便拿回 8 關的 id, 省一趟查詢
-          .select("id, seq");
+        const { error: stageErr } = await supabase.from("battle_stages").upsert(
+          template.types.map((weak_type, i) => ({
+            gym_id: gymId,
+            battle_id: data.id,
+            seq: i + 1,
+            weak_type,
+          })),
+          { onConflict: "battle_id,seq" }
+        );
         // 賽事已經建起來了 —— 屬性沒套用不是致命錯誤, 講清楚讓他自己補就好,
         // 不要把整個動作當成失敗 (那會讓人以為要重建一場)
         if (stageErr) {
           toast.warning("賽事建好了, 但屬性沒套用成功", {
             description: "可以在賽事頁自己選 8 關的屬性。",
           });
-        } else {
-          // 每關每輪的規則 (館主被動 / 輪次限制) → stage_round_notes, 管理員之後照樣可以改
-          const rules = templateStageRules(template);
-          const idBySeq = new Map((stages ?? []).map((s) => [s.seq, s.id]));
-          const rows = (rules ?? []).flatMap((st, i) => {
-            const stageId = idBySeq.get(i + 1);
-            return stageId
-              ? st.notes.map((n) => ({
-                  gym_id: gymId,
-                  battle_id: data.id,
-                  stage_id: stageId,
-                  round: n.round,
-                  note: n.note,
-                }))
-              : [];
-          });
-          if (rows.length) {
-            const { error: noteErr } = await supabase
-              .from("stage_round_notes")
-              .upsert(rows, { onConflict: "stage_id,round" });
-            if (noteErr) {
-              toast.warning("賽事與屬性都建好了, 但每輪規則沒寫進去", {
-                description: "不影響使用; 需要的話可以在各關的輪次說明自己補。",
-              });
-            }
-          }
         }
       }
 
@@ -146,7 +118,7 @@ export function CreateBattleButton({ gymId }: { gymId: string }) {
         <DialogHeader>
           <DialogTitle>建立賽事</DialogTitle>
           <DialogDescription>
-            一回帕希歐道館對戰。選一個模板就會把 8 關的弱點屬性, 連同每一輪的館主被動與限制一起填好。
+            一回帕希歐道館對戰。選一個模板就會把 8 關的弱點屬性填好, 看板上也會列出每一輪的館主被動、限制與對手 HP。
           </DialogDescription>
         </DialogHeader>
 

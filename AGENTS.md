@@ -1095,8 +1095,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   之後遊戲開新的一回, 在那個檔案加一筆就好 (測試會自動涵蓋新的那一筆)。
   **每關每輪的規則** (2026-09-28 使用者:「詞條限制那些的也要」) 在 `src/data/gvg-stage-rules.json`,
   由 `npm run data:gvg` 從 pomatools 的道館戰資料產生 (文字是它語系檔裡的官方繁中) —— **不要手改 JSON**。
-  新的一回: 模板加一筆 + 腳本的 `EDITIONS` 加 pomatools 的 id + 重跑。建立賽事時寫進 `stage_round_notes`:
-  R1 = 館主與固有被動、R2/R3 = 追加被動 (關卡特性)、Ex1 起 = 對我方的限制 (輪次限制), 兩種不要混。
+  新的一回: 模板加一筆 + 腳本的 `EDITIONS` 加 pomatools 的 id + 重跑。
+  **規則不存進資料庫, 看板依 8 關屬性認出是哪一回 (`matchTemplate`) 直接畫成 tag**
+  (使用者:「tag 跟血量資訊不要跟文字放一起」—— 說明欄 `stage_round_notes` 留給大家寫戰術)。
+  每一輪列的是**當輪全部生效的東西**: 限制 + 三隻對手 HP + 館主被動 (**累加**, R2 包含 R1 的;
+  那一輪才加上的標「新」)。館主被動 = 關卡特性、Ex1 起的限制 = 輪次限制, 兩種不要混。
+  ⚠ v1.8.0 曾把規則組成一句話寫進 `stage_round_notes`, 第二版就撤掉了 —— 不要再走回那條路。
+  **tag 預設收著**, 由賽事頁標題列右上的「規則」開關打開 (`?rules=1`, 進網址); 開了才畫 tag,
+  也才把 R1-Ex12 全部列出來。開關就兩個字 —— 使用者:「減少廢話, 就一個開關就好」,
+  手機上跟挑戰券/對戰紀錄同一排、不搶寬度 (shrink-0)。HP 是綠色, 與紅色的限制分開。
   ⚠ pomatools 的資料路徑是 `/data/gvg/<id>.json`, bundle 裡寫的 `/public/data/...` 會回 200 的 SPA 首頁。
 - **賽事狀態由賽期日期推導** (`battleStatusFromDates`, 台北時區): 沒到開賽日=籌備中,
   過結束日=已結束, 其間=進行中 — **沒有手動狀態下拉**;「目前輪」同樣由 battle_logs

@@ -77,6 +77,19 @@ describe("寫進網址的參數, server 端都要讀得回來", () => {
     expect(read("next.config.ts")).not.toMatch(/source:\s*"\/gyms\/:id\/activity"/);
   });
 
+  it("賽事頁: 寫 rules (標題列的「規則」開關), page.tsx 就要讀 rules, 看板要拿到開關狀態", () => {
+    // 2026-09-28 加: 開關預設關, 開了之後重整或把連結貼給別人都要留在「開」
+    const board = read("src/app/gyms/[id]/battles/[battleId]/stage-board.tsx");
+    const page = read("src/app/gyms/[id]/battles/[battleId]/page.tsx");
+    const client = read("src/app/gyms/[id]/battles/[battleId]/battle-client.tsx");
+    expect(client, "battle-client 沒有同步網址").toMatch(/useUrlState\(\{\s*rules:/);
+    expect(page, "賽事頁的 page.tsx 沒讀 rules").toMatch(/searchParams[\s\S]{0,300}rules\?:/);
+    expect(page).toContain("initialShowRules");
+    // 開關在標題列、畫 tag 的是看板 —— 漏傳的話網址對、開關也亮了, 看板卻永遠沒有 tag
+    expect(client).toMatch(/showRules=\{showRules\}/);
+    for (const f of [board, client]) expect(f).not.toContain("useSearchParams");
+  });
+
   it("初始值一律由 server 傳下來 — client 不可以自己讀 useSearchParams (會 hydration mismatch)", () => {
     for (const f of [
       "src/app/pairs/pairs-hub.tsx",

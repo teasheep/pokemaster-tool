@@ -49,6 +49,8 @@ import { ReportRunSheet } from "./report-run-sheet";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { reportBattleLog } from "@/lib/gym/battle-log";
+import { matchTemplate } from "@/lib/gym/battle-templates";
+import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 import type { GymViewer } from "@/lib/gym/queries";
 import {
@@ -161,6 +163,8 @@ type Props = {
   initialRoundNotes: { stage_id: string; round: number; note: string }[];
   /** 道館拍組名單 — 隊伍編輯候選池 */
   gymPairsList: { pairId: string; type: SyncPairType }[];
+  /** 「關卡規則」開關的初始值 (page.tsx 從 ?rules=1 讀) */
+  initialShowRules?: boolean;
 };
 
 export function BattleClient({
@@ -181,6 +185,7 @@ export function BattleClient({
   allBattles,
   initialRoundNotes,
   gymPairsList,
+  initialShowRules,
 }: Props) {
   const router = useRouter();
   /** 換賽事是 router.push (不是 Link, 吃不到 useLinkStatus) → 用 transition 自己給回饋 */
@@ -195,6 +200,14 @@ export function BattleClient({
   const [teamPairs, setTeamPairs] = useState(initialTeamPairs);
   const [stageTeams, setStageTeams] = useState(initialStageTeams);
   const [roundNotes, setRoundNotes] = useState(initialRoundNotes);
+  /**
+   * 「規則」開關: 預設關 —— 每輪 3-6 顆 tag × 15 輪 × 8 關, 平常出刀時會把看板淹掉。
+   * 狀態進網址 (`?rules=1`, AGENTS「決定畫面長什麼樣的狀態一律同步進網址」):
+   * 重整留得住, 把連結貼到群組, 對方打開也直接看到規則。
+   */
+  const [showRules, setShowRules] = useState(initialShowRules ?? false);
+  useUrlState({ rules: showRules ? "1" : null });
+  const hasRules = useMemo(() => matchTemplate(stages.map((s) => s.weak_type)) !== null, [stages]);
   /** 目前輪 — 由出戰紀錄推導 (最大已回報輪; 0047 起不再存欄位, 同狀態推導哲學) */
   const round = useMemo(
     () => Math.max(1, ...logs.map((l) => l.round ?? 0)),
@@ -527,6 +540,30 @@ export function BattleClient({
         ) : null}
 
         <span className="flex basis-full items-center gap-1.5 sm:ml-auto sm:basis-auto sm:flex-wrap">
+          {/* 「規則」開關 (2026-09-28 使用者:「改右上角, 減少廢話, 就一個開關就好」):
+              打開才在每一輪畫出限制 / 對手 HP / 館主被動的 tag。只有認得出是哪一回才出現 ——
+              自訂賽事沒有規則可顯示, 不長出一顆按了沒反應的開關。
+              手機上不跟另外兩顆平分寬度 (shrink-0), 觸控命中區由 Button 內建的 44px 補足。 */}
+          {hasRules ? (
+            <Button
+              size="sm"
+              variant="outline"
+              role="switch"
+              aria-checked={showRules}
+              className="h-7 shrink-0 gap-1.5"
+              onClick={() => setShowRules((v) => !v)}
+            >
+              <span
+                className={cn(
+                  "flex h-4 w-7 items-center rounded-full p-0.5 transition-colors",
+                  showRules ? "justify-end bg-primary" : "justify-start bg-muted-foreground/30"
+                )}
+              >
+                <span className="h-3 w-3 rounded-full bg-background shadow-sm" />
+              </span>
+              規則
+            </Button>
+          ) : null}
           {/* 隊伍庫 / 道館攻略 是上面的分頁, 這裡不再放第二個入口 (同一件事兩條路) */}
           <Button
             size="sm"
@@ -611,6 +648,7 @@ export function BattleClient({
             teamPairs={teamPairs}
             stageTeams={stageTeams}
             roundNotes={roundNotes}
+            showRules={showRules}
             gymPairsList={gymPairsList}
             onChanged={refetchBoard}
           />
