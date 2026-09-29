@@ -234,6 +234,8 @@ export type Database = {
           promotion: number | null;
           sync_grid: number | null;
           ex_role_unlocked: boolean | null;
+          lucky_skills: string[];
+          notes: string | null;
           ex_style_worn: boolean;
           created_at: string;
           updated_at: string;
@@ -250,6 +252,8 @@ export type Database = {
           promotion?: number | null;
           sync_grid?: number | null;
           ex_role_unlocked?: boolean | null;
+          lucky_skills?: string[];
+          notes?: string | null;
           ex_style_worn?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -266,6 +270,8 @@ export type Database = {
           promotion?: number | null;
           sync_grid?: number | null;
           ex_role_unlocked?: boolean | null;
+          lucky_skills?: string[];
+          notes?: string | null;
           ex_style_worn?: boolean;
           created_at?: string;
           updated_at?: string;

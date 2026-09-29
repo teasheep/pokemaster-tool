@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SyncPairCard } from "@/components/sync-pair-card";
+import { NotesField, PotentialPicker } from "@/components/potential-picker";
+import { MAX_NOTES } from "@/lib/pairs/potentials";
 import {
   LEVEL_OPTIONS,
   SYNC_GRID_CAPS,
@@ -344,9 +346,26 @@ export function PairEditPanel({
         ) : null}
       </div>
 
+      {/* 潛能 (最多 5 個) —— 與星數等級同一條規矩: 未持有不給編, 但已存的值留著 */}
+      <PotentialPicker
+        pairId={pair.pairId}
+        value={entry.luckySkills}
+        onChange={(luckySkills) => set({ luckySkills })}
+        disabled={!canEditRest}
+      />
+
+      {/* 備註: 未持有也能寫 (「想抽」「等復刻」這種備忘本來就是寫給還沒有的卡) —— 它不是練度 */}
+      <NotesField
+        key={pair.pairId}
+        value={entry.notes}
+        onCommit={(notes) => set({ notes: notes || null })}
+        disabled={!editable}
+        maxLength={MAX_NOTES}
+      />
+
       {editable && !ownsIt ? (
         <p className="text-xs text-muted-foreground">
-          未持有時只能改寶數。星數、等級、拍檔石盤、EX 體系都留著, 之後抽到再點回寶1 就會回來。
+          未持有時只能改寶數與備註。星數、等級、拍檔石盤、EX 體系、潛能都留著, 之後抽到再點回寶1 就會回來。
         </p>
       ) : null}
 

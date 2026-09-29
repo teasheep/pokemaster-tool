@@ -30,6 +30,23 @@ export const GRADE_LABELS = [
 
 export const GRADE_MAX = 10;
 
+/**
+ * 管理員代改成員練度時「這次真的改了哪些欄位」—— **沒有的欄位 = 不要動**
+ * (set_member_pair 的 null 語意, 0058 起)。左下角的寶數循環一個都不帶。
+ * ⚠ 新增一條練度軸就在這裡加一欄, 然後 members-client 的側板 onChange / flushGrade /
+ *   樂觀更新各補一行 —— 少一行的症狀是「側板改得動、卻存不進去」, 沒有任何徵兆。
+ */
+export type MemberPairExtra = {
+  level?: number;
+  promotion?: number;
+  syncGrid?: number;
+  exRoleUnlocked?: boolean;
+  /** 潛能 (最多 5 個, 0076)。[] = 清空 */
+  luckySkills?: string[];
+  /** 備註 (最多 500 字, 0076)。"" = 清空 */
+  notes?: string;
+};
+
 /** grade (0-10) → 卡片顯示用的 寶數/超覺醒 兩段值 */
 export function gradeParts(grade: number): { potential: number; superAwakening: number } {
   if (grade >= 6) return { potential: 5, superAwakening: Math.min(5, grade - 5) };

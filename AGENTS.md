@@ -648,6 +648,26 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   按下去什麼都沒發生會被當成壞掉。唯讀 (`editable=false`) 時不顯示這顆。
   ⚠ **新增一條練度軸就要回來加一條**, 否則「全滿」會留下沒滿的欄位 (使用者 2026-09-10
   就抓到過一次: 第一版漏了 EX 體系與拍檔石盤)。
+- **潛能 (最多 5 個) + 備註** (0076, 2026-09-29 使用者指定, 道館看得到、管理員可代改):
+  資料 `src/data/pair-potentials.json` 由 `npm run data:potentials` 產生 —— 結構取自 brybry datamine
+  (PotentialItem + PotentialLot), 與 www.pomatools.site 的 `luckCookies` **逐筆交叉驗證 505/505 一致**,
+  名稱用 pomatools 語系檔的官方繁中。特殊潛能 = 拍組專屬餅乾 (專用 / 塔1 / 塔2 / 道館對戰),
+  一般潛能 = trainerId -1 的餅乾抽得到的全部 (219 種), **依餅乾分五組** 硬脆 / 鬆脆 / 酥脆 / 香脆 / 特別
+  (pomatools 的分法, 一個潛能只歸排前面那組; 腳本對 `/data/potential/cookies.json` 逐組比對)。
+  側板兩個分頁分開選 (使用者:「UI 上要分開」)。**級數按鈕在名稱下面另起一行** —— 有 1-9 級的效果,
+  九顆按鈕擠在同一行會把名稱吃掉 (2026-09-29 使用者抓到)。
+  圖示是遊戲的餅乾圖 (`public/reference/ui/potential/`, 同一支腳本抓 + 裁邊轉 webp): 一般五色 (pomatools),
+  特殊**四種各一張** (神奇寶貝百科, 以 datamine imageId 對過) —— 專用是咖啡色滿滿星星那張, 不是塔1 的粉紅格紋
+  (第一版全部套塔1 那張, 使用者抓到「專用潛能餅乾好像是星號圖示」);
+  掛哪顆用 `skillIcon(data, pairId, id)` —— 有 11 個潛能同時在專用餅乾與一般餅乾裡, 以「這個拍組」為準。
+  ⚠ 資料檔 140KB, **只能走 `loadPotentials()` 的 dynamic import** (tests/potentials.test.ts 擋頂層 import)。
+  ⚠ `set_member_pair` 的 `p_lucky_skills` / `p_notes` 一樣是 **null = 不要動**; 清空要傳 `'{}'` / `''`。
+  前端只在真的改了才帶這兩個參數 —— 部署順序是「先套 0076 再上前端」, 帶了就會打到舊函式 404。
+  未持有時潛能跟其他練度一樣不給編 (值留著), **備註照樣能寫** (「想抽」本來就是寫給還沒有的卡)。
+  卡牆的「顯示」多選下拉 (`CardInfoSelect`, 網址 `?show=`): 拍檔石盤 / 等級 / 潛能 / 備註,
+  **預設只有拍檔石盤 = 原本的樣子**。**等級畫在卡面右上角** (SyncPairCard 的 Lv 描邊字, 有傳 `level` 就畫,
+  不再被 `minimal` 擋; Lv1 = 未設定不畫); 潛能 (圖示 + 名稱) 與備註在名稱下方**全部列出、不截斷**
+  (2026-09-29 使用者:「都要開關顯示了, 就是要全部列出來」—— 第一版固定一行高截斷, 什麼都看不到)。
 - **拍檔石盤與 EX 體系是兩件事, 不要混** (0063/0065, 2026-09-10 使用者指定):
   **拍檔石盤** (同步能力盤的能量上限) 六段 60/62/64/66/68/70, 存索引 0-5,
   **上限 = 索引 = 寶數** (使用者確認的遊戲規則) —— 這條在**兩條寫入路徑各要有一份**
@@ -664,7 +684,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   卡牆上的拍檔石盤徽章走 `SyncGridTag` (`sync-pair-card.tsx`), 用**官方那六張圖**
   (`/reference/ui/grid_60…grid_70.webp`, 60-68 青色、70 橘色) 不要自己配色;
   **索引 0 (=60) 不畫** —— 每張卡的起點都是 60, 畫了整面牆都掛一顆就不帶資訊了。
-  徽章放在**名稱那一行**不放卡面上: 官方卡面的左下/下緣/右下都已經有東西, 疊上去一定撞。
+  徽章放在**名稱下面自己一行**, 不放卡面上 (官方卡面的左下/下緣/右下都已經有東西, 疊上去一定撞),
+  也不再擠在名稱前面 (2026-09-29 使用者:「讓它多一行, 不要放在名字前面了」—— 會吃掉名字的兩行空間)。
   `tests/sync-grid.test.ts` 釘住上限與循環。
 - **系列標籤每拍組唯一** (`SERIES_LABELS`); 判定在 `scripts/patch-pomatools-meta.mjs`, seasonal 必須先於 limited。
   徽章會蓋掉 series (有 11 隻掛大師徽章實為 BP 兌換) → 另存 `acquisitions[]` 全展開, 篩選兩邊都吃。

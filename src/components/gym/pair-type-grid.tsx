@@ -13,6 +13,8 @@ import { ALL_TYPES } from "@/data/sync-pairs";
 import { SYNC_GRID_CAPS } from "@/lib/collection-entry";
 import { pairComparator, pairName, type PairSortKey } from "@/lib/pairs/name";
 import type { ClientPairRecord } from "@/lib/pairs/types";
+import { DEFAULT_CARD_INFO, skillIcon, type CardInfoKey, type PotentialData } from "@/lib/pairs/potentials";
+import { CookieIcon, usePotentials } from "@/components/potential-picker";
 import type { SyncPairType } from "@/lib/supabase/types";
 
 export type GridItem = {
@@ -41,6 +43,10 @@ export type GridItem = {
   syncGrid?: number;
   /** 這個人已解鎖 EX 體系 → 卡面左緣多一顆體系圖示 */
   exRoleUnlocked?: boolean;
+  /** 「顯示」下拉勾了才畫的三項 (見 CARD_INFO_KEYS) —— 一面牆代表「一個人」時才有值 */
+  level?: number;
+  luckySkills?: string[];
+  notes?: string | null;
 };
 
 /**
@@ -66,6 +72,8 @@ const GridCell = memo(function GridCell({
   onCount,
   onPromote,
   first = false,
+  show,
+  potentials,
 }: {
   item: GridItem;
   size: "sm" | "md";
@@ -76,6 +84,10 @@ const GridCell = memo(function GridCell({
   onPromote?: (key: string) => void;
   /** 整面牆的第一張 — 使用教學要框的目標 (只標一張, 645 張都標沒有意義) */
   first?: boolean;
+  /** 「顯示」下拉勾了哪些 (整面牆共用同一個陣列參照, memo 才擋得住) */
+  show: readonly CardInfoKey[];
+  /** 潛能資料 (勾了「潛能」才載入; 還沒到就先不畫) */
+  potentials: PotentialData | null;
 }) {
   const key = item.key;
   const select = useCallback(() => onSelect?.(key), [onSelect, key]);
@@ -116,6 +128,8 @@ const GridCell = memo(function GridCell({
           awakenable={item.pair.hasAwakening}
           ex={item.ex}
           exRoleUnlocked={item.exRoleUnlocked}
+          // 等級畫在卡面右上角 (SyncPairCard 的 Lv 描邊字)。Lv1 = 還沒設定 (見 LEVEL_OPTIONS), 不畫
+          level={show.includes("level") && item.owned && item.level && item.level > 1 ? item.level : undefined}
           onClick={handleClick}
           onCountClick={handleCount}
           onPromote={handlePromote}
@@ -143,9 +157,33 @@ const GridCell = memo(function GridCell({
         {/* NEW 畫在名稱前面 (2026-09-09 使用者指定) —— 名稱這一區本來就是固定兩行高,
             所以有沒有 NEW 都不影響卡牆的對齊, 也不會蓋到官方卡面。 */}
         {item.pair ? <PairStatusTag pair={item.pair} /> : null}
-        {item.syncGrid ? <SyncGridTag cap={SYNC_GRID_CAPS[item.syncGrid]!} /> : null}
         {item.pair ? pairName(item.pair) : (item.fallbackLabel ?? "")}
       </div>
+      {/* 拍檔石盤自己一行, 在名稱下面 (2026-09-29 使用者:「讓它多一行, 不要放在名字前面了」——
+          擠在名稱前面會吃掉名字的兩行空間)。索引 0 (=60) 一樣不畫。 */}
+      {item.syncGrid && show.includes("grid") ? (
+        <SyncGridTag cap={SYNC_GRID_CAPS[item.syncGrid]!} className="mr-0 mt-0.5 block h-3.5" />
+      ) : null}
+      {/* 「顯示」下拉勾的潛能與備註: **全部列出來, 不截斷** (2026-09-29 使用者:「都要開關顯示了,
+          就是要全部列出來, 不要太長就…, 這樣什麼都看不到」)。卡片高度因此不一 ——
+          同一列的格子由 flex 的 stretch 撐成一樣高, 內容一律靠上, 下一列仍然對得齊。 */}
+      {show.includes("potential") && item.luckySkills?.length && potentials ? (
+        <ul className="mt-0.5 space-y-0.5">
+          {item.luckySkills.map((id) => (
+            <li key={id} className="flex items-start gap-0.5 text-[10px] leading-tight text-foreground/80">
+              {item.pair ? (
+                <CookieIcon src={skillIcon(potentials, item.pair.pairId, id)} className="h-3.5 w-3.5" />
+              ) : null}
+              <span className="min-w-0 [overflow-wrap:anywhere]">{potentials.skills[id]?.[0] ?? id}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {show.includes("notes") && item.notes ? (
+        <p className="mt-0.5 whitespace-pre-wrap text-[10px] leading-tight text-muted-foreground [overflow-wrap:anywhere]">
+          {item.notes}
+        </p>
+      ) : null}
       {item.footer ? (
         <div className="w-full text-center text-[10px] leading-tight">{item.footer}</div>
       ) : null}
@@ -164,6 +202,7 @@ export const PairTypeGrid = memo(function PairTypeGrid({
   eagerCount = DEFAULT_EAGER_COUNT,
   ssrEagerOnly = false,
   scrollRoot,
+  show = DEFAULT_CARD_INFO,
 }: {
   items: GridItem[];
   size?: "sm" | "md";
@@ -193,7 +232,14 @@ export const PairTypeGrid = memo(function PairTypeGrid({
   ssrEagerOnly?: boolean;
   /** 卡片在自己捲的框裡時, 把那個框傳進來當延遲載圖的 root */
   scrollRoot?: Element | null;
+  /**
+   * 「顯示」下拉勾了哪些 (CardInfoSelect)。預設只有拍檔石盤 = 選單出現之前的樣子。
+   * ⚠ 呼叫端傳 state 裡的那個陣列, 不要每次 render 新建 (整牆 memo 會跟著失效)。
+   */
+  show?: readonly CardInfoKey[];
 }) {
+  // 潛能名稱只有勾了「潛能」才載入 (資料檔 140KB, 大多數人不會開這一項)
+  const potentials = usePotentials(show.includes("potential"));
   /**
    * hydration 之前 (SSR + client 第一輪) 只輸出 eagerCount 張。兩條規矩少一條就會比不做還慘:
    *   1. **client 的第一輪也要畫一模一樣的那幾張** → 用 state 判斷, 不是 typeof window。
@@ -286,6 +332,8 @@ export const PairTypeGrid = memo(function PairTypeGrid({
                 onCount={onCount}
                 onPromote={onPromote}
                 first={offset + i === 0}
+                show={show}
+                potentials={potentials}
               />
             ))}
           </div>

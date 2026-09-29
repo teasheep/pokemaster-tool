@@ -148,8 +148,9 @@ type Props = {
    */
   tera?: boolean;
   /**
-   * 精簡模式。換成官方成品卡之後**只剩「隱藏 Lv 文字」一個作用** ——
-   * 屬性圓 / 角色定位 / 拍組類別徽章都烤在官方圖裡, 挖不掉也不該挖。
+   * 精簡模式。換成官方成品卡之後已經**沒有作用** —— 屬性圓 / 角色定位 / 拍組類別徽章都烤在
+   * 官方圖裡, 挖不掉也不該挖。以前它還負責「隱藏 Lv 文字」, 2026-09-29 起改成「有傳 level 才畫」。
+   * prop 保留只為呼叫端相容。
    */
   minimal?: boolean;
   /**
@@ -190,7 +191,6 @@ export const SyncPairCard = memo(function SyncPairCard({
   superAwakening = 0,
   owned = true,
   exStyle = false,
-  minimal = false,
   awakenable,
   onCountClick,
   onPromote,
@@ -394,19 +394,22 @@ export const SyncPairCard = memo(function SyncPairCard({
           )}
         />
 
-        {/* 5. Lv 文字 (右上, 描邊白字, 避開放大星星) */}
-        {!minimal && level != null && (
+        {/* 5. Lv 文字 (右上, 描邊白字, 避開放大星星)。
+            **有傳 level 就畫, 不看 minimal** —— 卡牆勾了「顯示 → 等級」才會傳 (2026-09-29 使用者:
+            「等級要放在拍組右上角」), 沒勾的卡牆一律不傳, 所以其他地方的卡長相不變。 */}
+        {/* 字級 15 (原本 18): 6★EX 的星星圖右邊有「EX」字樣, 18 的「Lv.200」會壓到它 */}
+        {level != null && (
           <g fontFamily="NewRodinPro, Roboto, sans-serif" fontWeight="700">
             <text
               x="124"
               y="22"
               textAnchor="end"
-              fontSize="18"
+              fontSize="15"
               style={{ stroke: "#225d6b", strokeWidth: "5px", strokeLinecap: "round", strokeLinejoin: "round", paintOrder: "stroke" }}
             >
               Lv.{level}
             </text>
-            <text x="124" y="22" textAnchor="end" fontSize="18" fill="#fff">
+            <text x="124" y="22" textAnchor="end" fontSize="15" fill="#fff">
               Lv.{level}
             </text>
           </g>

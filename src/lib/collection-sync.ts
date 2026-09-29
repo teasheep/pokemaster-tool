@@ -47,7 +47,13 @@ export async function syncMemberPair(
    * 兩條寫入路徑都要自己夾, 只夾一邊的話另一條就會寫進遊戲裡不可能的組合。
    */
   syncGrid?: number,
-  exRoleUnlocked?: boolean
+  exRoleUnlocked?: boolean,
+  /**
+   * 潛能與備註 (0076) —— 一樣是鏡像, 道館的側板讀它。沒傳 (undefined) = 不動那一欄。
+   * ⚠ 部署順序是「先套 0076 再上前端」: 這兩欄在 migration 之前不存在, 寫進去整筆會 400。
+   */
+  luckySkills?: string[],
+  notes?: string | null
 ): Promise<void> {
   if (!gym?.memberId) return;
   const grade = gradeOf(potential, superAwakening);
@@ -87,6 +93,8 @@ export async function syncMemberPair(
           promotion: promotion ?? null,
           sync_grid: grid,
           ex_role_unlocked: exRoleUnlocked ?? null,
+          ...(luckySkills !== undefined ? { lucky_skills: luckySkills.slice(0, 5) } : {}),
+          ...(notes !== undefined ? { notes: notes || null } : {}),
         })
         .eq("id", existing[0].id)
     : await supabase.from("member_pairs").insert({
@@ -101,6 +109,8 @@ export async function syncMemberPair(
         promotion: promotion ?? null,
         sync_grid: grid,
         ex_role_unlocked: exRoleUnlocked ?? null,
+        ...(luckySkills !== undefined ? { lucky_skills: luckySkills.slice(0, 5) } : {}),
+        ...(notes !== undefined ? { notes: notes || null } : {}),
       });
   if (error) console.warn("member_pairs 同步失敗:", error.message);
 }

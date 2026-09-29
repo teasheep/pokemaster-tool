@@ -14,6 +14,9 @@ export type CollectionEntry = {
   /** EX 體系有沒有解鎖 (拍組能不能解鎖看 catalog 的 hasExRole) */
   exRoleUnlocked: boolean;
   exStyleWorn: boolean;   // EX 裝 (換裝立繪) 是否穿戴中
+  /** 潛能 id (最多 5 個, 順序 = 使用者選的順序); 名稱與分類見 src/data/pair-potentials.json */
+  luckySkills: string[];
+  /** 備註 (最多 500 字) —— 0076 起鏡像到 member_pairs, 道館看得到 */
   notes: string | null;
 };
 
@@ -26,7 +29,7 @@ export async function getUserCollection(userId: string): Promise<CollectionMap> 
   const { data, error } = await supabase
     .from("user_collection")
     .select(
-      "pair_id, owned, level, promotion, potential, super_awakening, ex_unlocked, sync_grid, ex_role_unlocked, ex_style_worn, notes"
+      "pair_id, owned, level, promotion, potential, super_awakening, ex_unlocked, sync_grid, ex_role_unlocked, ex_style_worn, lucky_skills, notes"
     )
     .eq("user_id", userId);
   if (error || !data) return {};
@@ -43,6 +46,7 @@ export async function getUserCollection(userId: string): Promise<CollectionMap> 
       syncGrid: r.sync_grid ?? 0,
       exRoleUnlocked: r.ex_role_unlocked ?? false,
       exStyleWorn: r.ex_style_worn ?? false,
+      luckySkills: r.lucky_skills ?? [],
       notes: r.notes,
     };
   }

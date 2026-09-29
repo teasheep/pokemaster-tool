@@ -66,6 +66,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import { pairLabel, pairName } from "@/lib/pairs/name";
 import type { GymViewer } from "@/lib/gym/queries";
+import type { MemberPairExtra } from "@/lib/gym/types";
+import { CardInfoSelect } from "@/components/gym/card-info-select";
+import { serializeCardInfo, type CardInfoKey } from "@/lib/pairs/potentials";
 import type { SyncPairType } from "@/lib/supabase/types";
 
 type MemberItem = {
@@ -111,6 +114,9 @@ type PairRow = {
   sync_grid: number | null;
   /** EX 體系有沒有解鎖 (與 6★EX 是兩件事) */
   ex_role_unlocked: boolean | null;
+  /** 潛能 (最多 5 個) 與備註 —— 0076 的鏡像。可選: migration 套上之前讀回來是 undefined */
+  lucky_skills?: string[] | null;
+  notes?: string | null;
 };
 
 type Props = {
@@ -145,6 +151,8 @@ type Props = {
     view: "pairs" | "resources";
     scope: "gym" | "all";
     ownedOnly: boolean;
+    /** ?show= 卡片下方多顯示哪些資訊 (「顯示」多選下拉; page.tsx 用 parseCardInfo 讀) */
+    show: CardInfoKey[];
   };
 };
 
@@ -345,7 +353,9 @@ export function MembersClient({
       const [pairsRes] = await Promise.all([
         supabase
           .from("member_pairs")
-          .select("id, pair_label, pair_id, grade, super_awakening, level, promotion, sync_grid, ex_role_unlocked")
+          // "*" 而不是明列欄位: 前端與 migration 不會同時落地, 明列一個還沒套上的欄位 (0076 的
+          // lucky_skills / notes) 整個查詢就 400 —— 成員頁一片空白 (與 gym_members 同一條規矩)
+          .select("*")
           .eq("member_id", memberId)
           .order("grade", { ascending: false })
           .order("pair_label"),
@@ -392,7 +402,7 @@ export function MembersClient({
       grade: number,
       superAwakening: number,
       /** 沒傳 = 這次沒動 (左下角循環), 保留原值 —— 與 RPC 的 p_level / p_promotion 同一個約定 */
-      extra?: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean }
+      extra?: MemberPairExtra
     ) => {
       setPairs((prev) => {
         const i = prev.findIndex((p) => p.pair_id === pairId);
@@ -413,6 +423,8 @@ export function MembersClient({
               promotion: extra?.promotion ?? null,
               sync_grid: extra?.syncGrid ?? null,
               ex_role_unlocked: extra?.exRoleUnlocked ?? null,
+              lucky_skills: extra?.luckySkills ?? [],
+              notes: extra?.notes ? extra.notes : null,
             },
           ];
         }
@@ -426,6 +438,9 @@ export function MembersClient({
           promotion: extra?.promotion ?? next[i]!.promotion,
           sync_grid: extra?.syncGrid ?? next[i]!.sync_grid,
           ex_role_unlocked: extra?.exRoleUnlocked ?? next[i]!.ex_role_unlocked,
+          lucky_skills: extra?.luckySkills ?? next[i]!.lucky_skills,
+          // "" = 清空 → null (與 RPC 的 nullif 同一個語意)
+          notes: extra?.notes === undefined ? next[i]!.notes : extra.notes || null,
         };
         return next;
       });
@@ -655,6 +670,7 @@ export function MembersClient({
                 guard={guard.run}
                 initialScope={initialView.scope}
                 initialOwnedOnly={initialView.ownedOnly}
+                initialShow={initialView.show}
               />
             </TabsContent>
             <TabsContent value="resources">
@@ -1314,6 +1330,7 @@ function PairsPanel({
   onOptimistic,
   initialScope,
   initialOwnedOnly,
+  initialShow,
 }: {
   gymId: string;
   isAdmin: boolean;
@@ -1334,13 +1351,14 @@ function PairsPanel({
   /** 網址帶來的初始狀態 (見上層的 initialView) */
   initialScope: "gym" | "all";
   initialOwnedOnly: boolean;
+  initialShow: CardInfoKey[];
   /** 送出前先把畫面改掉 (見上層的 patchPairGrade) — 受控的側板下拉不能等兩趟往返 */
   onOptimistic: (
     pairId: string,
     label: string,
     grade: number,
     superAwakening: number,
-    extra?: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean }
+    extra?: MemberPairExtra
   ) => void;
   /** 改別人的資料要先確認一次 (components/gym/edit-others-guard.tsx) */
   guard: (action: () => void) => void;
@@ -1428,8 +1446,15 @@ function PairsPanel({
    */
   const [ownedOnly, setOwnedOnly] = useState(initialOwnedOnly);
 
-  // 重新整理留在原本的畫面 (範圍 + 持有開關)
-  useUrlState({ scope: scope === "all" ? "all" : null, owned: ownedOnly ? "1" : null });
+  /** 「顯示」多選下拉 —— 卡片下方多顯示哪些資訊 (與 /pairs 同一個元件、同一個網址參數) */
+  const [show, setShow] = useState<CardInfoKey[]>(initialShow);
+
+  // 重新整理留在原本的畫面 (範圍 + 持有開關 + 顯示)
+  useUrlState({
+    scope: scope === "all" ? "all" : null,
+    owned: ownedOnly ? "1" : null,
+    show: serializeCardInfo(show),
+  });
   /**
    * 這一輪操作過的卡 —— 開著「只看持有的」時把寶數循環回 0, 卡片會當場消失,
    * 手就懸在半空 (/pairs 踩過同一個坑, 解法一樣: 操作過的留著顯示灰卡)。
@@ -1472,6 +1497,9 @@ function PairsPanel({
         promotion: row?.promotion ?? undefined,
         syncGrid: row?.sync_grid ?? 0,
         exRoleUnlocked: row?.ex_role_unlocked ?? false,
+        level: row?.level ?? 1,
+        luckySkills: row?.lucky_skills ?? [],
+        notes: row?.notes ?? null,
         corner:
           scope === "all" && gymSet.has(rec.pairId) ? (
             <span className="text-sm text-amber-400" title="已是道館拍組">
@@ -1525,6 +1553,8 @@ function PairsPanel({
         ...(row?.promotion != null ? { promotion: row.promotion } : {}),
         syncGrid: row?.sync_grid ?? 0,
         exRoleUnlocked: row?.ex_role_unlocked ?? false,
+        luckySkills: row?.lucky_skills ?? [],
+        notes: row?.notes ?? null,
       };
     },
     [rowByPairId]
@@ -1542,7 +1572,7 @@ function PairsPanel({
         label: string;
         potential: number;
         superAwakening: number;
-        extra: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean };
+        extra: MemberPairExtra;
       }
     ) => {
       const { error } = await supabase.rpc("set_member_pair", {
@@ -1558,6 +1588,10 @@ function PairsPanel({
         p_promotion: job.extra.promotion ?? null,
         p_sync_grid: job.extra.syncGrid ?? null,
         p_ex_role_unlocked: job.extra.exRoleUnlocked ?? null,
+        // 潛能與備註 (0076) **只在真的改了才帶**: 前端與 migration 不會同時落地,
+        // 舊函式沒有這兩個參數 → 一律帶的話中間那幾分鐘連左下角的寶數循環都會 404 (PGRST202)。
+        ...(job.extra.luckySkills !== undefined ? { p_lucky_skills: job.extra.luckySkills } : {}),
+        ...(job.extra.notes !== undefined ? { p_notes: job.extra.notes } : {}),
       });
       if (error) {
         toast.error("更新失敗", { description: error.message });
@@ -1588,7 +1622,7 @@ function PairsPanel({
        * (0058 / 0059)。左下角的寶數循環不知道 (也不該知道) 這兩個值, 一律不傳;
        * 傳了 defaultEntry 的預設值就會把人家設好的 Lv200 / 6★EX 洗掉。
        */
-      extra?: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean }
+      extra?: MemberPairExtra
     ) => {
       // 這條軸的編碼與全站一致: 0=未持有, 1-5=寶, 6-10=超覺醒 (RPC 自己會照 sa 算 grade)
       const grade = next.superAwakening > 0 ? 5 + next.superAwakening : next.potential;
@@ -1612,7 +1646,7 @@ function PairsPanel({
     (
       rec: ClientPairRecord,
       next: { potential: number; superAwakening: number },
-      extra?: { level?: number; promotion?: number; syncGrid?: number; exRoleUnlocked?: boolean }
+      extra?: MemberPairExtra
     ) => {
       guard(() => void writeGrade(rec, next, extra));
     },
@@ -1755,7 +1789,9 @@ function PairsPanel({
         regions={regions}
         sortBy={sortBy}
         onSortChange={setSortBy}
-      />
+      >
+        <CardInfoSelect value={show} onChange={setShow} />
+      </PairFilterBar>
 
       {loading ? (
         /* 骨架而不是一行「載入中…」: 卡牆塌成一行字會讓頁面高度從數千 px 掉到幾百 px, 捲軸暴衝。
@@ -1773,6 +1809,7 @@ function PairsPanel({
             onSelect={onSelectCard}
             onCount={canEdit ? onCountCard : undefined}
             onPromote={canEdit ? onPromoteCard : undefined}
+            show={show}
           />
         </div>
       )}
@@ -1816,6 +1853,12 @@ function PairsPanel({
                   syncGrid: next.syncGrid !== cur.syncGrid ? next.syncGrid : undefined,
                   exRoleUnlocked:
                     next.exRoleUnlocked !== cur.exRoleUnlocked ? next.exRoleUnlocked : undefined,
+                  // 潛能與備註 (0076) —— 同一條規矩: 沒改就不帶
+                  luckySkills:
+                    next.luckySkills.join(",") !== cur.luckySkills.join(",")
+                      ? next.luckySkills
+                      : undefined,
+                  notes: (next.notes ?? "") !== (cur.notes ?? "") ? (next.notes ?? "") : undefined,
                 });
               }}
               // 左下角循環: 與卡牆同一個手勢、同一條寫入路徑

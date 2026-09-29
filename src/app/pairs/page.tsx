@@ -4,6 +4,7 @@ import { PageShell } from "@/components/page-shell";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { getUserCollection, type CollectionMap } from "@/lib/collection";
 import { loadPairsForClient } from "@/lib/pairs/loader";
+import { parseCardInfo } from "@/lib/pairs/potentials";
 import { getMyMemberships } from "@/lib/gym/active-gym";
 import { PairsHub } from "./pairs-hub";
 
@@ -34,9 +35,9 @@ export const metadata: Metadata = {
 export default async function PairsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; owned?: string }>;
+  searchParams: Promise<{ tab?: string; owned?: string; show?: string }>;
 }) {
-  const { tab, owned } = await searchParams;
+  const { tab, owned, show } = await searchParams;
   const catalog = await loadPairsForClient().catch(() => []);
 
   let collection: CollectionMap = {};
@@ -95,6 +96,7 @@ export default async function PairsPage({
           // 訪客沒有「只看我持有的」那顆開關, 吃了這個參數就會看到空白圖鑑而且救不回來
           // (這頁在 PUBLIC_ROUTES 裡, 登出/過期後回到同一個網址就會發生)
           initialOwnedOnly={signedIn && owned === "1"}
+          initialShow={parseCardInfo(show)}
         />
       </PageShell>
     </main>

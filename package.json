@@ -22,6 +22,7 @@
     "data:facets": "node scripts/patch-upstream-facets.mjs",
     "data:names": "node scripts/normalize-pair-names.mjs",
     "data:gvg": "node scripts/fetch-gvg-templates.mjs",
+    "data:potentials": "node scripts/fetch-potentials.mjs",
     "deploy:cf": "node scripts/deploy-cloudflare.mjs",
     "preview:cf": "node scripts/deploy-cloudflare.mjs --preview",
     "art:preview": "node scripts/preview-trainer-art.mjs",

@@ -46,6 +46,7 @@ export function defaultEntry(pair: ClientPairRecord): CollectionEntry {
     syncGrid: 0,
     exRoleUnlocked: false,
     exStyleWorn: false,
+    luckySkills: [],
     notes: null,
   };
 }

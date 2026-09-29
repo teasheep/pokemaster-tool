@@ -42,6 +42,8 @@ import {
 import { clampSyncGrid, cycleEntry, cyclePromotion, defaultEntry } from "@/lib/collection-entry";
 import { setGymPair } from "@/lib/gym/gym-pairs-client";
 import { useUrlState } from "@/lib/use-url-state";
+import { CardInfoSelect } from "@/components/gym/card-info-select";
+import { DEFAULT_CARD_INFO, serializeCardInfo, type CardInfoKey } from "@/lib/pairs/potentials";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -57,6 +59,8 @@ type Props = {
   initialTab?: Tab | null;
   /** ?owned=1 深連結 — 重新整理要留在原本的畫面 */
   initialOwnedOnly?: boolean;
+  /** ?show= 卡片下方要多顯示哪些資訊 (「顯示」多選下拉; page.tsx 用 parseCardInfo 讀) */
+  initialShow?: CardInfoKey[];
   /** 道館管理員 (可在側板把拍組設為/取消道館拍組) */
   isGymAdmin?: boolean;
 };
@@ -81,6 +85,7 @@ export function PairsHub({
   isGymAdmin = false,
   initialTab = null,
   initialOwnedOnly = false,
+  initialShow = [...DEFAULT_CARD_INFO],
 }: Props) {
   const [collection, setCollection] = useState<CollectionMap>(initialCollection);
   const hasGym = gymPairIds.length > 0;
@@ -89,12 +94,15 @@ export function PairsHub({
   );
   /** 只看我持有的 — 預設關 (顯示全部, 沒有的是灰卡) */
   const [ownedOnly, setOwnedOnly] = useState(initialOwnedOnly);
+  /** 「顯示」多選下拉 —— 卡片下方多顯示哪些資訊 (預設只有拍檔石盤 = 原本的樣子) */
+  const [show, setShow] = useState<CardInfoKey[]>(initialShow);
 
   // 重新整理要留在同一個畫面 → 把子分頁與持有開關寫進網址 (見 lib/use-url-state.ts)。
   // 預設值一律不寫進去, 網址才不會長出一串沒有意義的參數。
   useUrlState({
     tab: tab === "gym" ? null : tab,
     owned: ownedOnly ? "1" : null,
+    show: serializeCardInfo(show),
   });
 
   const [filters, setFilters] = useState<PairFilters>(EMPTY_PAIR_FILTERS);
@@ -237,6 +245,7 @@ export function PairsHub({
           sync_grid: clampSyncGrid(entry.syncGrid, entry.superAwakening > 0 ? 5 : entry.potential),
           ex_role_unlocked: entry.exRoleUnlocked,
           ex_style_worn: entry.exStyleWorn,
+          lucky_skills: entry.luckySkills,
           notes: entry.notes,
         },
         { onConflict: "user_id,pair_id" }
@@ -252,7 +261,7 @@ export function PairsHub({
       await syncMemberPair(
         supabase, gymSync, pair,
         entry.potential, entry.superAwakening, entry.exStyleWorn, entry.level, entry.promotion,
-        entry.syncGrid, entry.exRoleUnlocked
+        entry.syncGrid, entry.exRoleUnlocked, entry.luckySkills, entry.notes
       );
   }, [gymSync, pairsById]);
 
@@ -383,6 +392,9 @@ export function PairsHub({
           superAwakening: r.superAwakening,
           syncGrid: r.syncGrid,
           exRoleUnlocked: r.exRoleUnlocked,
+          level: r.level,
+          luckySkills: r.luckySkills,
+          notes: r.notes,
           // 點擊 handler 不放在 item 上 — 交給 PairTypeGrid 的 onSelect/onCount (見下方)
         };
       }),
@@ -483,7 +495,9 @@ export function PairsHub({
             regions={regions}
             sortBy={sortBy}
             onSortChange={setSortBy}
-          />
+          >
+            <CardInfoSelect value={show} onChange={setShow} />
+          </PairFilterBar>
 
         </>
       ) : null}
@@ -517,6 +531,7 @@ export function PairsHub({
             onSelect={signedIn ? onSelectCard : undefined}
             onCount={signedIn ? onCountCard : undefined}
             onPromote={signedIn ? onPromoteCard : undefined}
+            show={signedIn ? show : undefined}
             /* 這頁一次 645 張卡 = 全站最大的一份 HTML (訪客 1.5MB / 登入 2.4MB),
                Cloudflare 免費方案的 CPU 幾乎全花在把它編成 bytes → 隨機 Error 1102。
                SSR 只出首屏那 24 張, 其餘等 hydration 在瀏覽器補 (卡片外觀與互動完全不變)。 */
