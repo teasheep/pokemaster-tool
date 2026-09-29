@@ -85,19 +85,36 @@ export const roundLabel = (r: number) => (r <= 3 ? `R${r}` : `Ex${r - 3}`);
 /** 挑戰券上限 — 券制是「剩餘 / 上限」預設 30/30 從上限往下扣 (0043) */
 export const TICKETS_MAX = 30;
 
-/** 戰鬥紀錄的分工 (道館統計表的三分工) */
+/**
+ * 戰鬥紀錄的分工。降抗分成物降抗 / 特降抗 (0078, 2026-09-29 使用者指定)。
+ * `debuff` 是之前沒分的「降抗」—— 舊紀錄 (第三次道館戰匯入的 81 筆) 看不出是哪一種, **不猜**,
+ * 照原樣顯示; 新登記的選項裡沒有它 (見 BATTLE_ROLES)。
+ */
 export const BATTLE_ROLE_LABELS = {
   main: "主力",
   assist: "補刀",
+  debuff_physical: "物降抗",
+  debuff_special: "特降抗",
   debuff: "降抗",
 } as const;
 
-/** 挑戰隊伍的分類 (每屬性通常備 3-5 套) */
+/** 登記出刀時可以選的分工 (不含舊的 debuff) —— 順序 = 按鈕順序 */
+export const BATTLE_ROLES = ["main", "assist", "debuff_physical", "debuff_special"] as const;
+
+/** 物降抗 / 特降抗 / 舊的降抗 —— 著色用 (降抗一族同一個色系) */
+export const isDebuffRole = (r: string) => r === "debuff" || r.startsWith("debuff_");
+
+/**
+ * 挑戰隊伍的分類 (每屬性通常備 3-5 套)。降抗分成物降抗 / 特降抗 (0078)。
+ * `debuff` = 之前沒分的「降抗」: 不能新增, 只在那一館還有這種隊伍時才出現, 等管理員改分類。
+ */
 export const TEAM_TAG_LABELS = {
-  debuff: "降抗",
+  debuff_physical: "物降抗",
+  debuff_special: "特降抗",
   physical: "物攻",
   special: "特攻",
   closer: "磨隊/其他",
+  debuff: "降抗（未分）",
 } as const;
 
 

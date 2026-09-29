@@ -1155,6 +1155,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   真要加, `0054_battle_broadcast.sql` 原封不動重跑即可 (那份的註解與取捨都還有效,
   包括「broadcast 是逐 topic 授權」那個前提 —— 它成立是因為那四張表的 SELECT policy
   實測全是 `is_gym_member(gym_id)`, 哪天有人加 row 層可見性條件就不成立了)。
+- **降抗分成物降抗 / 特降抗** (0078, 2026-09-29 使用者指定): 隊伍庫的分類 (`TEAM_TAGS`) 與出刀的分工
+  (`BATTLE_ROLES`) 都是 `debuff_physical` / `debuff_special`。舊的 `debuff` **兩張表都繼續合法** ——
+  線上 17 支隊伍、81 筆出刀紀錄看不出是哪一種, **不替他們猜**: 隊伍放在「降抗（未分）」一區
+  (沒有這種隊伍就整區不畫、不能新增), 管理員點隊伍卡上的分類徽章改掉; 出刀紀錄照原樣顯示「降抗」,
+  登記選項裡沒有它。三個登記入口 (回報側板 / 關卡卡片 / 對戰紀錄) 一律 `BATTLE_ROLES.map`, 不要手寫值。
+  `tests/split-debuff.test.ts` 釘住「check 允許的值 = 畫面上的全部值」。
+  同一批修掉隊伍的**屬性**: 在「全部」底下按新增以前會默默建成**一般** (五宝春パン屋 8 支龍/格鬥/電/冰隊就是這樣
+  跑進一般), 而且建好就改不了 —— 現在「全部」的新增先選屬性, 隊伍卡的屬性圖示與分類徽章都是下拉 (管理員)。
 - **新增對戰紀錄只有一條路** (`reportBattleLog`, `lib/gym/battle-log.ts`): 看板輪次列的
   Swords (自己出刀, 要選主力/降抗) 與 + (管理員幫成員記) 跟對戰紀錄側板都走它
   (插 battle_logs + round_label 派生 + 自動扣券)。排刀 (stage_assignments) 已無新增入口,

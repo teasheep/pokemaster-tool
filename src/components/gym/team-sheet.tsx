@@ -1,18 +1,26 @@
 "use client";
 
 // 挑戰隊伍庫 — 隊伍屬於「道館」而不是某一關:
-//   TeamLibrary  = 完整管理介面 (屬性 chips 切換 + 四分類分區 + 新增/編輯/刪除)
+//   TeamLibrary  = 完整管理介面 (屬性 chips 切換 + 五分類分區 + 新增/編輯/刪除)
 //                  /gyms/[id]/teams 頁直接用; 關卡的 TeamSheet 也是同一份
 //   TeamSheet    = TeamLibrary 包在右側 slideover, 給關卡「選隊伍」用
 //                  (defaultType = 該關弱點屬性排最前, 但可切到任何屬性選隊 —
 //                   超能關選電系隊也是合法需求)
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -47,14 +55,31 @@ export type TeamPairRow = Pick<
   "id" | "team_id" | "slot" | "pair_id" | "min_grade"
 >;
 
-/** 四個分類的順序與配色 (分區標題與徽章共用) */
-export const TEAM_TAGS: TeamTag[] = ["debuff", "physical", "special", "closer"];
+/**
+ * 可以新增 / 改成的分類 —— 順序 = 分區順序。降抗分成物降抗 / 特降抗 (0078, 2026-09-29 使用者指定)。
+ * 舊的 `debuff` (沒分物特的「降抗」) 不在這裡: 不能新增, 只在那一館還有這種隊伍時排在最前面,
+ * 等管理員點隊伍卡上的分類改掉 (那 17 支看不出是物降抗還是特降抗, **不替他們猜**)。
+ */
+export const TEAM_TAGS: TeamTag[] = ["debuff_physical", "debuff_special", "physical", "special", "closer"];
+/** 畫面上的分區順序 (含舊的「降抗（未分）」) */
+export const TEAM_TAG_ORDER: TeamTag[] = ["debuff", ...TEAM_TAGS];
 
 export const TAG_STYLES: Record<TeamTag, { chip: string; bar: string; ring: string }> = {
-  debuff: {
+  // 降抗一族同一個藍色系: 物降抗偏天藍、特降抗偏靛藍, 舊的「未分」是灰的 (提醒還沒分)
+  debuff_physical: {
     chip: "bg-sky-500/20 text-sky-700 dark:text-sky-300",
     bar: "bg-sky-500",
     ring: "border-sky-500/60",
+  },
+  debuff_special: {
+    chip: "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300",
+    bar: "bg-indigo-500",
+    ring: "border-indigo-500/60",
+  },
+  debuff: {
+    chip: "bg-slate-500/20 text-slate-700 dark:text-slate-300",
+    bar: "bg-slate-400",
+    ring: "border-slate-400/60",
   },
   physical: {
     chip: "bg-orange-500/20 text-orange-700 dark:text-orange-300",
@@ -72,6 +97,62 @@ export const TAG_STYLES: Record<TeamTag, { chip: string; bar: string; ring: stri
     ring: "border-emerald-500/60",
   },
 };
+
+/**
+ * 管理員改隊伍分類 —— 分類徽章本身就是下拉 (不另外長一顆「編輯」)。
+ * 主要是給舊的「降抗（未分）」改成物降抗 / 特降抗用, 放錯物攻/特攻也順便改得掉。
+ */
+function TagSelect({ value, onChange }: { value: TeamTag; onChange: (tag: TeamTag) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          "inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold max-sm:min-h-11 max-sm:text-xs",
+          TAG_STYLES[value].chip
+        )}
+        aria-label="改分類"
+      >
+        {TEAM_TAG_LABELS[value]}
+        <ChevronDown className="h-3 w-3 opacity-70" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuRadioGroup value={value} onValueChange={(v) => v !== value && onChange(v as TeamTag)}>
+          {TEAM_TAGS.map((tag) => (
+            <DropdownMenuRadioItem key={tag} value={tag} className="pointer-coarse:min-h-11">
+              {TEAM_TAG_LABELS[tag]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** 管理員改隊伍屬性 —— 屬性圖示本身就是下拉 (放錯屬性的隊伍以前建好就改不了) */
+function TypeSelect({ value, onChange }: { value: SyncPairType; onChange: (type: SyncPairType) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="inline-flex shrink-0 items-center gap-0.5 rounded px-0.5 py-0.5 hover:bg-accent max-sm:min-h-11"
+        aria-label={`改屬性 (目前: ${TYPE_LABELS[value]})`}
+        title={TYPE_LABELS[value]}
+      >
+        <TypeIcon type={value} className="h-4 w-4" />
+        <ChevronDown className="h-3 w-3 opacity-60" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto">
+        <DropdownMenuRadioGroup value={value} onValueChange={(v) => v !== value && onChange(v as SyncPairType)}>
+          {ALL_TYPES.map((ty) => (
+            <DropdownMenuRadioItem key={ty} value={ty} className="pointer-coarse:min-h-11">
+              <TypeIcon type={ty} className="h-4 w-4" />
+              {TYPE_LABELS[ty]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function TeamTagBadge({ tag, className }: { tag: TeamTag; className?: string }) {
   return (
@@ -439,9 +520,14 @@ export function TeamLibrary({
     scheduleTeamPairs(teamId, { picked });
   }
 
-  /** 新增 = 直接建一張空隊伍卡並展開拍組選擇 (不跳到另一個表單) */
-  async function createTeam(tag: TeamTag) {
-    const type = scope === "all" ? (defaultType ?? "normal") : scope;
+  /**
+   * 新增 = 直接建一張空隊伍卡並展開拍組選擇 (不跳到另一個表單)。
+   * 屬性: 看得到單一屬性時就是那個; 在「全部」底下由「新增」的下拉先選 ——
+   * ⚠ 以前在「全部」按新增會默默建成**一般**屬性 (五宝春パン屋 8 支龍/格鬥/電/冰的隊伍就是這樣
+   *   跑到一般底下, 而且建好就改不了屬性), 2026-09-29 修掉。
+   */
+  async function createTeam(tag: TeamTag, pickedType?: SyncPairType) {
+    const type = pickedType ?? (scope === "all" ? (defaultType ?? "normal") : scope);
     setBusy(true);
     const { data, error } = await supabase
       .from("gym_teams")
@@ -510,14 +596,16 @@ export function TeamLibrary({
         ))}
       </div>
 
-      {TEAM_TAGS.map((tag) => {
+      {TEAM_TAG_ORDER.map((tag) => {
         const list = visibleTeams
           .filter((t) => t.tag === tag)
           .sort(
             (a, b) =>
               ALL_TYPES.indexOf(a.type) - ALL_TYPES.indexOf(b.type) || a.sort_order - b.sort_order
           );
-        if (list.length === 0 && !isAdmin) return null;
+        // 舊的「降抗（未分）」: 沒有這種隊伍就整區不畫 (連管理員也不畫 —— 它不能新增)
+        const creatable = TEAM_TAGS.includes(tag);
+        if (list.length === 0 && (!isAdmin || !creatable)) return null;
         return (
           <section key={tag}>
             <div className="mb-1.5 flex items-center gap-2">
@@ -527,17 +615,42 @@ export function TeamLibrary({
               {list.length > 0 ? (
                 <span className="tabular-nums text-xs text-muted-foreground">{list.length} 套</span>
               ) : null}
-              {isAdmin ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="ml-auto h-7"
-                  onClick={() => void createTeam(tag)}
-                  disabled={busy}
-                >
-                  <Plus className="mr-0.5 h-3.5 w-3.5" />
-                  新增
-                </Button>
+              {isAdmin && creatable ? (
+                scope === "all" && !defaultType ? (
+                  // 「全部」底下不知道要建哪個屬性 → 新增先選屬性
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline" className="ml-auto h-7" disabled={busy}>
+                        <Plus className="mr-0.5 h-3.5 w-3.5" />
+                        新增
+                        <ChevronDown className="ml-0.5 h-3 w-3 opacity-70" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
+                      {ALL_TYPES.map((ty) => (
+                        <DropdownMenuItem
+                          key={ty}
+                          onSelect={() => void createTeam(tag, ty)}
+                          className="pointer-coarse:min-h-11"
+                        >
+                          <TypeIcon type={ty} className="h-4 w-4" />
+                          {TYPE_LABELS[ty]}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto h-7"
+                    onClick={() => void createTeam(tag)}
+                    disabled={busy}
+                  >
+                    <Plus className="mr-0.5 h-3.5 w-3.5" />
+                    新增
+                  </Button>
+                )
               ) : null}
             </div>
 
@@ -559,7 +672,23 @@ export function TeamLibrary({
                       )}
                     >
                       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                        <TypeIcon type={t.type} className="h-4 w-4 shrink-0" />
+                        {isAdmin ? (
+                          <TypeSelect
+                            value={t.type}
+                            onChange={(type) =>
+                              void patchTeam(t.id, {
+                                type,
+                                // 排到新屬性的最後面 (沿用舊的 sort_order 會跟那邊的隊伍撞號)
+                                sort_order: teams.filter((x) => x.type === type).length,
+                              })
+                            }
+                          />
+                        ) : (
+                          <TypeIcon type={t.type} className="h-4 w-4 shrink-0" />
+                        )}
+                        {isAdmin ? (
+                          <TagSelect value={t.tag} onChange={(tag) => void patchTeam(t.id, { tag })} />
+                        ) : null}
                         {isAdmin ? (
                           // 名稱就地改 (離開輸入框存檔) — 不用先按編輯鈕
                           <input

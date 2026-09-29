@@ -1,7 +1,7 @@
 "use client";
 
 // 手機版「我要出刀」bottom sheet — 看板底部主行動鈕點開後的登記流程:
-//   關卡 → 輪次 (預設目前輪) → 分工 (主力/補刀/降抗) → 挑戰券張數 → 送出。
+//   關卡 → 輪次 (預設目前輪) → 分工 (主力/補刀/物降抗/特降抗) → 挑戰券張數 → 送出。
 //
 // 這是**關卡卡片輪次列那顆 Swords 的同一條路徑**的手機捷徑 (拇指可及), 不是第二套寫入:
 // 一律 reportBattleLog (插 battle_logs + 自動扣券), 欄位、預設值 (主力 / 3 張)、
@@ -30,7 +30,7 @@ import { TypeIcon } from "@/components/sync-pair-badges";
 import { TYPE_LABELS } from "@/data/sync-pairs";
 import { createClient } from "@/lib/supabase/client";
 import { reportBattleLog } from "@/lib/gym/battle-log";
-import { BATTLE_ROLE_LABELS, roundLabel, type BattleStatus } from "@/lib/gym/types";
+import { BATTLE_ROLES, BATTLE_ROLE_LABELS, isDebuffRole, roundLabel, type BattleStatus } from "@/lib/gym/types";
 import { cn } from "@/lib/utils";
 import type { BattleLogRole } from "@/lib/supabase/types";
 import type { BattleLogRow, StageRow } from "./stage-board";
@@ -277,11 +277,11 @@ export function ReportRunSheet({
         ) : null}
       </div>
 
-      {/* 4. 分工 — 主力 / 補刀 / 降抗 (與關卡卡片同樣預設主力) */}
+      {/* 4. 分工 — 主力 / 補刀 / 物降抗 / 特降抗 (與關卡卡片同樣預設主力) */}
       <div className="space-y-1.5">
         <span className="block text-xs font-medium text-muted-foreground">分工</span>
-        <div className="grid grid-cols-3 overflow-hidden rounded-lg border">
-          {(["main", "assist", "debuff"] as const).map((ro) => (
+        <div className="grid grid-cols-4 overflow-hidden rounded-lg border">
+          {BATTLE_ROLES.map((ro) => (
             <button
               key={ro}
               type="button"
@@ -290,7 +290,7 @@ export function ReportRunSheet({
               className={cn(
                 "min-h-11 border-r text-sm transition-colors last:border-r-0",
                 role === ro
-                  ? ro === "debuff"
+                  ? isDebuffRole(ro)
                     ? "bg-sky-500/20 font-semibold text-sky-700 dark:text-sky-300"
                     : "bg-primary font-semibold text-primary-foreground"
                   : "text-muted-foreground hover:bg-accent"

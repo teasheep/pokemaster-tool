@@ -265,7 +265,8 @@ export function StageBoardSkeleton({ stages = 4 }: { stages?: number }) {
 }
 
 /** 隊伍庫 (屬性 chips + 四個分類, 每類一排等寬隊伍卡) */
-export function TeamGridSkeleton({ tags = 4 }: { tags?: number }) {
+/** tags = 分類數 (物降抗/特降抗/物攻/特攻/磨隊, 見 team-sheet.tsx 的 TEAM_TAGS) */
+export function TeamGridSkeleton({ tags = 5 }: { tags?: number }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-1">

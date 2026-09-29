@@ -54,10 +54,12 @@ import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 import type { GymViewer } from "@/lib/gym/queries";
 import {
+  BATTLE_ROLES,
   BATTLE_ROLE_LABELS,
   BATTLE_STATUS_LABELS,
   TICKETS_MAX,
   battleStatusFromDates,
+  isDebuffRole,
   roundLabel,
   type BattleStatus,
 } from "@/lib/gym/types";
@@ -1117,7 +1119,7 @@ function BattleLogsCard({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(Object.keys(BATTLE_ROLE_LABELS) as BattleLogRole[]).map((r) => (
+                {BATTLE_ROLES.map((r) => (
                   <SelectItem key={r} value={r}>
                     {BATTLE_ROLE_LABELS[r]}
                   </SelectItem>
@@ -1212,7 +1214,7 @@ function BattleLogsCard({
                           <Badge
                             variant="secondary"
                             className={
-                              log.role === "debuff"
+                              isDebuffRole(log.role)
                                 ? "bg-sky-500/15 text-sky-700 dark:text-sky-300"
                                 : undefined
                             }

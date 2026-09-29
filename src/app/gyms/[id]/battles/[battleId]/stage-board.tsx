@@ -35,7 +35,7 @@ import { useCatalogWithFullFallback } from "@/components/gym/pair-picker";
 import { candyForRole, type CandyCounts, type CandyType } from "@/components/gym/candy";
 import {
   TAG_STYLES,
-  TEAM_TAGS,
+  TEAM_TAG_ORDER,
   TeamFitRows,
   TeamPairs,
   TeamSheet,
@@ -43,7 +43,7 @@ import {
   type TeamPairRow,
   type TeamRow,
 } from "@/components/gym/team-sheet";
-import { BATTLE_ROLE_LABELS, GRADE_LABELS, TEAM_TAG_LABELS, roundLabel } from "@/lib/gym/types";
+import { BATTLE_ROLES, BATTLE_ROLE_LABELS, GRADE_LABELS, TEAM_TAG_LABELS, isDebuffRole, roundLabel } from "@/lib/gym/types";
 import {
   formatHp,
   matchTemplate,
@@ -342,7 +342,7 @@ function StageCard({
   const myTeamIds = stageTeams
     .filter((st) => st.stage_id === stage.id)
     .map((st) => st.team_id);
-  const stageTeamList = TEAM_TAGS.flatMap((tag) =>
+  const stageTeamList = TEAM_TAG_ORDER.flatMap((tag) =>
     teams.filter((t) => myTeamIds.includes(t.id) && t.tag === tag)
   );
   const allStageLogs = logs.filter((l) => l.stage_id === stage.id);
@@ -971,16 +971,16 @@ function StageCard({
                           </SelectContent>
                         </Select>
                       ) : null}
-                      {/* 角色: 主力 / 補刀 / 降抗 (登記自己的紀錄也要選) */}
+                      {/* 角色: 主力 / 補刀 / 物降抗 / 特降抗 (登記自己的紀錄也要選) */}
                       <span className="flex overflow-hidden rounded-full border">
-                        {(["main", "assist", "debuff"] as const).map((ro) => (
+                        {BATTLE_ROLES.map((ro) => (
                           <button
                             key={ro}
                             onClick={() => setAddRole(ro)}
                             className={cn(
                               "px-2 py-1.5 transition-colors pointer-coarse:min-h-11 pointer-coarse:px-3",
                               addRole === ro
-                                ? ro === "debuff"
+                                ? isDebuffRole(ro)
                                   ? "bg-sky-500/20 font-semibold text-sky-700 dark:text-sky-300"
                                   : "bg-primary font-semibold text-primary-foreground"
                                 : "text-muted-foreground hover:bg-accent"
@@ -1024,7 +1024,7 @@ function StageCard({
                             setAddRole("main");
                             setAddFor({ r, admin: false });
                           }}
-                          title="登記我在本輪的對戰紀錄 — 選角色 (主力/補刀/降抗) 與挑戰券張數"
+                          title="登記我在本輪的對戰紀錄 — 選角色 (主力/補刀/物降抗/特降抗) 與挑戰券張數"
                           aria-label="登記我在本輪的對戰紀錄"
                           className="inline-flex items-center justify-center rounded-full border p-2 text-muted-foreground transition-all hover:border-primary hover:text-primary active:scale-90 pointer-coarse:min-h-11 pointer-coarse:min-w-11"
                         >
