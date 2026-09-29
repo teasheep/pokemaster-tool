@@ -45,7 +45,7 @@ import {
 } from "@/components/gym/type-focus";
 import { SidePanel } from "@/components/ui/side-panel";
 import { setGymPair } from "@/lib/gym/gym-pairs-client";
-import { GYM_SEAT_CAP, countSeats } from "@/lib/gym/membership";
+import { GYM_SEAT_CAP, approvalTakesSeat, countSeats } from "@/lib/gym/membership";
 import { GymPairsClient, type PackedGrades, type GymPairRow } from "../pairs/pairs-client";
 import { PairTypeGrid, type GridItem } from "@/components/gym/pair-type-grid";
 import { PairEditPanel } from "@/components/pair-edit-panel";
@@ -462,7 +462,8 @@ export function MembersClient({
       // 名額上限 (0075): 滿 20 人就不能再放行。**擋在這裡是為了給得出理由** ——
       // 資料庫那條 trigger 只會丟 `GYM_FULL`, 管理員看到一句英文例外不會知道要做什麼。
       // 顧問與待確認都不佔名額, 所以 countSeats 要過濾 (members 這份 prop 是含顧問的)。
-      if (approve && countSeats(members) >= GYM_SEAT_CAP) {
+      // ⚠ **申請人自己是顧問就不用算** —— 放行顧問不會多佔名額 (漏了這條, 滿員時連顧問都放不進來)。
+      if (approve && approvalTakesSeat(m) && countSeats(members) >= GYM_SEAT_CAP) {
         toast.error(`道館已經滿 ${GYM_SEAT_CAP} 人`, {
           description: "要先把一位成員移出道館, 才能讓新的人加入。顧問不佔名額。",
         });
@@ -1027,9 +1028,21 @@ function MemberEditDialog({
       .eq("id", member.id);
     setBusy(false);
     if (error) {
+      // 顧問改成成員/管理員 = 多佔一個名額, 滿員時資料庫會丟 GYM_FULL (0075) —— 翻成人話
+      const full = error.message.includes("GYM_FULL");
       toast.error(
-        error.message.includes("LAST_ADMIN") ? "道館至少要有一位管理員" : "儲存失敗",
-        { description: error.message.includes("LAST_ADMIN") ? undefined : error.message }
+        error.message.includes("LAST_ADMIN")
+          ? "道館至少要有一位管理員"
+          : full
+            ? `道館已經滿 ${GYM_SEAT_CAP} 人`
+            : "儲存失敗",
+        {
+          description: error.message.includes("LAST_ADMIN")
+            ? undefined
+            : full
+              ? "顧問不佔名額, 改成成員或管理員就要佔一個。先把一位成員移出道館再改。"
+              : error.message,
+        }
       );
       return;
     }

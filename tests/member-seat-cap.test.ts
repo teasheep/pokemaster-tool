@@ -16,7 +16,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { GYM_SEAT_CAP, countSeats, occupiesSeat } from "@/lib/gym/membership";
+import { GYM_SEAT_CAP, approvalTakesSeat, countSeats, occupiesSeat } from "@/lib/gym/membership";
 
 const MIG = path.join(process.cwd(), "supabase", "migrations", "0075_member_seat_cap.sql");
 const sql = fs.readFileSync(MIG, "utf8");
@@ -74,6 +74,15 @@ describe("前端會先擋並說明原因", () => {
     path.join(process.cwd(), "src", "app", "gyms", "[id]", "members", "members-client.tsx"), "utf8");
   it("核准前先算名額", () => {
     expect(client).toMatch(/countSeats\(members\)\s*>=\s*GYM_SEAT_CAP/);
+  });
+  it("⚠ 放行顧問不佔名額: 滿員時也要放得進來 (2026-09-29 線上前科)", () => {
+    expect(approvalTakesSeat({ role: "advisor" })).toBe(false);
+    expect(approvalTakesSeat({ role: "member" })).toBe(true);
+    expect(approvalTakesSeat({ role: "admin" })).toBe(true);
+    expect(client).toMatch(/approve && approvalTakesSeat\(m\) && countSeats\(members\)/);
+  });
+  it("編輯成員把顧問改成成員撞到 GYM_FULL 時, 講人話不是丟英文例外", () => {
+    expect(client).toMatch(/error\.message\.includes\("GYM_FULL"\)/);
   });
   it("也要接住資料庫丟回來的 GYM_FULL（兩個管理員同時按勾勾）", () => {
     expect(client).toMatch(/GYM_FULL/);

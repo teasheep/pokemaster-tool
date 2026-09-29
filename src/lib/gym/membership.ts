@@ -45,6 +45,15 @@ export function occupiesSeat(m: { role?: string | null; status?: string | null }
   return m.role !== "advisor" && isActiveMember(m);
 }
 
+/**
+ * 放行這一筆申請會不會多佔一個名額 —— 看的是**申請人自己的角色**:
+ * 用顧問碼申請的人放行後還是顧問, 不佔名額, 滿 20 人照樣可以放行。
+ * (2026-09-29 線上: 滿員的道館要放行一位顧問, 前端只看「滿了沒」就擋下來, 資料庫那條 trigger 其實會過。)
+ */
+export function approvalTakesSeat(applicant: { role?: string | null }): boolean {
+  return occupiesSeat({ role: applicant.role, status: "active" });
+}
+
 /** 從一份成員清單算出目前佔掉幾個名額 */
 export function countSeats(list: ReadonlyArray<{ role?: string | null; status?: string | null }>): number {
   return list.filter(occupiesSeat).length;
