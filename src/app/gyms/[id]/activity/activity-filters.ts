@@ -9,13 +9,14 @@
 // 兩邊共用的東西就得放在中立的檔案裡。
 
 /** 類型篩選的合法值 (chips 的順序也是這一份) */
-export const ACTIVITY_KINDS = ["pair", "candy", "ticket", "battle_log", "gym_pair", "all"] as const;
+export const ACTIVITY_KINDS = ["pair", "candy", "ticket", "battle_log", "gym_pair", "member", "all"] as const;
 
 /**
  * 「全部」實際上要撈哪幾種 —— 就是有 trigger 在記的那些。
  * gym_pair 是 0068 加回來的 (0030 曾停掉); 隊伍 (team) 刻意沒有加回來。
+ * member (人員異動: 申請 / 放行 / 拒絕 / 改角色 / 移出 / 離開) 是 0079 加的。
  */
-export const ACTIVITY_LOGGED_KINDS = ["pair", "candy", "ticket", "battle_log", "gym_pair"] as const;
+export const ACTIVITY_LOGGED_KINDS = ["pair", "candy", "ticket", "battle_log", "gym_pair", "member"] as const;
 
 export const ACTIVITY_KIND_LABELS: Record<string, string> = {
   pair: "拍組練度",
@@ -23,6 +24,7 @@ export const ACTIVITY_KIND_LABELS: Record<string, string> = {
   ticket: "挑戰券",
   battle_log: "對戰紀錄",
   gym_pair: "道館拍組",
+  member: "人員",
 };
 
 /** 日期範圍: 幾天內 ("all" = 不限, "custom" = 自己選區間) */
@@ -81,7 +83,9 @@ export function mergeRuns(rows: ActivityRow[]): ActivityRow[] {
   /** (成員|種類|對象) → 這一組在 out 的位置 + 目前最舊的時間 (rows 是新到舊) */
   const open = new Map<string, { at: number; oldest: number }>();
   for (const r of rows) {
-    const key = `${r.member_id}|${r.kind}|${r.target}`;
+    // 人員異動**一筆一列, 不合併**: 「放行 → 升成管理員」是兩個人可能做的兩件事,
+    // 併起來就丟掉了中間那一步是誰做的 (而那正是這一類紀錄存在的理由)
+    const key = r.kind === "member" ? r.id : `${r.member_id}|${r.kind}|${r.target}`;
     const t = new Date(r.created_at).getTime();
     const hit = open.get(key);
     // 與這一組目前最舊的那一筆比 —— 一步一步往回接, 中斷超過視窗才另起一列
@@ -130,4 +134,56 @@ export function appendPage(prev: ActivityRow[], page: ActivityRow[]): ActivityRo
  */
 export function isNoop(r: ActivityRow): boolean {
   return (r.old_value ?? "") === (r.new_value ?? "");
+}
+
+// ── 人員異動 (kind = 'member', 0079) 的句子 ──
+
+const ROLE_LABELS: Record<string, string> = { admin: "管理員", member: "成員", advisor: "顧問" };
+
+/** 'status:role' → 拆開 (null = 那一列不存在; 'self' 只會出現在刪除的 new_value) */
+function parseMemberState(v: string | null): { status: string; role: string } | null {
+  if (!v || !v.includes(":")) return null;
+  const [status, role] = v.split(":");
+  return { status: status!, role: role! };
+}
+
+/**
+ * 一筆人員異動 → 一句話的三段: 主詞 (誰做的) / 動作 / 受詞 (對誰) / 補充。
+ * subject = "actor" 表示主詞是操作者, "target" 表示主詞是那位成員自己 (申請 / 取消 / 離開 ——
+ * 這幾種操作者就是他本人, 而他那時候多半還不在名冊上, 用名冊回查會查不到)。
+ */
+export function memberSentence(a: Pick<ActivityRow, "old_value" | "new_value">): {
+  subject: "actor" | "target";
+  verb: string;
+  object: boolean;
+  tail: string;
+} {
+  const before = parseMemberState(a.old_value);
+  const after = parseMemberState(a.new_value);
+  const role = (s: { role: string } | null) => (s ? (ROLE_LABELS[s.role] ?? s.role) : "");
+  if (!before && after) {
+    return after.status === "pending"
+      ? { subject: "target", verb: "申請加入", object: false, tail: `（${role(after)}）` }
+      : { subject: "target", verb: "加入道館", object: false, tail: `（${role(after)}）` };
+  }
+  if (before && !after) {
+    const self = a.new_value === "self";
+    if (before.status === "pending") {
+      return self
+        ? { subject: "target", verb: "取消了加入申請", object: false, tail: "" }
+        : { subject: "actor", verb: "拒絕了", object: true, tail: "的加入申請" };
+    }
+    return self
+      ? { subject: "target", verb: "離開了道館", object: false, tail: `（原本是${role(before)}）` }
+      : { subject: "actor", verb: "把", object: true, tail: `移出道館（原本是${role(before)}）` };
+  }
+  if (before && after) {
+    if (before.status === "pending" && after.status !== "pending") {
+      return { subject: "actor", verb: "放行", object: true, tail: `加入（${role(after)}）` };
+    }
+    if (before.role !== after.role) {
+      return { subject: "actor", verb: "把", object: true, tail: `從${role(before)}改成${role(after)}` };
+    }
+  }
+  return { subject: "actor", verb: "變更了", object: true, tail: "的身分" };
 }

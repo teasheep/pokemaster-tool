@@ -40,7 +40,7 @@ export default async function GymActivityPage({
     redirect(`/login?redirect=/gyms/${id}/activity`);
   }
 
-  const [{ gym, viewer, members }, catalog] = await Promise.all([
+  const [{ gym, viewer, members, advisors }, catalog] = await Promise.all([
     getGymContext(id),
     loadPairsForClient().catch(() => []),
   ]);
@@ -79,6 +79,15 @@ export default async function GymActivityPage({
           avatarUrl: m.avatar_url,
           badgeText: m.badge_text,
           // actor_id 記的是 auth.uid —— 要靠它回查「這是誰改的」
+          userId: m.user_id,
+        }))}
+        // 人員異動的對象常常是顧問 (放行顧問 / 改成顧問) —— 只拿來回查頭像與名字
+        advisors={advisors.map((m) => ({
+          id: m.id,
+          displayName: m.display_name,
+          lineName: m.line_name,
+          avatarUrl: m.avatar_url,
+          badgeText: m.badge_text,
           userId: m.user_id,
         }))}
         catalog={catalog}

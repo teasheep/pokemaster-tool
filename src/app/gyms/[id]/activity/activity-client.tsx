@@ -51,6 +51,7 @@ import {
   ACTIVITY_LOGGED_KINDS,
   ACTIVITY_RANGES,
   ACTIVITY_RANGE_LABELS as RANGE_LABELS,
+  memberSentence,
 } from "./activity-filters";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import { useUrlState } from "@/lib/use-url-state";
@@ -67,6 +68,7 @@ const KIND_STYLES: Record<string, string> = {
   ticket: "bg-sky-500/15 text-sky-700 dark:text-sky-300",
   battle_log: "bg-purple-500/15 text-purple-700 dark:text-purple-300",
   gym_pair: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  member: "bg-rose-500/15 text-rose-700 dark:text-rose-300",
 };
 
 /** 台北當地日期 (YYYY-MM-DD) 的起訖 → ISO; 查詢用 */
@@ -175,6 +177,8 @@ function groupRuns(rows: ActivityRow[]): Group[] {
     const g = out[out.length - 1];
     const same =
       g &&
+      // 人員異動一筆一列 (每一筆都是一句完整的話, 收成「幾件」反而要多點一下才看得到)
+      r.kind !== "member" &&
       g.actorId === r.actor_id &&
       g.memberId === r.member_id &&
       g.kind === r.kind &&
@@ -200,6 +204,7 @@ export function ActivityClient({
   isAdmin,
   myMemberId,
   members,
+  advisors = [],
   catalog,
   initialMember = "all",
   initialKind = "pair",
@@ -211,6 +216,8 @@ export function ActivityClient({
   isAdmin: boolean;
   myMemberId: string | null;
   members: MemberLite[];
+  /** 顧問: 不進成員篩選, 只用來回查人員異動的頭像與名字 */
+  advisors?: MemberLite[];
   catalog: ClientPairRecord[];
   initialMember?: string;
   initialKind?: (typeof ACTIVITY_KINDS)[number];
@@ -244,11 +251,13 @@ export function ActivityClient({
     to: days === "custom" ? to || null : null,
   });
 
-  const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
+  // 回查用的名冊含顧問 —— 人員異動的對象常常就是顧問 (放行顧問 / 把人改成顧問)
+  const people = useMemo(() => [...members, ...advisors], [members, advisors]);
+  const memberById = useMemo(() => new Map(people.map((m) => [m.id, m])), [people]);
   /** actor_id 是 auth.uid → 回查成員卡 (匯入的舊資料 actor 是 null) */
   const memberByUser = useMemo(
-    () => new Map(members.filter((m) => m.userId).map((m) => [m.userId as string, m])),
-    [members]
+    () => new Map(people.filter((m) => m.userId).map((m) => [m.userId as string, m])),
+    [people]
   );
 
   /** 撈第 offset 筆起的一頁**原始**紀錄 (篩選條件就是目前畫面上的那一組) */
@@ -432,12 +441,24 @@ export function ActivityClient({
       ) : groups.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-card/50 p-10 text-center text-sm text-muted-foreground">
           {days === "all"
-            ? "尚無紀錄 — 之後的拍組練度、糖果、挑戰券、道館拍組異動都會出現在這裡"
+            ? "尚無紀錄 — 之後的拍組練度、糖果、挑戰券、道館拍組、人員異動都會出現在這裡"
             : `這段時間內沒有紀錄 — 換一段時間或按「全部」看看`}
         </div>
       ) : (
         <div className="space-y-2">
           {groups.map((g) => {
+            if (g.kind === "member") {
+              const a = g.items[0]!;
+              return (
+                <MemberEventRow
+                  key={g.key}
+                  row={a}
+                  actor={g.actorId ? (memberByUser.get(g.actorId) ?? null) : null}
+                  target={a.member_id ? (memberById.get(a.member_id) ?? null) : null}
+                  when={fmt(a.created_at)}
+                />
+              );
+            }
             const actor = g.actorId ? memberByUser.get(g.actorId) : null;
             const target = g.memberId ? memberById.get(g.memberId) : null;
             const self = Boolean(actor && target && actor.id === target.id);
@@ -577,5 +598,58 @@ export function ActivityClient({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * 人員異動一筆 = 一句話, 不展開 (0079): 「小鳴 放行 某某 加入（顧問）」。
+ * 對象被移出 / 拒絕之後名冊上就沒有他了 → 名字用寫入當下的快照 (target), 頭像退回圓圈字。
+ */
+function MemberEventRow({
+  row,
+  actor,
+  target,
+  when,
+}: {
+  row: ActivityRow;
+  actor: MemberLite | null;
+  target: MemberLite | null;
+  when: string;
+}) {
+  const s = memberSentence(row);
+  const targetName = target ? memberLabel(target) : (row.target ?? "已退出的成員");
+  return (
+    <div
+      data-activity-group=""
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border bg-card px-3 py-2 text-sm max-sm:min-h-11"
+    >
+      {s.subject === "target" ? (
+        <Who m={target} name={targetName} />
+      ) : (
+        // 操作者查不到 = service role 的腳本 (actor_id null) 或已經不在這一館的人
+        <Who m={actor} name={actor ? memberLabel(actor) : row.actor_id ? "已退出的成員" : "系統"} />
+      )}
+      <span className="text-muted-foreground">{s.verb}</span>
+      {s.object ? <Who m={target} name={targetName} /> : null}
+      {s.tail ? <span className="text-muted-foreground">{s.tail}</span> : null}
+      <span className={cn("rounded px-1.5 py-0.5 text-xs", KIND_STYLES.member)}>{KIND_LABELS.member}</span>
+      <span className="ml-auto text-xs tabular-nums text-muted-foreground">{when}</span>
+    </div>
+  );
+}
+
+/** 頭像 + 名字 (名冊上查不到的人退回名字的第一個字) */
+function Who({ m, name }: { m: MemberLite | null; name: string }) {
+  return (
+    <>
+      {m ? (
+        <MemberAvatar member={m} size="sm" className="h-6 w-6 text-[10px]" />
+      ) : (
+        <span className="flex h-6 w-6 items-center justify-center rounded-full border text-[10px] text-muted-foreground">
+          {name.slice(0, 1) || "?"}
+        </span>
+      )}
+      <span className="font-medium">{name}</span>
+    </>
   );
 }
