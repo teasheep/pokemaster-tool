@@ -733,9 +733,43 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   資料欄位 (`exStyleWorn` / `exStyleImagePath`) 與 `public/reference/trainer-ex/` 的圖檔
   都留著不刪 (可重新產生的成本比留著高), 但**不要再為它長 UI**。
   `SyncPairCard` 的 `exStyle` prop 全站零呼叫端, 留著只為相容。
+- **拍組跟著帳號走, 道館那一份只是鏡像** (0080, 2026-10-01 使用者:「拍組應該是跟著 google 帳號,
+  不會因為道館離開加入而被影響」)。三個前科都沒有徵兆:
+  1. **加入道館不會補鏡像** —— 鏡像只在改練度那一下寫, 所以轉館的人在新道館裡一張卡都沒有
+     (軒: 帳號 439 張、跑路道館 0 張; 線上同樣狀況共 9 位、843 列)。
+  2. **鏡像跟帳號對不上** —— `set_member_pair` 新增鏡像列時等級固定給 1、星數給 null; 轉館的人看到灰卡就在
+     道館頁手動重點 (軒 10/1 點了 87 張, 全部 Lv1 / 星數空白)。線上當時寶數 76 / 等級 94 / 星數 586 列對不上。
+  3. **移出成員被記成「管理員把他的練度全部歸 0」** —— FK cascade 刪鏡像列時, member_pairs / member_candies /
+     battle_logs 的紀錄 trigger 一列一列照記 (哲爸 138 筆、軒 453 筆, 帳號裡一張都沒少)。
+     現在三支 trigger 在**成員已經不在**時不記刪除, 只留 0079 那一筆「人員」。
+  修法 = RPC `backfill_my_member_pairs`: 把**呼叫者自己帳號**的拍組同步進他的鏡像 ——
+  **缺的補上、既有的列對齊帳號 (寶數 / 等級 / 星數 / 石盤 / EX 體系 / 潛能 / 備註)、不刪、不寫道館紀錄**
+  (`pm.mirror_backfill` 交易設定, 拍組 trigger 的 insert 與 update 兩段都認它)。
+  **可以覆蓋既有列的理由**: 對已綁帳號的成員, 兩條寫入路徑都**先寫帳號** —— /pairs 是帳號寫成功才
+  syncMemberPair, set_member_pair (含管理員代改) 在同一個交易裡兩邊一起寫 —— 帳號永遠是最新的那一份。
+  哪天有人加了一條「只寫鏡像不寫帳號」的路, 這個前提就不成立, 要回來看這裡。
+  pair_label 由前端照 `pairLabel()` 算好傳進去 (`lib/pairs/mirror-labels.ts`) —— 資料庫沒有圖鑑。
+  **誰在什麼時候呼叫** (`lib/gym/backfill-pairs.ts`):
+  - 道館導覽列 (`gym-nav.tsx`, 進任何一個道館分頁含看板深連結) 與 `/pairs`: `after()` 排程, 回應送出後才跑。
+    ⚠ Server Component 的 `after()` 裡不能讀 cookies, client 一定要在排程**之前**建好。
+  - **成員頁: 自己的卡有缺就先同步完再畫** (`syncMyMirror`, 不是 after) —— 這一頁預設選的是自己,
+    交給 after 的話第一次畫出來還是灰卡, 而在灰卡上點左下角會走 set_member_pair 從寶1 開始寫,
+    **連帳號一起改掉**。帳號 pair_id 與全館持有平行抓, 沒缺就一趟都不多。
+  - ⚠ 兩支都**不可以丟例外** —— 背景補資料壞了頂多下次再補; `/pairs` 那一段丟例外會讓 gymSync 落空
+    (之後改的練度都不再同步進道館)。
+  - 一次性的全員同步 (不用等每個人自己回來): `node scripts/dev/sync-all-mirrors-0080.node.mjs`
+    (預設乾跑 + ROLLBACK, `--apply` 才 commit)。
+  **知道就好的副作用**: 開頁 (GET) 現在會寫資料庫 (自己的鏡像, 冪等) —— 本機 dev 連的是正式資料庫,
+  用 render-probe 登入某位成員開頁就會替他同步; 使用教學開著時也會同步 (教學的「不寫入」只攔瀏覽器端的 fetch,
+  而這筆寫的是帳號本來就有的東西)。
+  **還沒處理**: 被移出的成員**出戰紀錄 (battle_logs) 與挑戰券會被 cascade 真的刪掉**, 賽事統計跟著變
+  (哲爸 21 筆 / 30 張, 第三次道館戰) —— 要不要保留是使用者的決定。糖果 (`member_candies`) 是
+  「這一館的這個人」不是帳號的, 轉館不會跟過去。管理員剛放行的人在他自己上線之前, 名冊上看起來是空的。
+  鏡像補齊之後成員頁內嵌的圖鑑子集 (道館名單 ∪ 全館持有) 會接近整本, 上線後要量 payload。
 - **雙表同步**: `user_collection` 任何寫入都要經 `syncMemberPair()` (`src/lib/collection-sync.ts`) 同步
-  `member_pairs`, 否則排刀/道館拍組頁看到舊資料。新增 `CollectionEntry` 欄位時三處都要接: collection.ts
-  讀取、兩個 client 的 upsert、syncMemberPair。
+  `member_pairs`, 否則排刀/道館拍組頁看到舊資料。新增 `CollectionEntry` 欄位時四處都要接: collection.ts
+  讀取、兩個 client 的 upsert、syncMemberPair, **以及 RPC `backfill_my_member_pairs` 的 insert 欄位與 update 的 set**
+  (0080; 漏了的話轉館的人那一欄永遠是預設值, `tests/pairs-follow-account.test.ts` 會擋)。
 - **`/resources` 是「背包」不是「糖果頁」** (2026-09-06 使用者指定「資源」, 2026-09-10 改叫
   「我的背包」並換上背包 icon (`Backpack`, 原本是 `Candy`)): 三塊 —
   道具 (有幾個) + **想投入資源的屬性** + **已投入較多資源的屬性**,

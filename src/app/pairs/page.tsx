@@ -6,6 +6,7 @@ import { getUserCollection, type CollectionMap } from "@/lib/collection";
 import { loadPairsForClient } from "@/lib/pairs/loader";
 import { parseCardInfo } from "@/lib/pairs/potentials";
 import { getMyMemberships } from "@/lib/gym/active-gym";
+import { scheduleMyPairsBackfill } from "@/lib/gym/backfill-pairs";
 import { PairsHub } from "./pairs-hub";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +55,7 @@ export default async function PairsPage({
       if (user) {
         signedIn = true;
         // 一人可多館 → 以「目前道館」(cookie) 為準, 不能隨便抓第一筆成員列
-        const [col, { active }] = await Promise.all([
+        const [col, { all, active }] = await Promise.all([
           getUserCollection(user.id),
           getMyMemberships(user.id),
         ]);
@@ -76,6 +77,12 @@ export default async function PairsPage({
           gymPairIds = [...new Set((gp ?? []).map((g) => g.pair_id!).filter(Boolean))];
           isGymAdmin = active.isAdmin;
         }
+        // 拍組跟著帳號走 (0080): 回應送出後把帳號的拍組同步進自己所在的每一館 (不只目前這一館)。
+        // 放在 gymSync 算完之後 —— 它不會丟例外, 但萬一丟了也不能讓 gymSync 落空 (改的練度就不再同步進道館)。
+        await scheduleMyPairsBackfill(
+          user.id,
+          all.filter((m) => m.role !== "advisor").map((m) => m.memberId)
+        );
       }
     } catch {
       // 未登入或讀取失敗 → 訪客圖鑑模式

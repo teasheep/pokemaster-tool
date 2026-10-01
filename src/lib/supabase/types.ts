@@ -737,6 +737,14 @@ export type Database = {
         Returns: Json;
       };
       /**
+       * 把呼叫者自己帳號的拍組補進他在某一館的鏡像 (0080): 只補缺的、不覆蓋、不刪、不記紀錄。
+       * p_labels = [{pair_id, label}] (label 由 pairLabel() 算); 回傳補了幾列。
+       */
+      backfill_my_member_pairs: {
+        Args: { p_member: string; p_labels: Json };
+        Returns: number;
+      };
+      /**
        * 我還在等確認的道館 (0071) —— 待確認的人讀不到 gyms 也讀不到自己那一列,
        * 所以「我的道館」清單要靠這支才問得到館名。只回呼叫者自己的申請。
        */

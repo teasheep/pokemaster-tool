@@ -1,6 +1,7 @@
 import { ShellRow } from "@/components/page-shell";
 import { getSessionUser } from "@/lib/supabase/server";
 import { getMyMemberships } from "@/lib/gym/active-gym";
+import { scheduleMyPairsBackfill } from "@/lib/gym/backfill-pairs";
 import { GymTabs } from "./gym-tabs";
 import { GymSwitcher } from "./gym-switcher";
 
@@ -27,6 +28,13 @@ export async function GymNav({ gymId }: { gymId: string }) {
     if (user) {
       const { all } = await getMyMemberships(user.id);
       gyms = all.map((m) => ({ gymId: m.gymId, gymName: m.gymName, role: m.role }));
+      // 拍組跟著帳號走 (0080): 進到任何一個道館分頁 (含 LINE 貼的單場看板深連結) 都把帳號的拍組
+      // 同步進自己所在的每一館 —— 回應送出後才跑, 不擋導覽列。layout 在分頁間切換不會重畫,
+      // 所以是「每次進道館一次」, 不是每換一個分頁一次。
+      await scheduleMyPairsBackfill(
+        user.id,
+        all.filter((m) => m.role !== "advisor").map((m) => m.memberId)
+      );
     }
   } catch {
     // 未登入等情況: tabs 仍渲染

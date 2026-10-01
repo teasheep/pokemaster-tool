@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { createClient, getSessionUser } from "@/lib/supabase/server";
+import { fetchMyOwnedPairIds, syncMyMirror } from "@/lib/gym/backfill-pairs";
 import { fetchGymGrades, getGymContext, getMyPendingGyms } from "@/lib/gym/queries";
-import { CATALOG_VERSION, loadPairsForClient } from "@/lib/pairs/loader";
+import { CATALOG_VERSION, loadPairsById, loadPairsForClient } from "@/lib/pairs/loader";
 import { pickParam } from "@/lib/url-params";
 import { parseCardInfo } from "@/lib/pairs/potentials";
 import { MembersClient } from "./members-client";
@@ -49,14 +50,37 @@ export default async function GymMembersPage({
     );
   }
 
-  const [{ data: gymPairs }, grades, { data: invite }] = await Promise.all([
+  // 我自己算不算這一館的一員 (顧問的練度不屬於這一館, 0072)
+  const mirrorMe = viewer.memberId && !viewer.isAdvisor ? viewer.memberId : null;
+  const [{ data: gymPairs }, gradesNow, { data: invite }, myOwned] = await Promise.all([
     supabase.from("gym_pairs").select("id, pair_label, pair_id, type").eq("gym_id", id),
     // 全館持有 (分頁全量 — 這張表早就破 2000 列, 忘了分頁持有率會默默少算)
     fetchGymGrades(id),
     viewer.isAdmin
       ? supabase.from("gym_invites").select("code, advisor_code").eq("gym_id", id).maybeSingle()
       : Promise.resolve({ data: null }),
+    // 跟上面平行打, 不多花時間: 只是要知道「我帳號有、這一館卻沒有」的卡有沒有
+    mirrorMe ? fetchMyOwnedPairIds(supabase, user.id) : Promise.resolve([] as string[]),
   ]);
+
+  /**
+   * 拍組跟著帳號走 (0080): **我自己的卡在這一館有缺, 就先同步完再畫**。
+   * 剛轉館 / 剛被放行的人第一個落地的就是這一頁, 而這一頁預設選的是自己 ——
+   * 交給 after() 的話這一次畫出來的還是灰卡, 而在灰卡上點左下角會走 set_member_pair 從寶1 開始寫,
+   * **連帳號一起改掉** (軒 10/1 就在這一頁手動重點了 87 張)。
+   * 沒有缺 (平常的每一次) 就一趟都不多; 只有缺的那一次多兩趟 (同步 + 重抓全館持有)。
+   * 值對不上 (等級 / 星數…) 不在這裡等, 由導覽列 (gym-nav.tsx) 排程的那一次同步處理。
+   */
+  let grades = gradesNow;
+  if (mirrorMe && myOwned.length > 0) {
+    const mine = new Set(grades.filter((g) => g.member_id === mirrorMe).map((g) => g.pair_id));
+    // 圖鑑查不到的 pair_id 生不出 label、永遠補不進去 —— 不算「缺」, 不然每次開頁都白跑一次
+    const byId = await loadPairsById();
+    if (myOwned.some((pid) => !mine.has(pid) && byId.has(pid))) {
+      const changed = await syncMyMirror(supabase, [mirrorMe], myOwned);
+      if (changed > 0) grades = await fetchGymGrades(id);
+    }
+  }
 
   const memberList = [...members, ...advisors];
 
