@@ -778,7 +778,19 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   4. 隊伍庫 (gym_teams / gym_team_pairs) 沒有任何欄位指向成員, 移出本來就碰不到。
      挑戰券剩餘數、拍組鏡像、糖果、資源屬性仍然跟著成員刪 —— 那些是現在的狀態不是歷史。
   同一個人之後再加入會是新的一列, 舊紀錄仍然顯示「（已離開）」的那一份 (沒有用 user_id 接回去)。
+  哲爸那 21 筆是從群組的「出刀作戰儀表板」網頁 (ref/群組文件連結.md, 08-13) 撈回原始資料補回去的
+  (`scripts/dev/restore-roy-battle-logs.node.mjs`, 三道驗證: 其他 270 筆逐筆相同 / 刪除紀錄相同 / 張數相同)。
   `tests/departed-battle-logs.test.ts` 釘住; 乾跑 `scripts/dev/dryrun-0081.node.mjs`。
+- **道館資料刪了一律留一份** (0082 `deleted_rows`, 2026-10-01 使用者:「救不回來? 你應該要有之前的紀錄才對
+  這個問題得修」)。16 張道館資料表各掛一支 AFTER DELETE 的 statement 級 trigger (transition table),
+  **cascade 刪除也接得到** —— 移出成員、刪除賽事、刪除整館連帶刪掉的東西都在, 整列原封不動存成 jsonb。
+  還原: `node scripts/dev/restore-deleted.node.mjs --list --gym <館名>` 先看, 再 `--table <表> --since <時間> --apply`
+  (有上下層的要由上往下還原)。三件事:
+  1. **新增道館資料表 (有 gym_id) 就要加進 0082 那份清單** —— `tests/deleted-rows-archive.test.ts` 會擋。
+  2. **個人帳號資料刻意不封存** (profiles / user_collection / shares): 刪帳號是隱私權, 刪了就該真的不見。
+  3. 封存沒有任何 RLS policy, 一般使用者讀寫都不行; 只有 service role / 資料庫管理端看得到。它是保險, 不是功能,
+     **不要長出畫面**。gym_id 刻意沒有外鍵 (整館刪掉封存也要留著)。
+  乾跑 `scripts/dev/dryrun-0082.node.mjs` (刪出刀 / 移出成員 / 刪賽事 / 刪整館, 各自驗封存與還原)。
 - **雙表同步**: `user_collection` 任何寫入都要經 `syncMemberPair()` (`src/lib/collection-sync.ts`) 同步
   `member_pairs`, 否則排刀/道館拍組頁看到舊資料。新增 `CollectionEntry` 欄位時四處都要接: collection.ts
   讀取、兩個 client 的 upsert、syncMemberPair, **以及 RPC `backfill_my_member_pairs` 的 insert 欄位與 update 的 set**
