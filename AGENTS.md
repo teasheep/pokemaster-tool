@@ -762,10 +762,23 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   **知道就好的副作用**: 開頁 (GET) 現在會寫資料庫 (自己的鏡像, 冪等) —— 本機 dev 連的是正式資料庫,
   用 render-probe 登入某位成員開頁就會替他同步; 使用教學開著時也會同步 (教學的「不寫入」只攔瀏覽器端的 fetch,
   而這筆寫的是帳號本來就有的東西)。
-  **還沒處理**: 被移出的成員**出戰紀錄 (battle_logs) 與挑戰券會被 cascade 真的刪掉**, 賽事統計跟著變
-  (哲爸 21 筆 / 30 張, 第三次道館戰) —— 要不要保留是使用者的決定。糖果 (`member_candies`) 是
+  **還沒處理**: 糖果 (`member_candies`) 是
   「這一館的這個人」不是帳號的, 轉館不會跟過去。管理員剛放行的人在他自己上線之前, 名冊上看起來是空的。
   鏡像補齊之後成員頁內嵌的圖鑑子集 (道館名單 ∪ 全館持有) 會接近整本, 上線後要量 payload。
+- **移出成員不刪他的出刀紀錄** (0081, 2026-10-01 使用者:「出刀紀錄…就是那個人出刀的 不應該跟著成員離開而離開
+  也許可以頭像變灰之類的 但記錄應該要留著」)。前科: `battle_logs.member_id` 是 on delete cascade,
+  哲爸被移出時 21 筆 / 30 張跟著消失, 已經結束的第三次道館戰統計被改掉 (那 21 筆救不回來, 原始資料已經不在)。
+  1. **`battle_logs.member_id` 沒有外鍵了** —— 成員被移出後紀錄留著, member_id 照舊是他原本那一列的 id。
+     亂填 member_id 一樣寫不進去 (insert / update 的 RLS 都要 `member_in_gym`)。**不要把外鍵加回來**,
+     也不要改成 set null (那要動每一個讀 member_id 的地方)。
+  2. **`departed_members`** = 移出那一刻的名字 / 頭像快照 (id = 原本的 gym_members.id), 只有 trigger 寫得進去,
+     只在他有出刀紀錄時才存; 整館刪除不存。
+  3. 看板把它們標成 `departed: true` **只併進「查紀錄是誰出的」那張 map** —— 頭像灰階、名字後面加「（已離開）」。
+     **不要混進 `members`**: 那份同時是名冊、挑戰券、出刀選單的來源, 離開的人出現在那裡就是 bug。
+  4. 隊伍庫 (gym_teams / gym_team_pairs) 沒有任何欄位指向成員, 移出本來就碰不到。
+     挑戰券剩餘數、拍組鏡像、糖果、資源屬性仍然跟著成員刪 —— 那些是現在的狀態不是歷史。
+  同一個人之後再加入會是新的一列, 舊紀錄仍然顯示「（已離開）」的那一份 (沒有用 user_id 接回去)。
+  `tests/departed-battle-logs.test.ts` 釘住; 乾跑 `scripts/dev/dryrun-0081.node.mjs`。
 - **雙表同步**: `user_collection` 任何寫入都要經 `syncMemberPair()` (`src/lib/collection-sync.ts`) 同步
   `member_pairs`, 否則排刀/道館拍組頁看到舊資料。新增 `CollectionEntry` 欄位時四處都要接: collection.ts
   讀取、兩個 client 的 upsert、syncMemberPair, **以及 RPC `backfill_my_member_pairs` 的 insert 欄位與 update 的 set**

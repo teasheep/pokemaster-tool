@@ -591,8 +591,26 @@ export type Database = {
         };
         Relationships: [];
       };
+      // 離開的成員的快照 (0081): 移出成員時存一份名字/頭像, 看板畫他留下的出刀紀錄用 (灰色頭像)。
+      // id = 原本的 gym_members.id = battle_logs.member_id。只有 trigger 寫得進去。
+      departed_members: {
+        Row: {
+          id: string;
+          gym_id: string;
+          user_id: string | null;
+          display_name: string;
+          line_name: string | null;
+          avatar_url: string | null;
+          badge_text: string | null;
+          left_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       // 戰鬥紀錄 (0006): 每場出戰回報, 剩餘券與分數統計的資料源
       // (round_label / notes 已 drop, 0047 — 輪次標籤一律 roundLabel(round) 派生)
+      // 0081 起 member_id 沒有外鍵: 成員被移出之後紀錄留著, 對到 departed_members
       battle_logs: {
         Row: {
           id: string;

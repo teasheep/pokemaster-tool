@@ -145,6 +145,11 @@ type Props = {
     endsOn: string | null;
   };
   members: MemberCardData[];
+  /**
+   * 已經離開這一館、但在這一場留下出刀紀錄的人 (0081, departed: true)。
+   * **只拿來查「這筆紀錄是誰出的」** —— 不進名冊、挑戰券、任何選單。
+   */
+  departedMembers?: MemberCardData[];
   initialStages: StageRow[];
   initialTickets: TicketRow[];
   /** 對戰紀錄 (索引式傳輸, 見 PackedLogs) — 進到元件裡就還原成 BattleLogRow[] */
@@ -174,6 +179,7 @@ export function BattleClient({
   viewer,
   battle,
   members,
+  departedMembers = [],
   initialStages,
   initialTickets,
   initialLogs,
@@ -642,6 +648,7 @@ export function BattleClient({
             stages={stages}
             logs={logs}
             members={members}
+            departedMembers={departedMembers}
             memberGrades={memberGrades}
             memberCandies={memberCandies}
             catalog={catalog}
@@ -738,6 +745,7 @@ export function BattleClient({
             battleId={battle.id}
             viewer={viewer}
             members={members}
+            departedMembers={departedMembers}
             stages={stages}
             logs={logs}
             onChanged={async () => {
@@ -957,6 +965,7 @@ function BattleLogsCard({
   battleId,
   viewer,
   members,
+  departedMembers,
   stages,
   logs,
   onChanged,
@@ -965,6 +974,7 @@ function BattleLogsCard({
   battleId: string;
   viewer: GymViewer;
   members: MemberCardData[];
+  departedMembers: MemberCardData[];
   stages: StageRow[];
   logs: BattleLogRow[];
   onChanged: () => Promise<void>;
@@ -978,7 +988,11 @@ function BattleLogsCard({
   const [saving, setSaving] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
-  const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
+  // 查「紀錄是誰出的」: 名冊上的人 + 已經離開的人 (0081, 灰色頭像) —— 後者只在這張 map 裡
+  const memberById = useMemo(
+    () => new Map([...departedMembers, ...members].map((m) => [m.id, m])),
+    [members, departedMembers]
+  );
   // 顧問也有 memberId (他就是一列 role=advisor 的 gym_members), 所以光看 memberId 會把
   // 唯讀身分放進來 —— 表單畫得出來、按得下去, 然後被 RLS 擋下, 使用者看到的是英文的
   // 「new row violates row-level security policy」。`viewer.canEdit` 就是 !isAdvisor。

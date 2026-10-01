@@ -24,6 +24,11 @@ export type MemberCardData = {
    * 就可以馬上知道是哪一位會友」—— 有頭貼的人不受影響 (圖優先)。
    */
   badgeText?: string | null;
+  /**
+   * 已經離開這一館 (0081) —— 只會出現在「出刀紀錄是誰出的」那種查詢裡, 不會進名冊或任何選單。
+   * 頭像變灰、名字後面加「（已離開）」: 紀錄是他出的, 要留著, 但要看得出他已經不在了。
+   */
+  departed?: boolean;
 };
 
 // 手機的縮寫字放大到 12px (10-11px 在手機上根本認不出是哪個字)
@@ -40,10 +45,14 @@ const SIZES = {
  * 括號裡那個是用來對上遊戲內帳號的, 平常認人靠的是前面那個。
  * 沒填社群名的人維持只顯示遊戲名 (不要變成「(遊戲名)」那種空括號)。
  */
-export function memberLabel(m: { displayName: string; lineName?: string | null }): string {
-  return m.lineName && m.lineName !== m.displayName
-    ? `${m.lineName}(${m.displayName})`
-    : m.displayName;
+export function memberLabel(m: {
+  displayName: string;
+  lineName?: string | null;
+  departed?: boolean;
+}): string {
+  const name =
+    m.lineName && m.lineName !== m.displayName ? `${m.lineName}(${m.displayName})` : m.displayName;
+  return m.departed ? `${name}（已離開）` : name;
 }
 
 /** 認人優先的那個名字 (頭像縮寫、排序、搜尋都用它) */
@@ -94,6 +103,8 @@ export function MemberAvatar({
         "relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full font-bold leading-none",
         hasImage ? "border bg-muted" : "whitespace-nowrap text-white",
         SIZES[size],
+        // 已離開的成員: 灰階 + 淡一點 (紀錄留著, 但看得出人已經不在)
+        member.departed && "opacity-60 grayscale",
         className
       )}
       style={

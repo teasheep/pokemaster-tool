@@ -61,6 +61,7 @@ export default async function BattlePage({
     { data: stageTeams },
     { data: roundNotes },
     { data: allBattles },
+    { data: departed },
   ] = await Promise.all([
     // select 一律明列欄位 — '*' 白送 gym_id/battle_id/時間戳, battle_logs 一場 290 列就多 40KB
     // (欄位清單 = stage-board.tsx 的 StageRow / BattleLogRow 投影, 兩邊一起改)
@@ -98,6 +99,12 @@ export default async function BattlePage({
       .select("id, name, starts_on, ends_on")
       .eq("gym_id", id)
       .order("created_at", { ascending: false }),
+    // 已經離開的成員 (0081): 他們的出刀紀錄留著, 看板畫灰色頭像要用名字/頭像快照。
+    // 一館最多就是歷年離開的那幾位, 不必分頁; 表還不存在 (migration 沒套) 時回 null, 等於沒有。
+    supabase
+      .from("departed_members")
+      .select("id, display_name, line_name, avatar_url, badge_text")
+      .eq("gym_id", id),
   ]);
 
   const memberCandies: Record<string, Record<string, number>> = {};
@@ -197,6 +204,17 @@ export default async function BattlePage({
             initialStages={stages ?? []}
             initialTickets={tickets ?? []}
             initialLogs={{ memberIds: logMemberIds, stageIds: logStageIds, rows: packedLogs }}
+            // 只送「這一場的紀錄裡真的出現」而且已經不在名冊上的人
+            departedMembers={(departed ?? [])
+              .filter((d) => logMemberIndex.has(d.id) && !members.some((m) => m.id === d.id))
+              .map((d) => ({
+                id: d.id,
+                displayName: d.display_name,
+                lineName: d.line_name,
+                avatarUrl: d.avatar_url,
+                badgeText: d.badge_text,
+                departed: true,
+              }))}
             memberGrades={{ pairIds: gradePairIds, byMember: packedGrades }}
             memberCandies={memberCandies}
             catalog={catalogForClient}

@@ -82,6 +82,8 @@ export type StageBoardProps = {
   stages: StageRow[];
   logs: BattleLogRow[];
   members: MemberCardData[];
+  /** 已經離開、但留下出刀紀錄的人 (0081) —— 只拿來查「這筆紀錄是誰出的」, 不進任何選單 */
+  departedMembers?: MemberCardData[];
   /** memberId → pairId → grade (1-6); 供隊伍媒合 */
   memberGrades: Record<string, Record<string, number>>;
   /** memberId → 糖果庫存; 媒合時計算「吃糖可達」 */
@@ -284,6 +286,7 @@ function StageCard({
   round,
   logs,
   members,
+  departedMembers,
   memberGrades,
   memberCandies,
   catalog: catalogSubset,
@@ -328,7 +331,12 @@ function StageCard({
   /** 待確認取消的出戰紀錄 (單擊即刪太危險 — 手機誤觸會直接動到全館共享資料) */
   const [undoTarget, setUndoTarget] = useState<BattleLogRow | null>(null);
 
-  const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
+  // 查「紀錄是誰出的」: 名冊上的人 + 已經離開的人 (0081, 灰色頭像)。
+  // 以前名冊上查不到的人那一顆頭像直接不畫 —— 券數照算、人卻不見, 看起來像少了一筆。
+  const memberById = useMemo(
+    () => new Map([...(departedMembers ?? []), ...members].map((m) => [m.id, m])),
+    [members, departedMembers]
+  );
   /** 這關的輪次敘述: round → note */
   const stageNotes = useMemo(
     () =>
