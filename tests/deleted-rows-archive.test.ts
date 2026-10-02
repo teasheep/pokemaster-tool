@@ -8,9 +8,20 @@ import { describe, expect, it } from "vitest";
 
 const read = (p: string) => fs.readFileSync(path.join(process.cwd(), p), "utf8").replace(/\r\n/g, "\n");
 const M = read("supabase/migrations/0082_deleted_rows_archive.sql");
+/**
+ * 封存清單 = 0082 那份 + 之後每一支 migration 自己補掛的 (同一個 foreach … archive_deleted_rows 寫法)。
+ * 之後的表**不能**加進 0082 的清單: 新專案從頭重建時 0082 先跑, 那時候表還不存在 (0083 起是這樣)。
+ */
 const archived = (() => {
-  const block = M.slice(M.indexOf("foreach t in array array["), M.indexOf("] loop"));
-  return new Set([...block.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]!));
+  const out = new Set<string>();
+  for (const f of fs.readdirSync(path.join(process.cwd(), "supabase/migrations")).sort()) {
+    if (f < "0082") continue;
+    const sql = read(`supabase/migrations/${f}`);
+    if (!sql.includes("archive_deleted_rows()")) continue;
+    for (const m of sql.matchAll(/foreach t in array array\[([\s\S]*?)\] loop/g))
+      for (const t of m[1]!.matchAll(/'([a-z_]+)'/g)) out.add(t[1]!);
+  }
+  return out;
 })();
 
 /** migrations 裡建過、有 gym_id 欄位的道館資料表 (create table … gym_id) */

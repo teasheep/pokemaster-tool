@@ -651,6 +651,100 @@ export type Database = {
         Relationships: [];
       };
       /** 每關每輪一句敘述 (0044) — 管理員可編, 全館可讀 */
+      // 0083 排刀表: 欄位 / 一格裡的人或備註 / 敘述
+      battle_plan_fields: {
+        Row: {
+          id: string;
+          gym_id: string;
+          battle_id: string;
+          label: string;
+          wide: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          battle_id: string;
+          label?: string;
+          wide?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          gym_id?: string;
+          battle_id?: string;
+          label?: string;
+          wide?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      battle_plan_slots: {
+        Row: {
+          id: string;
+          gym_id: string;
+          battle_id: string;
+          field_id: string;
+          stage_id: string | null;
+          member_id: string | null;
+          note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          battle_id: string;
+          field_id: string;
+          stage_id?: string | null;
+          member_id?: string | null;
+          note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          gym_id?: string;
+          battle_id?: string;
+          field_id?: string;
+          stage_id?: string | null;
+          member_id?: string | null;
+          note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      battle_plans: {
+        Row: {
+          battle_id: string;
+          gym_id: string;
+          note: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          battle_id: string;
+          gym_id: string;
+          note?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          battle_id?: string;
+          gym_id?: string;
+          note?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       stage_round_notes: {
         Row: {
           id: string;

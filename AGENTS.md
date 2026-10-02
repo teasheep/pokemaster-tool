@@ -1203,6 +1203,28 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   leader_name/rule/rule_block/team_id、battle_logs 的 round_label/notes、
   user_collection 的 move_level/sync_level、gym_members.avatar_pair_id 一併 drop。
   重做排刀/特規時重建 schema, 不要復活這些欄位名。
+- **排刀表 (0083, 2026-10-02 重做, 使用者:「把排刀表那個格式長進系統內」)**: 單場看板最上面一塊
+  可展開/收起的「排刀表」(`battle-plan.tsx`, 展開狀態進網址 `?plan=1`)。格式照群組原本那張截圖:
+  8 關各一張卡 (卡頭 = 屬性色 + 館主, 與關卡卡片同一個長相), 卡裡是**自己取名的欄位**
+  (預設 物攻 / 特攻), 加上**全場一格**的欄位 (預設 降抗) 與一段敘述。六件事:
+  1. **全館成員都能改, 顧問唯讀** (使用者:「道館成員都共同看的到且可以編輯」) —— RLS 寫入一律
+     `is_gym_editor`, 前端 `canEdit={viewer.canEdit}`。顧問與待確認的人**不能被排進去**
+     (`battle_plan_slot_ok`)。
+  2. **一人一列, 不是一格一個陣列** (`battle_plan_slots`): 加人 = upsert `ignoreDuplicates`,
+     拿掉 = 依 (欄位, 關卡, 成員) 刪 —— 多人同時在排不會互相蓋掉 (道館拍組名單 2026-09-09 那個坑)。
+     唯一鍵是 `unique nulls not distinct (field_id, stage_id, member_id)`: 全場那格 stage_id 是 null、
+     備註那列 member_id 是 null, 一般的 unique 會讓同一格長出兩列備註。
+  3. **欄位名稱 / 備註 / 敘述是「離開輸入框才存」**, 打字只改畫面 —— 每打一個字寫一次會在多人時互相蓋。
+     別人改的東西「回到分頁就重抓」(5 秒節流, 與看板同一套; 沒有 Realtime)。
+  4. **新賽事自動帶三個預設欄位** (`on_battle_created_plan` trigger); 欄位裡有人時刪除要按兩下。
+  5. **`battle-plan-data.ts` 不可以標 "use client"** —— page.tsx 要拿裡面的欄位字串去 select,
+     從 use client 的檔案 import 到的是 client reference, 整頁直接掛掉 (2026-10-02 踩過, 與
+     activity-filters 同一個坑)。`tests/battle-plan.test.ts` 釘住。
+  6. **選人側板**: 這關屬性的「道館拍組 / 所有該屬性拍組」照練度排, 已選的人置頂, 同一人排了兩格以上標黃。
+     **匯出圖片**是 canvas 自繪 (卡片版面 + 頭像 + 社群名(遊戲名)), 給賴群看的; 頭貼抓不到就退回縮寫圓圈。
+  封存: 三張表的刪除封存掛在 0083 自己 (**不要加進 0082 的清單** —— 重建時 0082 先跑, 表還不存在);
+  `tests/deleted-rows-archive.test.ts` 會把 0082 之後每一支 migration 的封存清單一起算。
+  端對端證明: `npm run qa:plan` (隔離帳號 + 隔離道館, 一般成員實際點); 乾跑 `scripts/dev/dryrun-0083.node.mjs`。
 - **挑戰券 = 「剩餘 / 上限」** (0043): 預設 30/30 從上限往下扣 (館內用法是「這場總共 30 刀」,
   不用官方 9+3/日記法), 上限可 ± (模擬用; 降上限會夾住剩餘)。寫入一律走
   `adjust_member_ticket(p_delta, p_cap_delta)` 原子 RPC, 不要 client 算絕對值回寫。

@@ -47,6 +47,7 @@ import {
 } from "./stage-board";
 import { ReportRunSheet } from "./report-run-sheet";
 import { BattlePlan } from "./battle-plan";
+import type { PlanFieldRow, PlanSlotRow } from "./battle-plan-data";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { reportBattleLog } from "@/lib/gym/battle-log";
@@ -173,8 +174,8 @@ type Props = {
   gymPairsList: { pairId: string; type: SyncPairType }[];
   /** 「關卡規則」開關的初始值 (page.tsx 從 ?rules=1 讀) */
   initialShowRules?: boolean;
-  /** 排刀表預覽的入口 (只有本機 SHOW_BATTLE_PLAN=1 才是 true, 見 battle-plan.tsx) */
-  planPreview?: boolean;
+  /** 排刀表 (0083) 的初始資料 */
+  initialPlan: { fields: PlanFieldRow[]; slots: PlanSlotRow[]; note: string };
   /** 「排刀」開關的初始值 (?plan=1) */
   initialShowPlan?: boolean;
 };
@@ -199,7 +200,7 @@ export function BattleClient({
   initialRoundNotes,
   gymPairsList,
   initialShowRules,
-  planPreview = false,
+  initialPlan,
   initialShowPlan,
 }: Props) {
   const router = useRouter();
@@ -222,7 +223,7 @@ export function BattleClient({
    */
   const [showRules, setShowRules] = useState(initialShowRules ?? false);
   /** 排刀表區塊展開/收起 —— 狀態進網址 (?plan=1), 重整與貼連結都留得住 */
-  const [showPlan, setShowPlan] = useState(planPreview && (initialShowPlan ?? false));
+  const [showPlan, setShowPlan] = useState(initialShowPlan ?? false);
   useUrlState({ rules: showRules ? "1" : null, plan: showPlan ? "1" : null });
   const hasRules = useMemo(() => matchTemplate(stages.map((s) => s.weak_type)) !== null, [stages]);
   /** 目前輪 — 由出戰紀錄推導 (最大已回報輪; 0047 起不再存欄位, 同狀態推導哲學) */
@@ -644,8 +645,12 @@ export function BattleClient({
         </span>
       </div>
 
-      {planPreview ? (
+      {stages.length ? (
         <BattlePlan
+          gymId={gymId}
+          initialFields={initialPlan.fields}
+          initialSlots={initialPlan.slots}
+          initialNote={initialPlan.note}
           open={showPlan}
           onOpenChange={setShowPlan}
           battleId={battle.id}

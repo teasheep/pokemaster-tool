@@ -10,6 +10,7 @@ import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { pickParam } from "@/lib/url-params";
 import type { Database, SyncPairType } from "@/lib/supabase/types";
 import { BattleClient } from "./battle-client";
+import { PLAN_FIELD_COLS, PLAN_SLOT_COLS, type PlanFieldRow, type PlanSlotRow } from "./battle-plan-data";
 
 /** 分頁查詢用的投影型別 — 欄位清單與下面的 select 一起改 */
 type BattleLogRow = Pick<
@@ -62,6 +63,9 @@ export default async function BattlePage({
     { data: roundNotes },
     { data: allBattles },
     { data: departed },
+    { data: planFields },
+    { data: planSlots },
+    { data: planNote },
   ] = await Promise.all([
     // select 一律明列欄位 — '*' 白送 gym_id/battle_id/時間戳, battle_logs 一場 290 列就多 40KB
     // (欄位清單 = stage-board.tsx 的 StageRow / BattleLogRow 投影, 兩邊一起改)
@@ -105,6 +109,15 @@ export default async function BattlePage({
       .from("departed_members")
       .select("id, display_name, line_name, avatar_url, badge_text")
       .eq("gym_id", id),
+    // 排刀表 (0083): 欄位 / 格子 / 敘述。一場最多幾十列, 不必分頁
+    supabase.from("battle_plan_fields").select(PLAN_FIELD_COLS).eq("battle_id", battleId),
+    supabase
+      .from("battle_plan_slots")
+      .select(PLAN_SLOT_COLS)
+      .eq("battle_id", battleId)
+      .order("created_at")
+      .order("id"),
+    supabase.from("battle_plans").select("note").eq("battle_id", battleId).maybeSingle(),
   ]);
 
   const memberCandies: Record<string, Record<string, number>> = {};
@@ -229,8 +242,11 @@ export default async function BattlePage({
             }))}
             initialRoundNotes={roundNotes ?? []}
             initialShowRules={pickParam(sp.rules, ["1", "0"] as const, "0") === "1"}
-            // 排刀表預覽 (battle-plan.tsx): 只有本機設了 SHOW_BATTLE_PLAN=1 才有入口, 線上不設 = 看不到
-            planPreview={process.env.SHOW_BATTLE_PLAN === "1"}
+            initialPlan={{
+              fields: (planFields ?? []) as PlanFieldRow[],
+              slots: (planSlots ?? []) as PlanSlotRow[],
+              note: planNote?.note ?? "",
+            }}
             initialShowPlan={pickParam(sp.plan, ["1", "0"] as const, "0") === "1"}
             gymPairsList={(gymPairRows ?? [])
               .filter((g) => g.pair_id)

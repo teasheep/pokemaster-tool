@@ -1,16 +1,18 @@
 "use client";
 
-// 排刀表 (預覽版, 2026-10-02 使用者:「先照你的版本生一個在本地我看看」)
+// 排刀表 (0083, 2026-10-02 使用者:「把排刀表那個格式長進系統內」)
 //
-// 照群組裡那張排刀表的樣子: 欄 = 這場的 8 關, 列 = 使用者自己取名的列 (物攻主打 / 特攻主打 / 降抗…)。
-// 列有兩種: 「每關一格」與「整場一格」(截圖裡的降抗支援手就是後者)。底下一塊自由敘述。
+// 照群組裡那張排刀表: 8 關各一張卡, 卡裡是自己取名的欄位 (預設 物攻 / 特攻), 加上全場一格的欄位
+// (預設 降抗) 與一段敘述。全館成員都看得到、都能改, 顧問唯讀 (RLS 是 is_gym_editor)。
 //
-// ⚠ 預覽版**只存在這台瀏覽器的 localStorage**, 沒有資料表 —— 本機 dev 連的是正式資料庫,
-//   在使用者看過、決定要做之前不開 migration。入口由 page.tsx 的 SHOW_BATTLE_PLAN 環境變數決定,
-//   線上不設 = 完全看不到。要正式上線時: 換成資料表 + RLS + 0082 封存清單, 這個檔的畫面沿用。
+// 資料是三張表 (見 0083): 欄位 battle_plan_fields / 一格裡的一個人或那格備註 battle_plan_slots /
+// 敘述 battle_plans。畫面吃的是由它們組出來的 Plan (欄位 → 每關的格子), 匯出圖也吃同一份。
+// ⚠ **一人一列** —— 加人 = upsert 忽略重複, 拿掉 = 依 (欄位, 關卡, 成員) 刪除, 兩個都冪等,
+//   多人同時在排也不會互相蓋掉 (別用「整格存一個陣列」那種寫法)。
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Download, Plus, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button, COARSE_HIT_AREA } from "@/components/ui/button";
@@ -33,7 +35,14 @@ import { GRADE_LABELS } from "@/lib/gym/types";
 import { pairName } from "@/lib/pairs/name";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import type { SyncPairType } from "@/lib/supabase/types";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import {
+  PLAN_FIELD_COLS,
+  PLAN_SLOT_COLS,
+  type PlanFieldRow,
+  type PlanSlotRow,
+} from "./battle-plan-data";
 
 type Cell = { members: string[]; text: string };
 type PlanRow = {
@@ -48,42 +57,21 @@ type Plan = { rows: PlanRow[]; note: string };
 const WIDE = "all";
 const EMPTY_CELL: Cell = { members: [], text: "" };
 
-const newId = () => Math.random().toString(36).slice(2, 10);
-const DEFAULT_PLAN: Plan = {
-  rows: [
-    { id: "r1", label: "物攻", wide: false, cells: {} },
-    { id: "r2", label: "特攻", wide: false, cells: {} },
-    { id: "r3", label: "降抗", wide: true, cells: {} },
-  ],
-  note: "",
-};
-
-// ── localStorage 當資料來源 (useSyncExternalStore: SSR 給 null, 不會 hydration 對不上) ──
-const storageKey = (battleId: string) => `pm-gym:battle-plan-preview:v1:${battleId}`;
-const CHANGE_EVENT = "pm-gym:battle-plan-change";
-function subscribe(cb: () => void) {
-  window.addEventListener("storage", cb);
-  window.addEventListener(CHANGE_EVENT, cb);
-  return () => {
-    window.removeEventListener("storage", cb);
-    window.removeEventListener(CHANGE_EVENT, cb);
-  };
-}
-function readRaw(battleId: string): string | null {
-  try {
-    return localStorage.getItem(storageKey(battleId));
-  } catch {
-    return null;
+/** 三張表 → 畫面用的 Plan (格子的 key: 關卡 id, 全場是 WIDE) */
+function toPlan(fields: PlanFieldRow[], slots: PlanSlotRow[], note: string): Plan {
+  const rows: PlanRow[] = [...fields]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((f) => ({ id: f.id, label: f.label, wide: f.wide, cells: {} }));
+  const byField = new Map(rows.map((r) => [r.id, r]));
+  for (const s of slots) {
+    const row = byField.get(s.field_id);
+    if (!row) continue;
+    const key = s.stage_id ?? WIDE;
+    const cell = (row.cells[key] ??= { members: [], text: "" });
+    if (s.member_id) cell.members.push(s.member_id);
+    else if (s.note) cell.text = s.note;
   }
-}
-function parsePlan(raw: string | null): Plan {
-  if (!raw) return DEFAULT_PLAN;
-  try {
-    const p = JSON.parse(raw) as Plan;
-    return Array.isArray(p.rows) ? { rows: p.rows, note: p.note ?? "" } : DEFAULT_PLAN;
-  } catch {
-    return DEFAULT_PLAN;
-  }
+  return { rows, note };
 }
 
 // ── 匯出圖片 (2026-10-02 使用者:「這個區塊要可以單獨匯出」) ──
@@ -478,6 +466,7 @@ function drawPlanImage(
 export function BattlePlan({
   open,
   onOpenChange,
+  gymId,
   battleId,
   battleName,
   canEdit,
@@ -487,12 +476,17 @@ export function BattlePlan({
   catalog,
   fullCatalogUrl,
   gymPairsList,
+  initialFields,
+  initialSlots,
+  initialNote,
 }: {
   /** 區塊展開/收起 (由 battle-client 管, 狀態進網址 ?plan=1) */
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  gymId: string;
   battleId: string;
   battleName: string;
+  /** 正式成員與管理員 (顧問唯讀) —— 與 RLS 的 is_gym_editor 同一條 */
   canEdit: boolean;
   stages: { id: string; weak_type: SyncPairType }[];
   members: MemberCardData[];
@@ -501,23 +495,175 @@ export function BattlePlan({
   /** 「全部該屬性拍組」要整本圖鑑, 按需載入 */
   fullCatalogUrl: string;
   gymPairsList: { pairId: string; type: SyncPairType }[];
+  initialFields: PlanFieldRow[];
+  initialSlots: PlanSlotRow[];
+  initialNote: string;
 }) {
-  const raw = useSyncExternalStore(
-    subscribe,
-    () => readRaw(battleId),
-    () => null,
-  );
-  const plan = useMemo(() => parsePlan(raw), [raw]);
-  const save = (next: Plan) => {
-    try {
-      localStorage.setItem(storageKey(battleId), JSON.stringify(next));
-    } catch {
-      /* 無痕模式寫不進去就算了, 這是預覽 */
-    }
-    window.dispatchEvent(new Event(CHANGE_EVENT));
+  const supabase = useMemo(() => createClient(), []);
+  const [fields, setFields] = useState(initialFields);
+  const [slots, setSlots] = useState(initialSlots);
+  const [note, setNote] = useState(initialNote);
+  const plan = useMemo(() => toPlan(fields, slots, note), [fields, slots, note]);
+
+  /** 重抓 (別人改了 / 自己寫失敗要回滾) —— 回到分頁時抓一次, 5 秒節流, 與看板同一套新鮮度 */
+  const refetch = async () => {
+    const [f, sl, pl] = await Promise.all([
+      supabase.from("battle_plan_fields").select(PLAN_FIELD_COLS).eq("battle_id", battleId),
+      supabase
+        .from("battle_plan_slots")
+        .select(PLAN_SLOT_COLS)
+        .eq("battle_id", battleId)
+        .order("created_at")
+        .order("id"),
+      supabase.from("battle_plans").select("note").eq("battle_id", battleId).maybeSingle(),
+    ]);
+    if (f.data) setFields(f.data);
+    if (sl.data) setSlots(sl.data);
+    // 正在打敘述的人不要被重抓蓋掉
+    if (!pl.error && document.activeElement !== noteRef.current) setNote(pl.data?.note ?? "");
   };
-  const updateRow = (id: string, fn: (r: PlanRow) => PlanRow) =>
-    save({ ...plan, rows: plan.rows.map((r) => (r.id === id ? fn(r) : r)) });
+  const refetchRef = useRef(refetch);
+  useEffect(() => {
+    refetchRef.current = refetch;
+  });
+  useEffect(() => {
+    let last = Date.now();
+    const onBack = () => {
+      if (document.visibilityState !== "visible" || Date.now() - last < 5000) return;
+      last = Date.now();
+      void refetchRef.current();
+    };
+    document.addEventListener("visibilitychange", onBack);
+    window.addEventListener("focus", onBack);
+    return () => {
+      document.removeEventListener("visibilitychange", onBack);
+      window.removeEventListener("focus", onBack);
+    };
+  }, []);
+  const failed = (what: string, message: string) => {
+    toast.error(`${what}失敗`, { description: message });
+    void refetch();
+  };
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+
+  // ── 寫入 (畫面先變, 失敗才重抓回滾) ──
+  const stageOf = (cellKey: string) => (cellKey === WIDE ? null : cellKey);
+  const sameCell = (s: PlanSlotRow, fieldId: string, cellKey: string) =>
+    s.field_id === fieldId && s.stage_id === stageOf(cellKey);
+
+  const toggleMember = async (fieldId: string, cellKey: string, memberId: string) => {
+    const stageId = stageOf(cellKey);
+    const has = slots.some((s) => sameCell(s, fieldId, cellKey) && s.member_id === memberId);
+    if (has) {
+      setSlots((prev) =>
+        prev.filter((s) => !(sameCell(s, fieldId, cellKey) && s.member_id === memberId)),
+      );
+      let q = supabase
+        .from("battle_plan_slots")
+        .delete()
+        .eq("field_id", fieldId)
+        .eq("member_id", memberId);
+      q = stageId ? q.eq("stage_id", stageId) : q.is("stage_id", null);
+      const { error } = await q;
+      if (error) failed("移除", error.message);
+    } else {
+      setSlots((prev) => [
+        ...prev,
+        { field_id: fieldId, stage_id: stageId, member_id: memberId, note: null },
+      ]);
+      // 冪等: 別人剛好也加了同一個人 → 什麼都不做 (不要跳 duplicate key 的錯)
+      const { error } = await supabase.from("battle_plan_slots").upsert(
+        {
+          gym_id: gymId,
+          battle_id: battleId,
+          field_id: fieldId,
+          stage_id: stageId,
+          member_id: memberId,
+        },
+        { onConflict: "field_id,stage_id,member_id", ignoreDuplicates: true },
+      );
+      if (error) failed("排入", error.message);
+    }
+  };
+
+  /** 那一格的備註: 打字只改畫面, 離開輸入框才存 (空白 = 刪掉那一列) */
+  const setCellText = (fieldId: string, cellKey: string, text: string) =>
+    setSlots((prev) => {
+      const rest = prev.filter((s) => !(sameCell(s, fieldId, cellKey) && s.member_id === null));
+      return text
+        ? [...rest, { field_id: fieldId, stage_id: stageOf(cellKey), member_id: null, note: text }]
+        : rest;
+    });
+  const saveCellText = async (fieldId: string, cellKey: string, raw: string) => {
+    const text = raw.trim();
+    const stageId = stageOf(cellKey);
+    if (!text) {
+      let q = supabase
+        .from("battle_plan_slots")
+        .delete()
+        .eq("field_id", fieldId)
+        .is("member_id", null);
+      q = stageId ? q.eq("stage_id", stageId) : q.is("stage_id", null);
+      const { error } = await q;
+      if (error) failed("儲存備註", error.message);
+      return;
+    }
+    const { error } = await supabase.from("battle_plan_slots").upsert(
+      {
+        gym_id: gymId,
+        battle_id: battleId,
+        field_id: fieldId,
+        stage_id: stageId,
+        member_id: null,
+        note: text,
+      },
+      { onConflict: "field_id,stage_id,member_id" },
+    );
+    if (error) failed("儲存備註", error.message);
+  };
+
+  const renameField = (id: string, label: string) =>
+    setFields((prev) => prev.map((f) => (f.id === id ? { ...f, label } : f)));
+  const saveFieldLabel = async (id: string, label: string) => {
+    const { error } = await supabase
+      .from("battle_plan_fields")
+      .update({ label: label.trim() })
+      .eq("id", id);
+    if (error) failed("改欄位名稱", error.message);
+  };
+  /** 欄位裡有人時要按兩下才刪 (與名冊的叉叉同一個手勢) */
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const deleteField = async (id: string) => {
+    const used = slots.some((s) => s.field_id === id);
+    if (used && confirmDelete !== id) {
+      setConfirmDelete(id);
+      return;
+    }
+    setConfirmDelete(null);
+    setFields((prev) => prev.filter((f) => f.id !== id));
+    setSlots((prev) => prev.filter((s) => s.field_id !== id));
+    const { error } = await supabase.from("battle_plan_fields").delete().eq("id", id);
+    if (error) failed("刪除欄位", error.message);
+  };
+  const addField = async (wide: boolean) => {
+    const sort = Math.max(0, ...fields.map((f) => f.sort_order)) + 1;
+    const { data, error } = await supabase
+      .from("battle_plan_fields")
+      .insert({ gym_id: gymId, battle_id: battleId, label: "", wide, sort_order: sort })
+      .select(PLAN_FIELD_COLS)
+      .single();
+    if (error || !data) {
+      failed("新增欄位", error?.message ?? "");
+      return;
+    }
+    setFields((prev) => [...prev, data]);
+  };
+  const saveNote = async (raw: string) => {
+    const { error } = await supabase
+      .from("battle_plans")
+      .upsert({ battle_id: battleId, gym_id: gymId, note: raw }, { onConflict: "battle_id" });
+    if (error) failed("儲存敘述", error.message);
+  };
 
   const roster = useMemo(() => members.filter((m) => m.role !== "advisor"), [members]);
   const byId = useMemo(() => new Map(roster.map((m) => [m.id, m])), [roster]);
@@ -559,7 +705,7 @@ export function BattlePlan({
     pairScope === "all" ? { ids: heldIds, fullCatalogUrl } : undefined,
   );
   const candidates = useMemo(() => {
-    if (!editRow) return [];
+    if (!editing) return [];
     const type = editStage?.weak_type;
     const pool = !type
       ? []
@@ -579,15 +725,7 @@ export function BattlePlan({
         return { m, score: held.reduce((sum, x) => sum + x.grade, 0), held };
       })
       .sort((a, b) => b.score - a.score || memberCallName(a.m).localeCompare(memberCallName(b.m)));
-  }, [editRow, editStage, pairScope, gymPairsList, fullCatalog, catById, roster, memberGrades]);
-
-  const setCell = (next: Cell) => {
-    if (!editing) return;
-    updateRow(editing.rowId, (r) => ({
-      ...r,
-      cells: { ...r.cells, [editing.cellKey]: next },
-    }));
-  };
+  }, [editing, editStage, pairScope, gymPairsList, fullCatalog, catById, roster, memberGrades]);
 
   const leaders = useMemo(() => matchTemplate(stages.map((s) => s.weak_type)), [stages]);
 
@@ -700,20 +838,27 @@ export function BattlePlan({
               placeholder="欄位名稱"
               // 寬度用 em 算: size 屬性是照英文字寬估的, 中文會被切掉一截
               style={{ width: `${Math.max(4, [...row.label].length) + 0.5}em` }}
-              onChange={(e) => updateRow(row.id, (r) => ({ ...r, label: e.target.value }))}
+              onChange={(e) => renameField(row.id, e.target.value)}
+              onBlur={(e) => void saveFieldLabel(row.id, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+              }}
               className="min-w-0 bg-transparent font-medium outline-none placeholder:text-muted-foreground"
             />
             <button
               type="button"
-              title="刪除欄位"
+              title={confirmDelete === row.id ? "再按一次刪除 (欄位裡已經有人)" : "刪除欄位"}
               aria-label="刪除欄位"
-              onClick={() => save({ ...plan, rows: plan.rows.filter((r) => r.id !== row.id) })}
+              onClick={() => void deleteField(row.id)}
+              onBlur={() => setConfirmDelete((c) => (c === row.id ? null : c))}
               className={cn(
                 "relative rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-destructive",
+                confirmDelete === row.id &&
+                  "bg-destructive px-2 text-xs text-white hover:bg-destructive hover:text-white",
                 COARSE_HIT_AREA,
               )}
             >
-              <X className="h-3.5 w-3.5" />
+              {confirmDelete === row.id ? "確定刪除" : <X className="h-3.5 w-3.5" />}
             </button>
           </span>
         ))}
@@ -721,9 +866,7 @@ export function BattlePlan({
           size="sm"
           variant="ghost"
           className="h-8 text-muted-foreground"
-          onClick={() =>
-            save({ ...plan, rows: [...plan.rows, { id: newId(), label: "", wide, cells: {} }] })
-          }
+          onClick={() => void addField(wide)}
         >
           <Plus className="mr-1 h-3.5 w-3.5" />
           {wide ? "新增欄位" : "新增關卡欄位"}
@@ -763,8 +906,6 @@ export function BattlePlan({
       </div>
       {open ? (
         <div className="space-y-3 border-t p-3">
-          <p className="text-xs text-muted-foreground">預覽版・資料僅儲存於本機瀏覽器</p>
-
           {/* 每關欄位 (名稱自己填, 可加可刪) —— 在關卡卡片上方 */}
           {fieldBar(stageRows, false)}
 
@@ -816,7 +957,9 @@ export function BattlePlan({
                 maxLength={2000}
                 rows={4}
                 placeholder="例：降抗順序、注意事項"
-                onChange={(e) => save({ ...plan, note: e.target.value })}
+                ref={noteRef}
+                onChange={(e) => setNote(e.target.value)}
+                onBlur={(e) => void saveNote(e.target.value)}
                 className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
               />
             ) : plan.note ? (
@@ -850,7 +993,8 @@ export function BattlePlan({
             maxLength={60}
             rows={3}
             placeholder="例：備用"
-            onChange={(e) => setCell({ ...editCell, text: e.target.value })}
+            onChange={(e) => setCellText(editing!.rowId, editing!.cellKey, e.target.value)}
+            onBlur={(e) => void saveCellText(editing!.rowId, editing!.cellKey, e.target.value)}
             className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
           />
           <div className="mt-6 flex items-center gap-2 border-t pt-4">
@@ -895,14 +1039,7 @@ export function BattlePlan({
                   <li key={m.id}>
                     <button
                       type="button"
-                      onClick={() =>
-                        setCell({
-                          ...editCell,
-                          members: on
-                            ? editCell.members.filter((x) => x !== m.id)
-                            : [...editCell.members, m.id],
-                        })
-                      }
+                      onClick={() => void toggleMember(editing!.rowId, editing!.cellKey, m.id)}
                       className={cn(
                         "w-full px-1 py-2 text-left",
                         on ? "bg-primary/10" : "hover:bg-accent",
