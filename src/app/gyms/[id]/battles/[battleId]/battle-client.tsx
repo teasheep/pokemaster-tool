@@ -46,6 +46,7 @@ import {
   type StageTeamRow,
 } from "./stage-board";
 import { ReportRunSheet } from "./report-run-sheet";
+import { BattlePlan } from "./battle-plan";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { reportBattleLog } from "@/lib/gym/battle-log";
@@ -172,6 +173,10 @@ type Props = {
   gymPairsList: { pairId: string; type: SyncPairType }[];
   /** 「關卡規則」開關的初始值 (page.tsx 從 ?rules=1 讀) */
   initialShowRules?: boolean;
+  /** 排刀表預覽的入口 (只有本機 SHOW_BATTLE_PLAN=1 才是 true, 見 battle-plan.tsx) */
+  planPreview?: boolean;
+  /** 「排刀」開關的初始值 (?plan=1) */
+  initialShowPlan?: boolean;
 };
 
 export function BattleClient({
@@ -194,6 +199,8 @@ export function BattleClient({
   initialRoundNotes,
   gymPairsList,
   initialShowRules,
+  planPreview = false,
+  initialShowPlan,
 }: Props) {
   const router = useRouter();
   /** 換賽事是 router.push (不是 Link, 吃不到 useLinkStatus) → 用 transition 自己給回饋 */
@@ -214,7 +221,9 @@ export function BattleClient({
    * 重整留得住, 把連結貼到群組, 對方打開也直接看到規則。
    */
   const [showRules, setShowRules] = useState(initialShowRules ?? false);
-  useUrlState({ rules: showRules ? "1" : null });
+  /** 排刀表區塊展開/收起 —— 狀態進網址 (?plan=1), 重整與貼連結都留得住 */
+  const [showPlan, setShowPlan] = useState(planPreview && (initialShowPlan ?? false));
+  useUrlState({ rules: showRules ? "1" : null, plan: showPlan ? "1" : null });
   const hasRules = useMemo(() => matchTemplate(stages.map((s) => s.weak_type)) !== null, [stages]);
   /** 目前輪 — 由出戰紀錄推導 (最大已回報輪; 0047 起不再存欄位, 同狀態推導哲學) */
   const round = useMemo(
@@ -634,6 +643,23 @@ export function BattleClient({
           ) : null}
         </span>
       </div>
+
+      {planPreview ? (
+        <BattlePlan
+          open={showPlan}
+          onOpenChange={setShowPlan}
+          battleId={battle.id}
+          battleName={battle.name}
+          // 全館成員都看得到、都能改 (2026-10-02 使用者:「道館成員都共同看的到且可以編輯」); 顧問唯讀
+          canEdit={viewer.canEdit}
+          stages={stages}
+          members={members}
+          memberGrades={memberGrades}
+          catalog={catalog}
+          fullCatalogUrl={fullCatalogUrl}
+          gymPairsList={gymPairsList}
+        />
+      ) : null}
 
       {/* 主體: 看板全寬 (券數收進「挑戰券」側板, 點了才出現) */}
       <div>

@@ -94,7 +94,11 @@ const nextConfig: NextConfig = {
       // 道館攻略仍然下架 (2026-08-17) — 只擋入口, 頁面與資料留著之後重做。
       // **道館紀錄 2026-09-10 已經回來了** (使用者:「之前做過的道館紀錄我覺得可以加回來了」),
       // 所以 /activity 這一行拿掉了 —— 分頁在 gym-tabs.tsx。
-      { source: "/gyms/:id/guides", destination: "/gyms/:id/members", permanent: false },
+      // 本機要看舊攻略時: `$env:SHOW_GUIDES=1; npm run dev` (2026-10-01 使用者要在本地看)。
+      // 線上不設這個變數 = 照舊轉導; 導覽列也沒有入口 (下架的規矩不變)。
+      ...(process.env.SHOW_GUIDES === "1"
+        ? []
+        : [{ source: "/gyms/:id/guides", destination: "/gyms/:id/members", permanent: false }]),
       // 道館拍組已併進「成員與拍組」(同一頁的「全館拍組」視角)
       { source: "/gyms/:id/pairs", destination: "/gyms/:id/members", permanent: false },
       // AI 串接改成個人頁 (金鑰跟人走)

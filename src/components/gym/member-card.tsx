@@ -61,7 +61,7 @@ export function memberCallName(m: { displayName: string; lineName?: string | nul
 }
 
 /** 沒設頭像時的底色 — 從名字 hash 出固定色相, 每個人顏色不同才好認 */
-function nameHue(name: string): number {
+export function nameHue(name: string): number {
   let h = 0;
   for (const ch of name) h = (h * 31 + ch.codePointAt(0)!) % 360;
   return h;

@@ -25,7 +25,7 @@ export default async function BattlePage({
 }: {
   params: Promise<{ id: string; battleId: string }>;
   // 重新整理要留在原本的畫面 —「關卡規則」開關 (stage-board 的 useUrlState 寫 ?rules=1)
-  searchParams: Promise<{ rules?: string }>;
+  searchParams: Promise<{ rules?: string; plan?: string }>;
 }) {
   const [{ id, battleId }, sp] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
@@ -229,6 +229,9 @@ export default async function BattlePage({
             }))}
             initialRoundNotes={roundNotes ?? []}
             initialShowRules={pickParam(sp.rules, ["1", "0"] as const, "0") === "1"}
+            // 排刀表預覽 (battle-plan.tsx): 只有本機設了 SHOW_BATTLE_PLAN=1 才有入口, 線上不設 = 看不到
+            planPreview={process.env.SHOW_BATTLE_PLAN === "1"}
+            initialShowPlan={pickParam(sp.plan, ["1", "0"] as const, "0") === "1"}
             gymPairsList={(gymPairRows ?? [])
               .filter((g) => g.pair_id)
               .map((g) => ({ pairId: g.pair_id!, type: g.type as SyncPairType }))}
