@@ -813,6 +813,9 @@ function TicketRail({
   const rows = useMemo(
     () =>
       members
+        // 顧問不佔名額、不領券 (0028/0084)。但**這一場已經有券的**照樣列出來 —— 例如轉顧問之前就領了、
+        // 打過的舊賽事 (2026-10-05 使用者:「舊道館戰的紀錄要保留」); 沒有券的顧問不列, 免得被「全員發放」發到
+        .filter((m) => m.role !== "advisor" || ticketByMember.has(m.id))
         .map((m) => {
           const t = ticketByMember.get(m.id);
           return {
@@ -846,7 +849,8 @@ function TicketRail({
   }
 
   async function issueAll() {
-    const missing = rows.filter((r) => r.remaining === null);
+    // 只發給正式成員 —— 顧問的 insert 資料庫也會擋 (0084), 這裡先排掉才給得出正確的人數
+    const missing = rows.filter((r) => r.remaining === null && r.member.role !== "advisor");
     if (missing.length === 0) {
       toast.info("所有成員都已發放挑戰券");
       return;

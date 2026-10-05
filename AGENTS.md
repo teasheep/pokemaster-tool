@@ -1229,6 +1229,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   不用官方 9+3/日記法), 上限可 ± (模擬用; 降上限會夾住剩餘)。寫入一律走
   `adjust_member_ticket(p_delta, p_cap_delta)` 原子 RPC, 不要 client 算絕對值回寫。
   燈號三列 (`TeamFitRows`) 是純檢視 — 點頭像預排刀已拔掉, 不要加回點擊寫入。
+  **顧問不領券** (0084, 2026-10-05): insert policy 加 `member_counts_in_gym`, 挑戰券側板不列「沒有券的顧問」,
+  「全員發放」只發正式成員。⚠ **既有的列一律不動** (使用者:「舊道館戰的紀錄要保留」) —— 轉顧問前領的券照樣
+  列出、照樣調得動; 所以 `adjust_member_ticket` 是「先 update、沒有才 insert」(upsert 一律先檢查 insert policy,
+  只改 policy 會讓舊賽事的券調不動)。判斷看 gym_members 那一列, 別館是正式成員的人在別館照常領券。
+  乾跑 `scripts/dev/dryrun-0084.node.mjs`, `tests/ticket-advisor.test.ts` 釘住。
 - **全站沒有 Realtime, 不要再加回去** (0055 撤掉 0054, 2026-09-04)。看板的新鮮度靠
   `battle-client.tsx` 那個 effect: **回到分頁就重抓** (visibilitychange + focus, 5 秒節流)
   \+ **賽事進行中且分頁看得見時每 45 秒抓一次出戰紀錄與券數**; 已結束的賽事兩件都不做。
