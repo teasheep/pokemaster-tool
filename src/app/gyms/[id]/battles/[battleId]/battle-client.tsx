@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Swords, Ticket, Trash2 } from "lucide-react";
+import { Copy, Pencil, Swords, Ticket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -755,6 +755,7 @@ export function BattleClient({
           <TicketRail
             gymId={gymId}
             battleId={battle.id}
+            battleName={battle.name}
             viewer={viewer}
             members={members}
             ticketByMember={ticketByMember}
@@ -794,6 +795,7 @@ export function BattleClient({
 function TicketRail({
   gymId,
   battleId,
+  battleName,
   viewer,
   members,
   ticketByMember,
@@ -802,6 +804,7 @@ function TicketRail({
 }: {
   gymId: string;
   battleId: string;
+  battleName: string;
   viewer: GymViewer;
   members: MemberCardData[];
   ticketByMember: Map<string, { remaining: number; cap: number }>;
@@ -848,6 +851,34 @@ function TicketRail({
     else await onChanged();
   }
 
+  /**
+   * 複製成純文字貼到賴群 (2026-10-05 使用者:「可以快速複製出每個人用掉多少票」)。
+   * 依「已使用」由多到少, 只算這一場有券的人 —— 與側板列的是同一批 (顧問沒券就不在裡面)。
+   */
+  async function copySummary() {
+    const list = rows
+      .filter((r) => r.remaining !== null)
+      .sort((a, b) => b.used - a.used || memberLabel(a.member).localeCompare(memberLabel(b.member)));
+    const used = list.reduce((a, r) => a + r.used, 0);
+    const left = list.reduce((a, r) => a + (r.remaining ?? 0), 0);
+    const cap = list.reduce((a, r) => a + (r.cap ?? 0), 0);
+    const now = new Intl.DateTimeFormat("zh-TW", {
+      timeZone: "Asia/Taipei", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
+    }).format(new Date());
+    const text = [
+      `${battleName} 挑戰券（${now}）`,
+      `${list.length} 人｜已用 ${used} 張｜剩 ${left} / ${cap}`,
+      "",
+      ...list.map((r) => `${memberLabel(r.member)}　已用 ${r.used}｜剩 ${r.remaining}/${r.cap}`),
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`已複製 ${list.length} 人的挑戰券使用量`);
+    } catch {
+      toast.error("複製失敗", { description: "瀏覽器不允許寫入剪貼簿" });
+    }
+  }
+
   async function issueAll() {
     // 只發給正式成員 —— 顧問的 insert 資料庫也會擋 (0084), 這裡先排掉才給得出正確的人數
     const missing = rows.filter((r) => r.remaining === null && r.member.role !== "advisor");
@@ -885,6 +916,14 @@ function TicketRail({
   // 側板內容 — 外框/標題由 Sheet 提供, 這裡只有名單 (捲動交給 SheetContent)
   return (
     <div>
+      {issued > 0 ? (
+        <div className="flex justify-end pb-1">
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => void copySummary()}>
+            <Copy className="h-3.5 w-3.5" />
+            複製使用量
+          </Button>
+        </div>
+      ) : null}
       <div className="space-y-0.5 py-1">
         {rows.map(({ member, remaining, cap, used }) => {
           const mine = member.id === viewer.memberId;
