@@ -45,6 +45,10 @@ describe("看板: 已離開的人只拿來查「紀錄是誰出的」", () => {
     expect(page).toMatch(/logMemberIndex\.has\(d\.id\) && !members\.some\(\(m\) => m\.id === d\.id\)/);
     expect(page).toMatch(/departed: true/);
   });
+  it("改成顧問的人也算「已離開」—— 他當時的出刀紀錄照樣畫 (小鳴 第三次道館戰 12 筆原本整個不見)", () => {
+    expect(page).toMatch(/const \{ gym, viewer, members, advisors \} = await getGymContext\(id\)/);
+    expect(page).toMatch(/\.\.\.advisors\.map\(/);
+  });
   it("只併進查人的 map, 沒有混進 members (名冊 / 挑戰券 / 選單)", () => {
     expect(client).toMatch(/new Map\(\[\.\.\.departedMembers, \.\.\.members\]/);
     expect(board).toMatch(/new Map\(\[\.\.\.\(departedMembers \?\? \[\]\), \.\.\.members\]/);
@@ -57,5 +61,36 @@ describe("看板: 已離開的人只拿來查「紀錄是誰出的」", () => {
   });
   it("頭像變灰", () => {
     expect(read("src/components/gym/member-card.tsx")).toMatch(/member\.departed && "opacity-60 grayscale"/);
+  });
+});
+
+describe("道館紀錄: 已離開的人留下的紀錄照樣看得出是誰 (2026-10-12)", () => {
+  // 前科: 阿育 10/12 離開後, 她 10/5 改自己練度的 3 筆變成「匯入資料 改了 已退出的成員 的 拍組練度」——
+  // 名字只從現役名冊找, 沒讀 departed_members 快照。
+  const page = read("src/app/gyms/[id]/activity/page.tsx");
+  const client = read("src/app/gyms/[id]/activity/activity-client.tsx");
+  it("頁面讀 departed_members (含 user_id, 才回查得到「誰改的」) 並標 departed", () => {
+    expect(page).toMatch(/from\("departed_members"\)\s*\.select\("id, user_id, display_name, line_name, avatar_url, badge_text"\)/);
+    expect(page).toMatch(/departed=\{[\s\S]*?userId: d\.user_id,[\s\S]*?departed: true/);
+  });
+  it("回查名冊把快照放最前面 (同一個人又加回來時現役那一筆蓋掉快照)", () => {
+    expect(client).toMatch(/\[\.\.\.departed, \.\.\.members, \.\.\.advisors\]/);
+  });
+});
+
+describe("0085 離開的人一律存快照 (不再限有出刀紀錄的人)", () => {
+  const M0085 = read(`${MIGRATIONS}/0085_departed_snapshot_everyone.sql`);
+  const fn = M0085.slice(M0085.indexOf("create or replace function public.snapshot_departed_member"), M0085.indexOf("$$;") + 3);
+  it("trigger 函式不再看 battle_logs; 待確認的申請與整館刪除照舊不存", () => {
+    expect(fn).not.toMatch(/battle_logs/);
+    expect(fn).toMatch(/if old\.status = 'pending' then\s+return old;/);
+    expect(fn).toMatch(/if not exists \(select 1 from public\.gyms where id = old\.gym_id\) then\s+return old;/);
+    expect(fn).toMatch(/security definer set search_path = public/);
+  });
+  it("補資料只補: 道館還在、不在現役名冊、還沒有快照、不是待確認的", () => {
+    expect(M0085).toMatch(/from public\.deleted_rows d\s+where d\.table_name = 'gym_members'/);
+    expect(M0085).toMatch(/<> 'pending'/);
+    expect(M0085).toMatch(/not exists \(select 1 from public\.gym_members m where m\.id = \(d\.data->>'id'\)::uuid\)/);
+    expect(M0085).toMatch(/on conflict \(id\) do nothing/);
   });
 });

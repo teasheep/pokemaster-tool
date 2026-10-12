@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { PageHeading } from "@/components/page-shell";
-import { getSessionUser } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { getGymContext } from "@/lib/gym/queries";
 import { loadPairsForClient } from "@/lib/pairs/loader";
 import { pickParam } from "@/lib/url-params";
@@ -40,9 +40,17 @@ export default async function GymActivityPage({
     redirect(`/login?redirect=/gyms/${id}/activity`);
   }
 
-  const [{ gym, viewer, members, advisors }, catalog] = await Promise.all([
+  const supabase = await createClient();
+  const [{ gym, viewer, members, advisors }, catalog, { data: departed }] = await Promise.all([
     getGymContext(id),
     loadPairsForClient().catch(() => []),
+    // 已經離開的成員 (0081 的名字/頭像快照): 他們留下的紀錄照樣要看得出是誰,
+    // 不然改的人會掉成「匯入資料」、被改的人掉成「已退出的成員」(2026-10-12 使用者抓到阿育那幾筆)。
+    // 一館就歷年離開的那幾位, 不必分頁; 表不存在時回 null 等於沒有。
+    supabase
+      .from("departed_members")
+      .select("id, user_id, display_name, line_name, avatar_url, badge_text")
+      .eq("gym_id", id),
   ]);
   if (!gym || !viewer) {
     return (
@@ -89,6 +97,16 @@ export default async function GymActivityPage({
           avatarUrl: m.avatar_url,
           badgeText: m.badge_text,
           userId: m.user_id,
+        }))}
+        // 只拿來回查名字與頭像 (標「（已離開）」、頭像變灰), 不進成員篩選
+        departed={(departed ?? []).map((d) => ({
+          id: d.id,
+          displayName: d.display_name,
+          lineName: d.line_name,
+          avatarUrl: d.avatar_url,
+          badgeText: d.badge_text,
+          userId: d.user_id,
+          departed: true,
         }))}
         catalog={catalog}
       />

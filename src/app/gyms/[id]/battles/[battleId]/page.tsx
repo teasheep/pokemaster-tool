@@ -35,7 +35,7 @@ export default async function BattlePage({
     redirect(`/login?redirect=/gyms/${id}/battles/${battleId}`);
   }
 
-  const { gym, viewer, members } = await getGymContext(id);
+  const { gym, viewer, members, advisors } = await getGymContext(id);
   if (!gym || !viewer) {
     return <Notice title="找不到道館或你不是成員" />;
   }
@@ -218,16 +218,27 @@ export default async function BattlePage({
             initialTickets={tickets ?? []}
             initialLogs={{ memberIds: logMemberIds, stageIds: logStageIds, rows: packedLogs }}
             // 只送「這一場的紀錄裡真的出現」而且已經不在名冊上的人
-            departedMembers={(departed ?? [])
-              .filter((d) => logMemberIndex.has(d.id) && !members.some((m) => m.id === d.id))
-              .map((d) => ({
+            // 這一場紀錄裡出現、但現在不在名冊上的人 —— 被移出的 (departed_members 快照) 與**改成顧問的**
+            // (2026-10-05 使用者:「變成顧問跟離開是一樣的意思」—— 小鳴第三次道館戰 12 筆 / 31 張原本整個不見)。
+            // 紀錄照「當時」的人保留, 只是標成（已離開）、頭像變灰。
+            departedMembers={[
+              ...(departed ?? []).map((d) => ({
                 id: d.id,
                 displayName: d.display_name,
                 lineName: d.line_name,
                 avatarUrl: d.avatar_url,
                 badgeText: d.badge_text,
-                departed: true,
-              }))}
+              })),
+              ...advisors.map((a) => ({
+                id: a.id,
+                displayName: a.display_name,
+                lineName: a.line_name,
+                avatarUrl: a.avatar_url,
+                badgeText: a.badge_text,
+              })),
+            ]
+              .filter((d) => logMemberIndex.has(d.id) && !members.some((m) => m.id === d.id))
+              .map((d) => ({ ...d, departed: true }))}
             memberGrades={{ pairIds: gradePairIds, byMember: packedGrades }}
             memberCandies={memberCandies}
             catalog={catalogForClient}

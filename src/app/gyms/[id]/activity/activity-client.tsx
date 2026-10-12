@@ -205,6 +205,7 @@ export function ActivityClient({
   myMemberId,
   members,
   advisors = [],
+  departed = [],
   catalog,
   initialMember = "all",
   initialKind = "pair",
@@ -218,6 +219,8 @@ export function ActivityClient({
   members: MemberLite[];
   /** 顧問: 不進成員篩選, 只用來回查人員異動的頭像與名字 */
   advisors?: MemberLite[];
+  /** 已經離開的成員 (departed_members 快照, departed: true): 只用來回查他們留下的紀錄是誰 */
+  departed?: MemberLite[];
   catalog: ClientPairRecord[];
   initialMember?: string;
   initialKind?: (typeof ACTIVITY_KINDS)[number];
@@ -252,7 +255,8 @@ export function ActivityClient({
   });
 
   // 回查用的名冊含顧問 —— 人員異動的對象常常就是顧問 (放行顧問 / 把人改成顧問)
-  const people = useMemo(() => [...members, ...advisors], [members, advisors]);
+  // 離開的人排最前面 → 同一個人又加回來時, 後面現役那一筆會蓋掉快照 (名字照現在的、不標已離開)
+  const people = useMemo(() => [...departed, ...members, ...advisors], [departed, members, advisors]);
   const memberById = useMemo(() => new Map(people.map((m) => [m.id, m])), [people]);
   /** actor_id 是 auth.uid → 回查成員卡 (匯入的舊資料 actor 是 null) */
   const memberByUser = useMemo(
