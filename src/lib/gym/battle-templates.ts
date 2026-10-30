@@ -35,6 +35,12 @@ export type BattleTemplate = {
   subtitle: string;
   /** 第 1 關到第 8 關的弱點屬性 */
   types: SyncPairType[];
+  /**
+   * 官方已公告屬性、但 pomatools 還沒有這一回的資料 (館主 / 每輪規則 / HP) —— 先只套屬性。
+   * 資料出來之後: fetch-gvg-templates.mjs 的 EDITIONS 加 id、跑 `npm run data:gvg`、**拿掉這個旗標**
+   * (測試只放過最新的那一回掛著它, 掛太久會變紅提醒)。
+   */
+  rulesPending?: true;
 };
 
 /** 資料檔裡的一輪 (fresh = 這一輪才加上的館主被動; 累積的由 stageRound 算) */
@@ -141,6 +147,15 @@ export const BATTLE_TEMPLATES: BattleTemplate[] = [
     name: "第四次道館戰",
     subtitle: "神奧館主大集合",
     types: ["grass", "flying", "fairy", "dragon", "dark", "fighting", "poison", "ground"],
+  },
+  {
+    // 2026-12-03 14:00 ~ 12-10 13:59。屬性取自官方公告 (zh-TW announcements/Update_8100_1W_1, 2026-10-28)。
+    // 公告沒寫館主是誰, pomatools 也還沒有這一回 → 副標先寫賽期, 館主公布後再換成官方活動名。
+    id: "r5",
+    name: "第五次道館戰",
+    subtitle: "2026/12/03 開賽",
+    types: ["fighting", "electric", "ground", "fire", "psychic", "ghost", "rock", "bug"],
+    rulesPending: true,
   },
 ];
 

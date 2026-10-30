@@ -9,7 +9,7 @@
 //   結構  brybry datamine  PotentialItem.json (餅乾 → 專屬哪個拍組 / 抽獎表)
 //                          PotentialLot.json  (抽獎表 → 潛能 id + 機率)
 //   比對  www.pomatools.site /data/pairs/<pairId>.json 的 luckCookies (同一份結構的另一個整理者)
-//   名稱  www.pomatools.site /locales/zh.json (官方繁中: passive_name_* / passive_desc_* / lucky_*)
+//   名稱  www.pomatools.site /locales/modules/zh/{base,passives}.json (官方繁中: passive_name_* / passive_desc_* / lucky_*)
 // ⚠ pomatools 那邊記的是「名稱代號」(所有「塔潛能餅乾1」共用一個), brybry 記的是每個拍組各自的
 //   道具 id —— 要用 PotentialItem.potentialItemName 對回名稱代號才比得起來 (直接比道具 id 會全錯)。
 //
@@ -36,7 +36,8 @@ const rowsOf = (j) => (Array.isArray(j) ? j : Object.values(j).find(Array.isArra
 const [items, lots, zh] = await Promise.all([
   getJson(`${BRYBRY}/PotentialItem.json`).then(rowsOf),
   getJson(`${BRYBRY}/PotentialLot.json`).then(rowsOf),
-  getJson(`${POMA}/locales/zh.json`),
+  // 2026-10 pomatools 改版: 語系檔拆成模組 (舊的 /locales/zh.json 變成 SPA 首頁); lucky_* 在 base, passive_* 在 passives
+  Promise.all(["base", "passives"].map((m) => getJson(`${POMA}/locales/modules/zh/${m}.json`))).then((parts) => Object.assign({}, ...parts)),
 ]);
 
 const lotSkills = new Map();

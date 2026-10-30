@@ -51,8 +51,17 @@ describe("道館戰模板", () => {
   describe("每關每輪的規則 (src/data/gvg-stage-rules.json, 2026-09-28)", () => {
     it("每個模板都有規則資料 —— 新的一回只加屬性、忘了跑 npm run data:gvg 會在這裡變紅", () => {
       for (const t of BATTLE_TEMPLATES) {
+        if (t.rulesPending) continue;
         expect(templateStageRules(t), t.name).not.toBe(null);
       }
+    });
+
+    it("「規則還沒出來」只准掛在最新的那一回 —— 再開下一回時舊的那個還掛著 = 忘了補資料", () => {
+      const pending = BATTLE_TEMPLATES.filter((t) => t.rulesPending);
+      expect(pending.length).toBeLessThanOrEqual(1);
+      if (pending[0]) expect(pending[0]).toBe(BATTLE_TEMPLATES.at(-1));
+      // 補了資料就要拿掉旗標, 不然看板與對話框會一直當它沒有規則
+      for (const t of pending) expect(templateStageRules(t), t.name).toBe(null);
     });
 
     it("**規則資料的弱點屬性 = 模板的屬性**, 一關都不能錯位 (錯位 = 規則掛到別的館主身上)", () => {

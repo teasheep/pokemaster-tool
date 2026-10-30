@@ -4,7 +4,7 @@
 //
 // 來源: www.pomatools.site 的道館戰頁 (#/gvg?id=8090) 背後那幾份 JSON
 //   /data/gvg/<id>.json   8 位館主 × 15 輪 (R1-R3 + Ex1-Ex12), 數值與規則都是代號
-//   /locales/zh.json      官方繁中文字 (規則 gvg_theme_* / 被動 passive_name_* / 館主 trainer_name_*)
+//   /locales/modules/zh/{base,passives,events}.json  官方繁中文字 (館主 trainer_name_* / 被動 passive_name_* / 規則 gvg_theme_*)
 // ⚠ 路徑是 /data/... 不是 bundle 裡寫的 /public/data/... —— 後者是 SPA 的 fallback, 一律回 200 的首頁 HTML。
 //
 // 每一回有兩種東西, 不要混 (docs/strategy-videos 那邊被使用者抓過一次):
@@ -37,7 +37,10 @@ async function getJson(url) {
   return JSON.parse(text);
 }
 
-const zh = await getJson(`${BASE}/locales/zh.json`);
+// 2026-10 pomatools 改版: 語系檔拆成模組 /locales/modules/zh/<模組>.json (舊的 /locales/zh.json 變成 SPA 首頁)。
+// 我們要的三種鍵分在三個模組: trainer_name_* 在 base、passive_name_* 在 passives、gvg_theme_* 與 event_title_* 在 events。
+const zh = {};
+for (const mod of ["base", "passives", "events"]) Object.assign(zh, await getJson(`${BASE}/locales/modules/zh/${mod}.json`));
 const text = (key) => {
   const v = zh[key];
   if (typeof v !== "string" || !v.trim()) throw new Error(`語系檔沒有 ${key} —— pomatools 改版了? 先看一下再重跑`);
