@@ -1,8 +1,8 @@
 # 拍組資料更新報告
 
-- catalog: 673 → 673 隻
-- 新增 0 ・ 移除 0 ・ 欄位變動 10
-- embedding: 620 筆 (catalog 中 57 隻尚無 embedding)
+- catalog: 682 → 682 隻
+- 新增 0 ・ 移除 0 ・ 欄位變動 5
+- embedding: 620 筆 (catalog 中 66 隻尚無 embedding)
 - 其中 🆕 NEW (只有 brybry, 其他來源待收錄): 0 / 0
 
 > **🆕 NEW** = 目前只有 brybry datamine 收錄、pomatools/wiki 還沒跟上的新拍組。
@@ -12,13 +12,8 @@
 
 ## ✏️ 欄位變動
 
-- **主角 & 霜奶仙** (player-alcremie) — acquisitions: null → ["event"]
-- **主角 & 爆肌蚊** (player-buzzwole) — acquisitions: null → ["bp"]
-- **主角 & 勾帕路翁** (player-cobalion) — acquisitions: null → ["bp"]
-- **主角 & 艾姆利多** (player-mesprit) — acquisitions: null → ["bp"]
-- **主角 & 皮卡丘** (player-pikachu) — acquisitions: null → ["story"]
-- **主角 & 雷公** (player-raikou) — acquisitions: null → ["bp"]
-- **主角 & 雷吉洛克** (player-regirock) — acquisitions: null → ["bp"]
-- **主角 & 雷吉斯奇魯** (player-registeel) — acquisitions: null → ["bp"]
-- **主角 & 索爾迦雷歐** (player-solgaleo) — acquisitions: null → ["legendary"]
-- **主角 & 火稚雞** (player-torchic) — acquisitions: null → ["story"]
+- **小茜 & 麒麟奇** (10026000002) — series: "upcoming" → "general"
+- **美月 & 西獅海壬** (10123000002) — series: "upcoming" → "general"
+- **小春（輕便和服） & 遠古巨蜓** (10286800000) — series: "upcoming" → "general"
+- **小青 & 風鈴鈴** (10287000002) — series: "upcoming" → "general"
+- **丹瑜（輕便和服） & 大狼犬** (10356800000) — series: "upcoming" → "general"

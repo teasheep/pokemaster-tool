@@ -1303,11 +1303,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   3. stage 1 從 brybry 重建 catalog 時會丟掉手動拍組, 所以主角拍組**從來不會經過 4c** ——
      取得管道 (`acq`) 要寫在 add-protagonist-pairs 的 PAIRS 裡, 不能指望 pomatools 補。
   另外: fandom wiki 目前對 curl 回 403 (stage 2 soft, 沿用舊資料)。
-- **能對到上游 (pomasters) 官方卡面的新拍組就上站, 日期標「未確定」** (2026-09-28 使用者:
-  「能找到正確的圖片就上站, 還不確定的東西就標不確定就好, 以我們找資料的那些站為準」)。
-  我方來源 (pomatools / wiki / 登記簿) 都沒日期時, 5b2 用上游的並寫 `releaseDateUncertain: true`,
-  側板顯示「初上線 X（未確定）」, 卡牆照 isUpcomingPair 標「未上線」(不是 NEW)。
-  上游對未上市拍組的日期常與官方差 1-4 天, 所以**旗標一定要跟著**; 之後我方來源跟上就自然換成確定值。
+- **能對到上游 (pomasters) 官方卡面的新拍組就上站, 日期照上游的用** (2026-09-28 使用者:
+  「能找到正確的圖片就上站… 以我們找資料的那些站為準」; 2026-10-30:「有上架日期就不標未確定了
+  時間到正常用就可以了」)。我方來源 (pomatools / wiki / 登記簿) 都沒日期時, 5b2 用上游的並寫
+  `releaseDateUncertain: true` —— 那只是**來源紀錄, 不進 CLIENT_PAIR_FIELDS, 畫面不標「未確定」**
+  (09-28 到 10-30 側板曾顯示「（未確定）」, 不要加回去)。卡牆照 isUpcomingPair 標「未上線」,
+  到了那天自己變成一般拍組 (client 端算日期, 不用重新部署)。之後我方來源跟上就自然換成我方的日期。
   判準 A 只剩「上游也沒有」的 datamine 空殼 (10 筆)。卡面對照表只排 `sharedKit` 空殼, 不再排整個判準 A。
   **新拍組的完整步驟** (update-catalog 還沒包含後面三步):
   `data:pomasters -- --bump` → `data:update:fast` → `data:cardmap` → `data:facets` → `data:catalog` → `data:cards`

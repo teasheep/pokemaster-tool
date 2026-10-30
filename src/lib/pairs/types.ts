@@ -45,9 +45,10 @@ export type PairRecord = {
   /** **初上線日** (ISO yyyy-mm-dd) — 拍組第一次在遊戲裡登場, 復刻與二次開放不算。對不到的為 null。 */
   releaseDate?: string | null;
   /**
-   * 上架日是從上游 (pomasters) 補來的、還沒有其他來源證實 → 畫面標「未確定」。
-   * 由 scripts/patch-upstream-facets.mjs 在我方所有來源都沒有日期時寫入 (2026-09-28);
-   * 上游對未上市拍組的日期常與官方公告差幾天, 所以不能當成確定值顯示。
+   * 上架日是從上游 (pomasters) 補來的、還沒有其他來源證實 —— **只是來源紀錄, 畫面不標**。
+   * 由 scripts/patch-upstream-facets.mjs 在我方所有來源都沒有日期時寫入 (2026-09-28)。
+   * 2026-10-30 使用者:「有上架日期就不標未確定了 時間到正常用就可以了」→ 不進 CLIENT_PAIR_FIELDS;
+   * 查「這個日期是誰給的」時看這欄 (上游對未上市拍組的日期與官方公告曾差 1-4 天)。
    */
   releaseDateUncertain?: boolean;
   /** 系列標籤 (每拍組唯一): arc/exmaster/master/fair/limited/... 見 SERIES_LABELS */
@@ -81,7 +82,7 @@ export type PairRecord = {
 // SyncPairCardData 直接 alias 此型別 (單一來源, 不再手動同步兩份)。
 //
 // **加欄位前先確認 client 真的在讀它** — 每加一個就是每頁白送的位元組。
-// 已刪 (client 零使用): group / exMode / role / hasExStyle / exStyleImagePath;
+// 已刪 (client 零使用): group / exMode / role / hasExStyle / exStyleImagePath / releaseDateUncertain;
 // forms 最肥 (~62KB, client 只為了判斷 11 隻太晶) → 投影時折成 isTera 布林。
 // EX 換裝要重啟時把 exStyleImagePath 加回來 (見 AGENTS.md『EX 裝』, 資料與圖檔都還在)。
 export const CLIENT_PAIR_FIELDS = [
@@ -91,7 +92,7 @@ export const CLIENT_PAIR_FIELDS = [
   "roleAsset", "exRole", "change", "moveTypes", "pairKind",
   "weakType", "themes", "tags",
   "hasSixEx", "hasExRole", "hasAwakening",
-  "releaseDate", "releaseDateUncertain", "series", "acquisitions",
+  "releaseDate", "series", "acquisitions",
 ] as const;
 
 export type ClientPairRecord = Pick<PairRecord, (typeof CLIENT_PAIR_FIELDS)[number]> & {

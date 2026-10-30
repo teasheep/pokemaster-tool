@@ -1,20 +1,20 @@
 # 多來源資料校正/交叉驗證報告
 
-> 我們自己的 DB 原地修補; 來源(可擴充): pomatools, wiki, serebii。2026-09-28T14:06:00.843Z
+> 我們自己的 DB 原地修補; 來源(可擴充): pomatools, wiki, serebii。2026-10-30T06:31:31.376Z
 
 | 項目 | 值 |
 | --- | ---: |
-| 本地拍組 | 673 |
+| 本地拍組 | 682 |
 | pomatools 驗證 | 610 |
 | wiki 驗證 | 653 |
 | serebii 驗證 | 10 |
 | 至少一來源驗證 | 654 |
 | 多來源 (≥2) 驗證 | 609 |
-| 太晶化 / 超覺醒 | 11 / 126 |
-| 有圖 / 缺圖 | 662 / 11 |
+| 太晶化 / 超覺醒 | 11 / 128 |
+| 有圖 / 缺圖 | 671 / 11 |
 | sharedKit | 9 |
 | 欄位歧異 | 39 |
-| 疑似雜質 | 10 |
+| 疑似雜質 | 19 |
 | 候選新拍組 (待補) | 41 |
 
 ## 疑似雜質 (三來源皆查無)
@@ -22,6 +22,10 @@
 - Lyra (Special Costume) & Marill (10002410001)
 - Korrina & Machoke (10012000002)
 - Parker & Cottonee (10074000000)
+- Arc Suit Hau & Raichu (10098900000)
+- Lance & Aerodactyl (10111000004)
+- Arc Suit Gladion & Silvally (10119900000)
+- Selene & Lycanroc (10123000003)
 - Maxie (Fall 2026) & Ting-Lu (10192400000)
 - Archie (Fall 2026) & Wo-Chien (10193400000)
 - Sygna Suit Ghetsis & Chien-Pao (10195100000)
@@ -29,6 +33,11 @@
 - Tabitha & Camerupt (10221000000)
 - Matt & Sharpedo (10223000000)
 - Shelly & Sharpedo (10224000000)
+- Victor (Academy) & Urshifu (10242410000)
+- Victor (Academy) & Urshifu (10242410001)
+- Bede & Hattrem (10246000003)
+- Bea (Alt.) & Machamp (10250800000)
+- Dendra & Medicham (10346000000)
 
 ## 欄位歧異 (跨站不一致, 待確認)
 

@@ -373,8 +373,7 @@
       "themes": [
         "Main Character",
         "Pallet Town",
-        "Passionate Spirit",
-        "Villain Arc"
+        "Passionate Spirit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -796,6 +795,8 @@
         "AttackMoveSpecial",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "SyncMoveSpecial",
         "Weather",
         "isWoman"
@@ -872,8 +873,7 @@
       "themes": [
         "Main Character",
         "Pigtails",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -1088,7 +1088,6 @@
       "imageAvailable": true,
       "sharedKit": false,
       "suspectImpurity": true,
-      "releaseDateUncertain": true,
       "weakType": "poison",
       "themes": [
         "Pigtails",
@@ -1403,6 +1402,8 @@
         "AttackMoveSpecial",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "SyncMoveSpecial",
         "Wish Zone",
         "isMan"
@@ -1819,6 +1820,8 @@
         "AttackMovePhysical",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "SyncMovePhysical",
         "Terrain",
         "isWoman"
@@ -1900,8 +1903,7 @@
       "themes": [
         "Main Character",
         "Sygna Suit",
-        "Unova Adventurer",
-        "Villain Arc"
+        "Unova Adventurer"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -2701,8 +2703,7 @@
       "themes": [
         "Free Spirit",
         "Sygna Suit",
-        "Trial Giver",
-        "Villain Arc"
+        "Trial Giver"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -3101,8 +3102,7 @@
       "themes": [
         "Artistic",
         "Battle Facility Foe",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -3885,7 +3885,6 @@
       "imageAvailable": true,
       "sharedKit": false,
       "suspectImpurity": true,
-      "releaseDateUncertain": true,
       "weakType": "flying",
       "themes": [
         "Gym Leader",
@@ -5835,6 +5834,8 @@
         "AttackMoveSpecial",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "SyncMoveSpecial",
         "Terrain",
         "isWoman"
@@ -5911,8 +5912,7 @@
       "themes": [
         "Knowledgeable",
         "Main Character",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -6312,8 +6312,7 @@
       "themes": [
         "Main Character",
         "Space Cadet",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -6743,6 +6742,8 @@
         "AttackMoveSpecial",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "SyncMoveSpecial",
         "Wish Zone",
         "isMan"
@@ -6823,8 +6824,7 @@
       "themes": [
         "Main Character",
         "Sygna Suit",
-        "Unova Adventurer",
-        "Villain Arc"
+        "Unova Adventurer"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -7489,8 +7489,7 @@
       "themes": [
         "Pallet Town",
         "Passionate Spirit",
-        "Rival",
-        "Villain Arc"
+        "Rival"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -8662,7 +8661,7 @@
       "exRoleName": null,
       "exDataSource": "wiki",
       "releaseDate": "2026-08-01",
-      "series": "upcoming",
+      "series": "general",
       "verifiedSources": [
         "wiki"
       ],
@@ -9835,8 +9834,7 @@
       "themes": [
         "Free Spirit",
         "Sygna Suit",
-        "Trial Giver",
-        "Villain Arc"
+        "Trial Giver"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -13995,8 +13993,7 @@
       "weakType": "ground",
       "themes": [
         "Knowledgeable",
-        "Rival",
-        "Villain Arc"
+        "Rival"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -15007,8 +15004,7 @@
       "themes": [
         "Rival",
         "Sygna Suit",
-        "Unova Adventurer",
-        "Villain Arc"
+        "Unova Adventurer"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -15618,8 +15614,7 @@
       "themes": [
         "Champion",
         "Space Cadet",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -16554,8 +16549,7 @@
       "themes": [
         "Battle Facility Foe",
         "Passionate Spirit",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -17951,7 +17945,7 @@
       "exRoleName": null,
       "exDataSource": "wiki",
       "releaseDate": "2026-07-01",
-      "series": "upcoming",
+      "series": "general",
       "verifiedSources": [
         "wiki"
       ],
@@ -18051,8 +18045,7 @@
       "themes": [
         "Free Spirit",
         "Passionate Spirit",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -18063,6 +18056,66 @@
         "Terrain",
         "Unique Costume",
         "Wish Zone",
+        "ZMove",
+        "isMan"
+      ]
+    },
+    {
+      "pairId": "10098900000",
+      "trainerId": "ch0098_90_hau",
+      "pokemonId": "pm0026_61_araichu",
+      "trainerName": "Arc Suit Hau",
+      "pokemonName": "Raichu",
+      "trainerNameZh": "阿爾套裝哈烏",
+      "pokemonNameZh": "雷丘",
+      "type": "electric",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_032",
+      "roleAsset": "ROLE_032",
+      "exRole": "ROLE_001P",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "electric"
+      ],
+      "pairKind": "arc",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0026_61_araichu_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0026_61_araichu/pm0026_61_araichu_128.png",
+      "formId": 70001,
+      "trainerImagePath": "/reference/trainer/ch0098_90_hau_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0098_90_hau/ch0098_90_hau_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-11-01",
+      "series": "arc",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "ghost",
+      "themes": [
+        "Arc Suit",
+        "Free Spirit",
+        "Rival"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "AttackMoveStatus",
+        "Buddy Move",
+        "Grid5",
+        "Rebuff",
+        "SyncMovePhysical",
+        "Terrain",
+        "Unique Costume",
         "ZMove",
         "isMan"
       ]
@@ -19515,8 +19568,7 @@
       "weakType": "ground",
       "themes": [
         "Free Spirit",
-        "Passionate Spirit",
-        "Villain Arc"
+        "Passionate Spirit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -21052,8 +21104,7 @@
       "themes": [
         "Battle Facility Foe",
         "Passionate Spirit",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -21472,6 +21523,62 @@
         "GridMega",
         "Starter",
         "SyncMovePhysical",
+        "Wish Zone",
+        "isMan"
+      ]
+    },
+    {
+      "pairId": "10111000004",
+      "trainerId": "ch0111_00_wataru",
+      "pokemonId": "pm0142_00_ptera",
+      "trainerName": "Lance",
+      "pokemonName": "Aerodactyl",
+      "trainerNameZh": "阿渡",
+      "pokemonNameZh": "化石翼龍",
+      "type": "rock",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_008",
+      "roleAsset": "ROLE_008",
+      "exRole": "ROLE_016",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "rock"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0142_00_ptera_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0142_00_ptera/pm0142_00_ptera_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0111_00_wataru_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0111_00_wataru/ch0111_00_wataru_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-11-01",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "electric",
+      "themes": [
+        "Cape",
+        "Champion"
+      ],
+      "tags": [
+        "AttackMoveSpecial",
+        "Buddy Move",
+        "Fossil",
+        "Region Circle",
+        "SyncMoveSpecial",
         "Wish Zone",
         "isMan"
       ]
@@ -21940,8 +22047,7 @@
       "themes": [
         "Main Character",
         "Scarf",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -23323,8 +23429,7 @@
       "weakType": "dark",
       "themes": [
         "Main Character",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -24728,6 +24833,66 @@
       ]
     },
     {
+      "pairId": "10119900000",
+      "trainerId": "ch0119_90_gladion",
+      "pokemonId": "pm0862_11_gryps2",
+      "trainerName": "Arc Suit Gladion",
+      "pokemonName": "Silvally",
+      "trainerNameZh": "阿爾套裝格拉吉歐",
+      "pokemonNameZh": "銀伴戰獸",
+      "type": "normal",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_032",
+      "roleAsset": "ROLE_032",
+      "exRole": "ROLE_001P",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "normal"
+      ],
+      "pairKind": "arc",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0862_11_gryps2_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0862_11_gryps2/pm0862_11_gryps2_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0119_90_gladion_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0119_90_gladion/ch0119_90_gladion_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-10-30",
+      "series": "arc",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "fighting",
+      "themes": [
+        "Arc Suit",
+        "Rival",
+        "Villain"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "Buddy Move",
+        "Grid5",
+        "Legendary",
+        "Rebuff",
+        "Region Circle",
+        "SyncMovePhysical",
+        "Unique Costume",
+        "Wish Zone",
+        "isMan"
+      ]
+    },
+    {
       "pairId": "10120000000",
       "trainerId": "ch0120_00_lusamine",
       "pokemonId": "pm0879_00_beastblue",
@@ -25363,6 +25528,8 @@
         "AttackMoveSpecial",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "SyncMoveSpecial",
         "Terrain",
         "ZMove",
@@ -25783,6 +25950,8 @@
         "AttackMovePhysical",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "SyncMovePhysical",
         "Wish Zone",
         "ZMove",
@@ -25826,7 +25995,7 @@
       "exRoleName": "Tech",
       "exDataSource": "wiki",
       "releaseDate": "2026-08-01",
-      "series": "upcoming",
+      "series": "general",
       "verifiedSources": [
         "wiki"
       ],
@@ -25853,6 +26022,64 @@
         "Starter",
         "SyncMovePhysical",
         "Wish Zone",
+        "isWoman"
+      ]
+    },
+    {
+      "pairId": "10123000003",
+      "trainerId": "ch0123_00_mizuki",
+      "pokemonId": "pm0829_12_okami2night",
+      "trainerName": "Selene",
+      "pokemonName": "Lycanroc",
+      "trainerNameZh": "美月",
+      "pokemonNameZh": "鬃岩狼人",
+      "type": "rock",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_002",
+      "roleAsset": "ROLE_002",
+      "exRole": "ROLE_016",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "rock"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0829_12_okami2night_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0829_12_okami2night/pm0829_12_okami2night_128.png",
+      "formId": 70011,
+      "trainerImagePath": "/reference/trainer/ch0123_00_mizuki_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0123_00_mizuki/ch0123_00_mizuki_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-11-01",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "steel",
+      "themes": [
+        "Alola Adventurer",
+        "Main Character",
+        "Nature Lover"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "AttackMoveStatus",
+        "Master Passive Teamwork",
+        "SyncMovePhysical",
+        "Weather",
+        "Wish Zone",
+        "ZMove",
         "isWoman"
       ]
     },
@@ -26830,8 +27057,7 @@
       "themes": [
         "Main Character",
         "Pigtails",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -29922,8 +30148,7 @@
       "weakType": "psychic",
       "themes": [
         "Pigtails",
-        "Rival",
-        "Villain Arc"
+        "Rival"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -30484,8 +30709,7 @@
       "weakType": "psychic",
       "themes": [
         "Sygna Suit",
-        "Villain",
-        "Villain Arc"
+        "Villain"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -31197,8 +31421,7 @@
       "themes": [
         "Passionate Spirit",
         "Rival",
-        "Unova Adventurer",
-        "Villain Arc"
+        "Unova Adventurer"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -31671,8 +31894,7 @@
       "themes": [
         "Gym Leader",
         "Supernatural",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -33259,8 +33481,7 @@
       "themes": [
         "Artistic",
         "Champion",
-        "Sygna Suit",
-        "Villain Arc"
+        "Sygna Suit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -33809,8 +34030,7 @@
       "themes": [
         "Free Spirit",
         "Sygna Suit",
-        "Trial Giver",
-        "Villain Arc"
+        "Trial Giver"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -34072,8 +34292,7 @@
       "themes": [
         "Knowledgeable",
         "Main Character",
-        "Scarf",
-        "Villain Arc"
+        "Scarf"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -34162,6 +34381,8 @@
         "AttackMoveSpecial",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "SyncMoveSpecial",
         "Weather",
         "isMan"
@@ -34936,8 +35157,7 @@
       "sharedKit": false,
       "weakType": "fighting",
       "themes": [
-        "Grown Woman",
-        "Villain Arc"
+        "Grown Woman"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -35653,8 +35873,7 @@
       "themes": [
         "Glasses",
         "Researcher",
-        "Villain",
-        "Villain Arc"
+        "Villain"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -35791,7 +36010,6 @@
       "imageAvailable": true,
       "sharedKit": false,
       "suspectImpurity": true,
-      "releaseDateUncertain": true,
       "weakType": "water",
       "themes": [
         "Glasses",
@@ -35935,7 +36153,6 @@
       "imageAvailable": true,
       "sharedKit": false,
       "suspectImpurity": true,
-      "releaseDateUncertain": true,
       "weakType": "bug",
       "themes": [
         "Body Builder",
@@ -36178,8 +36395,7 @@
       "themes": [
         "Scarf",
         "Sygna Suit",
-        "Villain",
-        "Villain Arc"
+        "Villain"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -36317,7 +36533,6 @@
       "imageAvailable": true,
       "sharedKit": false,
       "suspectImpurity": true,
-      "releaseDateUncertain": true,
       "weakType": "fighting",
       "themes": [
         "Cape",
@@ -36499,8 +36714,7 @@
       "themes": [
         "Researcher",
         "Sygna Suit",
-        "Villain",
-        "Villain Arc"
+        "Villain"
       ],
       "tags": [
         "AttackMoveSpecial",
@@ -36553,7 +36767,6 @@
       "imageAvailable": true,
       "sharedKit": false,
       "suspectImpurity": true,
-      "releaseDateUncertain": true,
       "weakType": "ground",
       "themes": [
         "Sunglasses",
@@ -37719,8 +37932,7 @@
       "sharedKit": false,
       "weakType": "psychic",
       "themes": [
-        "Veteran Trainer",
-        "Villain Arc"
+        "Veteran Trainer"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -37801,8 +38013,7 @@
       "sharedKit": false,
       "weakType": "psychic",
       "themes": [
-        "Passionate Spirit",
-        "Villain Arc"
+        "Passionate Spirit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -37938,8 +38149,7 @@
       "weakType": "water",
       "themes": [
         "Battle Partner",
-        "Villain",
-        "Villain Arc"
+        "Villain"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -38658,6 +38868,128 @@
       ]
     },
     {
+      "pairId": "10242410000",
+      "trainerId": "ch0242_41_masaru",
+      "pokemonId": "pm0892_11_00_wulaosu",
+      "trainerName": "Victor (Academy)",
+      "pokemonName": "Urshifu (Single Strike Style)",
+      "trainerNameZh": "小勝（學院）",
+      "pokemonNameZh": "武道熊師（一擊流）",
+      "type": "dark",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_001",
+      "roleAsset": "ROLE_001P",
+      "exRole": "ROLE_002",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "dark"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0892_11_00_wulaosu_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0892_11_00_wulaosu/pm0892_11_00_wulaosu_128.png",
+      "formId": 80016,
+      "trainerImagePath": "/reference/trainer/ch0242_41_masaru_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0242_41_masaru/ch0242_41_masaru_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-11-12",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "flying",
+      "themes": [
+        "Academy Sync Pair",
+        "Galar Adventurer",
+        "Main Character",
+        "Pasio Academy"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "AttackMoveSpecial",
+        "AttackMoveStatus",
+        "Legendary",
+        "Rebuff",
+        "Region Circle",
+        "SyncMovePhysical",
+        "Unique Costume",
+        "Wish Zone",
+        "isMan"
+      ]
+    },
+    {
+      "pairId": "10242410001",
+      "trainerId": "ch0242_41_masaru",
+      "pokemonId": "pm0892_12_00_wulaosu",
+      "trainerName": "Victor (Academy)",
+      "pokemonName": "Urshifu (Rapid Strike Style)",
+      "trainerNameZh": "小勝（學院）",
+      "pokemonNameZh": "武道熊師（連擊流）",
+      "type": "water",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_001",
+      "roleAsset": "ROLE_001P",
+      "exRole": "ROLE_002",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "water"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0892_12_00_wulaosu_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0892_12_00_wulaosu/pm0892_12_00_wulaosu_128.png",
+      "formId": 70027,
+      "trainerImagePath": "/reference/trainer/ch0242_41_masaru_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0242_41_masaru/ch0242_41_masaru_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-11-12",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "flying",
+      "themes": [
+        "Academy Sync Pair",
+        "Galar Adventurer",
+        "Main Character",
+        "Pasio Academy"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "AttackMoveSpecial",
+        "AttackMoveStatus",
+        "Legendary",
+        "Rebuff",
+        "Region Circle",
+        "SyncMovePhysical",
+        "Unique Costume",
+        "Weather",
+        "isMan"
+      ]
+    },
+    {
       "pairId": "10243000000",
       "trainerId": "ch0243_00_yuri",
       "pokemonId": "pm0888_12_00_zacian",
@@ -39203,8 +39535,7 @@
       "themes": [
         "Galar Adventurer",
         "Main Character",
-        "Passionate Spirit",
-        "Villain Arc"
+        "Passionate Spirit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -40753,6 +41084,59 @@
       ]
     },
     {
+      "pairId": "10246000003",
+      "trainerId": "ch0246_00_beet",
+      "pokemonId": "pm0857_00_00_tebrim",
+      "trainerName": "Bede",
+      "pokemonName": "Hattrem",
+      "trainerNameZh": "彼特",
+      "pokemonNameZh": "提布莉姆",
+      "type": "psychic",
+      "region": null,
+      "group": null,
+      "basePotential": 4,
+      "exMode": 0,
+      "role": "ROLE_016",
+      "roleAsset": "ROLE_016",
+      "exRole": null,
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "psychic"
+      ],
+      "pairKind": "none",
+      "hasSixEx": false,
+      "hasExRole": false,
+      "hasAwakening": false,
+      "pokemonImagePath": "/reference/pokemon/pm0857_00_00_tebrim_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0857_00_00_tebrim/pm0857_00_00_tebrim_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0246_00_beet_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0246_00_beet/ch0246_00_beet_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-11-01",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "dark",
+      "themes": [
+        "Galar Adventurer",
+        "Rival"
+      ],
+      "tags": [
+        "AttackMoveSpecial",
+        "SyncMoveSpecial",
+        "Terrain",
+        "isMan"
+      ]
+    },
+    {
       "pairId": "10246100000",
       "trainerId": "ch0246_10_beet",
       "pokemonId": "pm1006_00_00_tetsunobujin",
@@ -41449,8 +41833,7 @@
       "themes": [
         "Battle Facility Foe",
         "Champion",
-        "Passionate Spirit",
-        "Villain Arc"
+        "Passionate Spirit"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -42106,6 +42489,64 @@
       ]
     },
     {
+      "pairId": "10250800000",
+      "trainerId": "ch0250_80_saida",
+      "pokemonId": "pm0068_00_kairiky",
+      "trainerName": "Bea (Alt.)",
+      "pokemonName": "Machamp",
+      "trainerNameZh": "彩豆（制服）",
+      "pokemonNameZh": "怪力",
+      "type": "fighting",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_008",
+      "roleAsset": "ROLE_008",
+      "exRole": "ROLE_016",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "fighting"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": true,
+      "pokemonImagePath": "/reference/pokemon/pm0068_00_kairiky_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0068_00_kairiky/pm0068_00_kairiky_128.png",
+      "formId": null,
+      "trainerImagePath": "/reference/trainer/ch0250_80_saida_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0250_80_saida/ch0250_80_saida_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-11-12",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "fairy",
+      "themes": [
+        "Body Builder",
+        "Gym Leader",
+        "Sweet Tooth"
+      ],
+      "tags": [
+        "AttackMovePhysical",
+        "Buddy Move",
+        "Grid5",
+        "Region Circle",
+        "SyncMovePhysical",
+        "Unique Costume",
+        "Wish Zone",
+        "isWoman"
+      ]
+    },
+    {
       "pairId": "10251000000",
       "trainerId": "ch0251_00_onion",
       "pokemonId": "pm0094_00_gangar",
@@ -42696,6 +43137,8 @@
       "tags": [
         "AttackMovePhysical",
         "AttackMoveStatus",
+        "Grid3",
+        "GridExpansion",
         "Rebuff",
         "SyncMovePhysical",
         "Weather",
@@ -43858,8 +44301,7 @@
       "weakType": "fighting",
       "themes": [
         "Passionate Spirit",
-        "Villain",
-        "Villain Arc"
+        "Villain"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -44026,8 +44468,7 @@
       "themes": [
         "Grown Woman",
         "Researcher",
-        "Villain",
-        "Villain Arc"
+        "Villain"
       ],
       "tags": [
         "AttackMovePhysical",
@@ -44553,6 +44994,8 @@
         "AttackMoveSpecial",
         "AttackMoveStatus",
         "Eeveelution",
+        "Grid3",
+        "GridExpansion",
         "Rebuff",
         "SyncMovePhysical",
         "Wish Zone",
@@ -45865,7 +46308,7 @@
       "exRoleName": "Sprint",
       "exDataSource": "wiki",
       "releaseDate": "2026-07-31",
-      "series": "upcoming",
+      "series": "general",
       "verifiedSources": [
         "wiki"
       ],
@@ -46102,7 +46545,7 @@
       "exRoleName": "Sprint",
       "exDataSource": "wiki",
       "releaseDate": "2026-07-31",
-      "series": "upcoming",
+      "series": "general",
       "verifiedSources": [
         "wiki"
       ],
@@ -50934,6 +51377,62 @@
       ]
     },
     {
+      "pairId": "10346000000",
+      "trainerId": "ch0346_00_kihada",
+      "pokemonId": "pm0308_01_charem",
+      "trainerName": "Dendra",
+      "pokemonName": "Medicham",
+      "trainerNameZh": "凰檗",
+      "pokemonNameZh": "恰雷姆",
+      "type": "fighting",
+      "region": null,
+      "group": null,
+      "basePotential": 5,
+      "exMode": 1,
+      "role": "ROLE_001",
+      "roleAsset": "ROLE_001S",
+      "exRole": "ROLE_016",
+      "change": "NONE",
+      "forms": [],
+      "moveTypes": [
+        "fighting",
+        "psychic"
+      ],
+      "pairKind": "none",
+      "hasSixEx": true,
+      "hasExRole": true,
+      "hasAwakening": true,
+      "pokemonImagePath": "/reference/pokemon/pm0308_01_charem_128.png",
+      "pokemonImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Monster/pm0308_01_charem/pm0308_01_charem_128.png",
+      "formId": 90010,
+      "trainerImagePath": "/reference/trainer/ch0346_00_kihada_128.png",
+      "trainerImageUrl": "https://pokemon.brybry.ch/masters/data/actor/Trainer/ch0346_00_kihada/ch0346_00_kihada_128.png",
+      "hasExStyle": false,
+      "exDataSource": "none",
+      "releaseDate": "2026-11-12",
+      "series": "upcoming",
+      "verifiedSources": [],
+      "confirm": {},
+      "tera": false,
+      "imageAvailable": true,
+      "sharedKit": false,
+      "suspectImpurity": true,
+      "releaseDateUncertain": true,
+      "weakType": "flying",
+      "themes": [
+        "Body Builder",
+        "Passionate Spirit"
+      ],
+      "tags": [
+        "AttackMoveSpecial",
+        "Buddy Move",
+        "Grid5",
+        "SyncMoveSpecial",
+        "Wish Zone",
+        "isWoman"
+      ]
+    },
+    {
       "pairId": "10348000000",
       "trainerId": "ch0348_00_raifort",
       "pokemonId": "pm0094_00_gangar",
@@ -51625,7 +52124,7 @@
       "exRoleName": "Field",
       "exDataSource": "wiki",
       "releaseDate": "2026-07-31",
-      "series": "upcoming",
+      "series": "general",
       "verifiedSources": [
         "wiki"
       ],
@@ -53936,5 +54435,5 @@
     }
   ],
   "source": "brybry",
-  "generatedAt": "2026-09-28T14:05:36.983Z"
+  "generatedAt": "2026-10-30T06:31:04.012Z"
 }

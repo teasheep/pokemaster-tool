@@ -4,16 +4,16 @@
 		"上游來源與授權見 src/data/upstream-pin.json; 上游資料鏡像在 src/data/pomasters/syncpairs.json。",
 		"files 的 key 是星級 (3/4/5/EX), value 是上游檔名。下載時一律改名成 <pairId>_<星級>.png。"
 	],
-	"generatedFrom": "pomasters/SyncPairsTracker@0dfe96ce8153d4ba4b6db5ef1e5417345a125e63",
-	"upstreamVersion": "v2.73.0",
+	"generatedFrom": "pomasters/SyncPairsTracker@9893ebfc63045a39c380f24f12f4b0ab8115fb76",
+	"upstreamVersion": "v2.74.0",
 	"counts": {
-		"catalog": 673,
+		"catalog": 682,
 		"blockedA": 9,
-		"mapped": 663,
-		"withEx": 643,
-		"files": 1516,
+		"mapped": 672,
+		"withEx": 652,
+		"files": 1535,
 		"via": {
-			"exact": 619,
+			"exact": 628,
 			"protagonist": 11,
 			"trainerUnique": 33
 		}
@@ -192,6 +192,18 @@
 			"ours": "Fennekin",
 			"oursZh": "火狐狸",
 			"theirs": "Delphox"
+		},
+		{
+			"pairId": "10242410000",
+			"ours": "Urshifu (Single Strike Style)",
+			"oursZh": "武道熊師（一擊流）",
+			"theirs": "Urshifu"
+		},
+		{
+			"pairId": "10242410001",
+			"ours": "Urshifu (Rapid Strike Style)",
+			"oursZh": "武道熊師（連擊流）",
+			"theirs": "Urshifu"
 		},
 		{
 			"pairId": "10244000003",
@@ -3032,6 +3044,18 @@
 			}
 		},
 		{
+			"pairId": "10098900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Raichu",
+			"files": {
+				"5": "icons/Hau_0026_2_5.png",
+				"EX": "icons/Hau_0026_2_EX.png"
+			}
+		},
+		{
 			"pairId": "10099000000",
 			"via": "trainer-unique",
 			"basePotential": 3,
@@ -3549,6 +3573,18 @@
 			}
 		},
 		{
+			"pairId": "10111000004",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Aerodactyl",
+			"files": {
+				"5": "icons/Lance_0142_5.png",
+				"EX": "icons/Lance_0142_EX.png"
+			}
+		},
+		{
 			"pairId": "10111400000",
 			"via": "exact",
 			"basePotential": 5,
@@ -4022,6 +4058,18 @@
 			}
 		},
 		{
+			"pairId": "10119900000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Silvally",
+			"files": {
+				"5": "icons/Gladion_0773_2_5.png",
+				"EX": "icons/Gladion_0773_2_EX.png"
+			}
+		},
+		{
 			"pairId": "10120000000",
 			"via": "exact",
 			"basePotential": 5,
@@ -4189,6 +4237,18 @@
 			"files": {
 				"5": "icons/Selene_0730_5.png",
 				"EX": "icons/Selene_0730_EX.png"
+			}
+		},
+		{
+			"pairId": "10123000003",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Lycanroc",
+			"files": {
+				"5": "icons/Selene_0745_5.png",
+				"EX": "icons/Selene_0745_EX.png"
 			}
 		},
 		{
@@ -6136,6 +6196,30 @@
 			}
 		},
 		{
+			"pairId": "10242410000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Urshifu",
+			"files": {
+				"5": "icons/Victor_0892_5.png",
+				"EX": "icons/Victor_0892_EX.png"
+			}
+		},
+		{
+			"pairId": "10242410001",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Urshifu",
+			"files": {
+				"5": "icons/Victor_0892_2_5.png",
+				"EX": "icons/Victor_0892_2_EX.png"
+			}
+		},
+		{
 			"pairId": "10243000000",
 			"via": "exact",
 			"basePotential": 5,
@@ -6426,6 +6510,19 @@
 			}
 		},
 		{
+			"pairId": "10246000003",
+			"via": "exact",
+			"basePotential": 4,
+			"hasSixEx": false,
+			"exPose": true,
+			"upstreamPokemonName": "Hattrem",
+			"files": {
+				"4": "icons/Bede_0857_4.png",
+				"5": "icons/Bede_0857_5.png",
+				"EX": "icons/Bede_0857_EX.png"
+			}
+		},
+		{
 			"pairId": "10246100000",
 			"via": "exact",
 			"basePotential": 5,
@@ -6618,6 +6715,18 @@
 			"files": {
 				"5": "icons/Bea_0584_5.png",
 				"EX": "icons/Bea_0584_EX.png"
+			}
+		},
+		{
+			"pairId": "10250800000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Machamp",
+			"files": {
+				"5": "icons/Bea_0068_5.png",
+				"EX": "icons/Bea_0068_EX.png"
 			}
 		},
 		{
@@ -7905,6 +8014,18 @@
 			"files": {
 				"5": "icons/Perrin_0164_5.png",
 				"EX": "icons/Perrin_0164_EX.png"
+			}
+		},
+		{
+			"pairId": "10346000000",
+			"via": "exact",
+			"basePotential": 5,
+			"hasSixEx": true,
+			"exPose": true,
+			"upstreamPokemonName": "Medicham",
+			"files": {
+				"5": "icons/Dendra_0308_5.png",
+				"EX": "icons/Dendra_0308_EX.png"
 			}
 		},
 		{

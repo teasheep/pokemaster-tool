@@ -129,6 +129,21 @@ async function main() {
   }
   const nProtagonist = matched.size - nExact;
 
+  // ── 2b. 同訓練家 + 同一條進化線 (我方記進化前、對方記進化後; internal 名去掉尾端數字相同) ──
+  // 例: 美月 pm0841_00_fukurou1 (木木梟) ↔ 上游 pm0843_00_fukurou3 (狙射樹梟)。
+  // 原本靠第 3 段「兩邊都只剩一個」配到, 2026-10-28 美月多了一隻上游還沒收的鬃岩狼人,
+  // 我方變成剩兩個 → 第 3 段多義。這一段比第 3 段窄 (多比對寶可夢那一半), 候選仍須唯一。
+  const stem = (pokemonId) => String(pokemonId ?? "").replace(/^pm\d+_\d+_/, "").replace(/\d+$/, "");
+  for (const rec of ours) {
+    if (matched.has(rec.pairId)) continue;
+    const key = upstreamTrainerId(rec);
+    const s = stem(rec.pokemonId);
+    if (!s) continue;
+    const cands = rows.filter((r) => !usedRows.has(r) && r.internalTrainerName === key && stem(r.internalPokemonName) === s);
+    const oursSame = ours.filter((o) => !matched.has(o.pairId) && upstreamTrainerId(o) === key && stem(o.pokemonId) === s);
+    if (cands.length === 1 && oursSame.length === 1) take(rec, cands[0], "trainer-unique");
+  }
+
   // ── 3. 同一位訓練家, 兩邊都只剩一個 (我方記進化前 / 對方記進化後) ──
   for (const rec of ours) {
     if (matched.has(rec.pairId)) continue;

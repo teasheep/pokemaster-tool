@@ -304,6 +304,83 @@
 				"https://gonintendo.com/contents/62906-arc-suit-diantha-and-arc-suit-geeta-arrive-in-pokemon-masters-ex-july-2026",
 				"https://www.pocketmonsters.net/news/9374"
 			]
+		},
+		"10002410001": {
+			"label": "琴音（隊員） & 瑪力露",
+			"debut": "2026-09-28",
+			"was": "2026-09-28",
+			"why": "上游 pomasters 給的日期 (catalog 標「未確定」) 與官方 zh-TW 公告的台北日期一致, 登記後拿掉「未確定」。 每月對戰點數挑戰 2026/09/28 13:00 (TST) 隨更新開放, 第95封開發者的信寫明這次的拍組是琴音（隊員）＆瑪力露。",
+			"otherDates": [],
+			"sources": [
+				"https://pokemonmasters-game.com/zh-TW/announcements/Update_8090_1W_2",
+				"https://pokemonmasters-game.com/zh-TW/announcements/Other_8080_5W_1",
+				"https://pocketmonsters.net/news/9576"
+			]
+		},
+		"10195100000": {
+			"label": "美極套裝魁奇思 & 古劍豹",
+			"debut": "2026-09-30",
+			"was": "2026-09-30",
+			"why": "上游 pomasters 給的日期 (catalog 標「未確定」) 與官方 zh-TW 公告的台北日期一致, 登記後拿掉「未確定」。 「美極套裝魁奇思 ＥＸ盛典」舉辦期間 2026/09/30 14:00 - 10/18 13:59 (TST) = 9/29 23:00 PDT。",
+			"otherDates": [
+				"2026-10-18 (卡池結束日, 台北)"
+			],
+			"sources": [
+				"https://pokemonmasters-game.com/zh-TW/announcements/BSearch_8090_1W_1",
+				"https://pocketmonsters.net/news/9581"
+			]
+		},
+		"10012000002": {
+			"label": "可爾妮 & 豪力",
+			"debut": "2026-10-01",
+			"was": "2026-10-01",
+			"why": "上游 pomasters 給的日期 (catalog 標「未確定」) 與官方 zh-TW 公告的台北日期一致, 登記後拿掉「未確定」。 「關於 訓練家沙龍 更新」2026/10/01 14:00 (TST): 現在可以邀請可爾妮來訓練家沙龍 (沙龍拍組)。",
+			"otherDates": [],
+			"sources": [
+				"https://pokemonmasters-game.com/zh-TW/announcements/Update_8090_1W_3",
+				"https://www.serebii.net/pokemonmasters/syncpairs/korrina.shtml"
+			]
+		},
+		"10196110000": {
+			"label": "美極套裝弗拉達利（異裝） & 古玉魚",
+			"debut": "2026-10-02",
+			"was": "2026-10-02",
+			"why": "上游 pomasters 給的日期 (catalog 標「未確定」) 與官方 zh-TW 公告的台北日期一致, 登記後拿掉「未確定」。 「美極套裝弗拉達利 ＥＸ盛典」舉辦期間 2026/10/02 14:00 - 10/18 13:59 (TST) = 10/1 23:00 PDT。",
+			"otherDates": [
+				"2026-10-18 (卡池結束日, 台北)"
+			],
+			"sources": [
+				"https://pokemonmasters-game.com/zh-TW/announcements/BSearch_8090_1W_3",
+				"https://pocketmonsters.net/index.php/news/9595"
+			]
+		},
+		"10193400000": {
+			"label": "水梧桐（2026秋季） & 古簡蝸",
+			"debut": "2026-10-14",
+			"was": "2026-10-14",
+			"why": "上游 pomasters 給的日期 (catalog 標「未確定」) 與官方 zh-TW 公告的台北日期一致, 登記後拿掉「未確定」。 「水梧桐精選 季節限定拍組搜尋」舉辦期間 2026/10/14 14:00 - 11/01 13:59 (TST) = 10/13 23:00 PDT。",
+			"otherDates": [
+				"2026-11-01 (卡池結束日, 台北)",
+				"2026-11-08 (票券專用拍組搜尋結束日, 台北)"
+			],
+			"sources": [
+				"https://pokemonmasters-game.com/zh-TW/announcements/BSearch_8090_3W_2",
+				"https://pocketmonsters.net/news/9627"
+			]
+		},
+		"10192400000": {
+			"label": "赤焰松（2026秋季） & 古鼎鹿",
+			"debut": "2026-10-16",
+			"was": "2026-10-16",
+			"why": "上游 pomasters 給的日期 (catalog 標「未確定」) 與官方 zh-TW 公告的台北日期一致, 登記後拿掉「未確定」。 「赤焰松精選 季節限定拍組搜尋」舉辦期間 2026/10/16 14:00 - 11/01 13:59 (TST) = 10/15 23:00 PDT; 部分英文新聞寫 10/14 是公布日, 不是上架日。",
+			"otherDates": [
+				"2026-10-14 (英文新聞的公布日, 與水梧桐同一篇)",
+				"2026-11-01 (卡池結束日, 台北)"
+			],
+			"sources": [
+				"https://pokemonmasters-game.com/zh-TW/announcements/BSearch_8090_3W_3",
+				"https://pocketmonsters.net/news/9634"
+			]
 		}
 	}
 }
