@@ -79,6 +79,24 @@ export function serializeComparePairs(pairIds: readonly string[]): string | null
 }
 
 /**
+ * 指定拍組那張表**沒點排序**(或排序同分) 時誰排前面: 有幾組 → 寶數加總 → **由左到右每一欄的寶數**。
+ * `grades` 是這個人在每一欄的寶數 (0-10, 照欄位順序)。回傳 0 = 全部一樣, 交給呼叫端照名冊排。
+ * 第三層是 2026-11-06 加的 (使用者:「排序是怎麼排的阿 好奇怪」): 原本加總一樣就直接看名冊,
+ * 於是 5·4 和 4·5 在同一段裡交錯, 看起來像沒排。
+ */
+export function comparePickedGrades(a: readonly number[], b: readonly number[]): number {
+  const count = (gs: readonly number[]) => gs.filter((g) => g > 0).length;
+  const sum = (gs: readonly number[]) => gs.reduce((s, g) => s + g, 0);
+  const d = count(b) - count(a) || sum(b) - sum(a);
+  if (d) return d;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const c = (b[i] ?? 0) - (a[i] ?? 0);
+    if (c) return c;
+  }
+  return 0;
+}
+
+/**
  * ?res= 要比的資源 (2026-11-06 使用者:「可以再幫我加比較資源的部分嗎?」):
  * 背包的四組道具 (= candy.tsx 的 CANDY_GROUPS 的 key, 同一個順序) + 投入屬性 (member_type_focus)。
  * ⚠ 這裡是手抄的 —— candy.tsx 標了 "use client", 這支不能 import 它 (見檔頭)。

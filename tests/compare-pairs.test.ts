@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   COMPARE_ALL,
+  comparePickedGrades,
   MAX_COMPARE_PAIRS,
   parseCompareMembers,
   parseComparePairs,
@@ -93,7 +94,9 @@ describe("指定拍組不亂長", () => {
   });
 
   it("有最多組的人排前面; 一組都沒有的人收成表格下面一行", () => {
-    expect(view).toMatch(/b\.n - a\.n \|\| b\.sum - a\.sum/);
+    // 順序本身在下面 comparePickedGrades 那一組測
+    expect(view).toMatch(/comparePickedGrades\(a\.gs, b\.gs\)/);
+    expect(view).toMatch(/scored\.filter\(\(r\) => !owns\(r\)\)/);
     expect(view).toMatch(/data-compare-rest[\s\S]{0,80}\{restLine\(g\.rest, g\.rows\.length > 1, "沒有"\)\}/);
     // 畫面與匯出圖是同一句
     expect(view).toContain('return `其餘 ${rest.length} 人${many ? "都" : ""}${verb}：${rest.map(memberCallName).join("、")}`;');
@@ -168,5 +171,38 @@ describe("點拍組名排序, 可以疊好幾層", () => {
   it("卡片本身還是點不了 (比較只讀; 點得動的只有拍組名)", () => {
     const at = view.indexOf("<PairCell");
     expect(view.slice(at, view.indexOf("/>", at))).not.toMatch(/onSelect|onCount|onPromote/);
+  });
+});
+
+describe("指定拍組沒點排序時的順序 (comparePickedGrades)", () => {
+  it("組數 → 加總 → 由左到右每一欄; 用 2026-11-06 使用者截圖那張表 (美月 / 望羅) 釘住", () => {
+    // 名冊順序 (排序前), [美月, 望羅]; 寶1-5 = 1-5
+    const rows: [string, number[]][] = [
+      ["No.120", [5, 5]], ["Opal", [5, 5]], ["Pikaboo", [5, 5]],
+      ["傑瑞", [4, 5]], ["泡茶綿羊", [5, 4]], ["Simba", [4, 5]], ["草地人", [5, 4]],
+      ["蓉", [5, 3]], ["老人", [5, 3]], ["阿星", [4, 4]], ["寶可夢大叔", [4, 4]], ["請假王", [5, 3]],
+      ["小伊布", [3, 4]], ["JCLee", [3, 3]], ["軒", [5, 1]], ["萬軍", [1, 5]],
+      ["只有一組的寶5", [0, 5]], ["超覺醒1", [6, 0]],
+    ];
+    const roster = new Map(rows.map(([n], i) => [n, i]));
+    const sorted = [...rows]
+      .sort((a, b) => comparePickedGrades(a[1], b[1]) || roster.get(a[0])! - roster.get(b[0])!)
+      .map(([n]) => n);
+    expect(sorted).toEqual([
+      "No.120", "Opal", "Pikaboo",
+      "泡茶綿羊", "草地人", "傑瑞", "Simba",
+      "蓉", "老人", "請假王", "阿星", "寶可夢大叔",
+      "小伊布", "軒", "JCLee", "萬軍",
+      "超覺醒1", "只有一組的寶5",
+    ]);
+  });
+
+  it("全部一樣回 0 (交給名冊), 欄數不同時缺的當 0", () => {
+    expect(comparePickedGrades([5, 4], [5, 4])).toBe(0);
+    expect(comparePickedGrades([5], [5, 0])).toBe(0);
+  });
+
+  it("畫面那張表真的用它, 而且還是排在點擊排序 (bySort) 之後、名冊之前", () => {
+    expect(view).toMatch(/bySort\(a\.m, b\.m\) \|\| comparePickedGrades\(a\.gs, b\.gs\) \|\| roster\.get/);
   });
 });

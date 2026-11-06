@@ -86,6 +86,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ALL_TYPES, TYPE_COLORS, TYPE_LABELS } from "@/data/sync-pairs";
 import {
+  comparePickedGrades,
   MAX_COMPARE_PAIRS,
   serializeCompareMembers,
   serializeComparePairs,
@@ -498,16 +499,14 @@ export function CompareView({
       if (loadingAny) {
         out.push(build("picked", null, pairRecs, columns, []));
       } else {
-        const scored = ordered.map((m) => {
-          const gs = pairRecs.map((p) => gradeOf(m, p.pairId));
-          return { m, n: gs.filter((g) => g > 0).length, sum: gs.reduce((a, b) => a + b, 0) };
-        });
+        const scored = ordered.map((m) => ({ m, gs: pairRecs.map((p) => gradeOf(m, p.pairId)) }));
+        const owns = (r: { gs: number[] }) => r.gs.some((g) => g > 0);
         const has = scored
-          .filter((r) => r.n > 0)
-          // 有點排序就照排序; 同分 (或沒點) 才看有幾組 → 寶數加總 → 名冊順序
-          .sort((a, b) => bySort(a.m, b.m) || b.n - a.n || b.sum - a.sum || roster.get(a.m.id)! - roster.get(b.m.id)!)
+          .filter(owns)
+          // 有點排序就照排序; 同分 (或沒點) 才看有幾組 → 寶數加總 → 由左到右每一欄 → 名冊順序
+          .sort((a, b) => bySort(a.m, b.m) || comparePickedGrades(a.gs, b.gs) || roster.get(a.m.id)! - roster.get(b.m.id)!)
           .map((r) => r.m);
-        out.push(build("picked", null, pairRecs, has, scored.filter((r) => r.n === 0).map((r) => r.m)));
+        out.push(build("picked", null, pairRecs, has, scored.filter((r) => !owns(r)).map((r) => r.m)));
       }
     }
     // 屬性表也一樣: 這個屬性一組都沒有的人收成下面那一行 (順序照舊是共用的那一份)
