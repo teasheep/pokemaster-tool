@@ -39,7 +39,7 @@ describe("比較的格子是卡牆的卡", () => {
 
 describe("每個屬性一張表, 手機與電腦的軸相反", () => {
   it("每個屬性一段, 段裡兩張表: 手機那張 sm:hidden、電腦那張 max-sm:hidden", () => {
-    expect(code).toMatch(/<section key=\{g\.type\}[\s\S]{0,1600}<PairsDownTable[\s\S]{0,400}<MembersDownTable/);
+    expect(code).toMatch(/<section key=\{g\.key\}[\s\S]{0,1600}<PairsDownTable[\s\S]{0,400}<MembersDownTable/);
     expect(fn("PairsDownTable")).toMatch(/"sm:hidden"\)\} data-compare-layout="pairs-down"/);
     expect(fn("MembersDownTable")).toMatch(/"max-sm:hidden"\)\} data-compare-layout="members-down"/);
   });

@@ -8,7 +8,7 @@ import { fetchGymGrades, getGymContext, getMyPendingGyms } from "@/lib/gym/queri
 import { CATALOG_VERSION, loadPairsById, loadPairsForClient } from "@/lib/pairs/loader";
 import { pickParam } from "@/lib/url-params";
 import { parseCardInfo } from "@/lib/pairs/potentials";
-import { parseCompareMembers, parseCompareTypes } from "@/lib/gym/compare-params";
+import { parseCompareMembers, parseComparePairs, parseCompareRes, parseCompareTypes } from "@/lib/gym/compare-params";
 import { requestNowMs } from "@/lib/gym/pairs-updated";
 import { MembersClient } from "./members-client";
 
@@ -20,7 +20,7 @@ export default async function GymMembersPage({
 }: {
   params: Promise<{ id: string }>;
   // 重新整理要留在原本的畫面 → 這幾個決定畫面長相的狀態走網址 (見 lib/use-url-state.ts)
-  // cmp / types = 名冊「比較」那一項選了誰、哪些屬性 (compare-view.tsx 寫)
+  // cmp / types / pairs / sort / cards = 名冊「比較」那一項選了誰、哪些屬性、哪幾組指定拍組、照哪幾組排、要不要畫成卡片 (compare-view.tsx 寫)
   searchParams: Promise<{
     member?: string;
     view?: string;
@@ -29,6 +29,10 @@ export default async function GymMembersPage({
     show?: string;
     cmp?: string;
     types?: string;
+    pairs?: string;
+    sort?: string;
+    cards?: string;
+    res?: string;
   }>;
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
@@ -152,6 +156,10 @@ export default async function GymMembersPage({
         show: parseCardInfo(sp.show),
         compareMembers: parseCompareMembers(sp.cmp),
         compareTypes: parseCompareTypes(sp.types),
+        comparePairs: parseComparePairs(sp.pairs),
+        compareSort: parseComparePairs(sp.sort),
+        compareCards: sp.cards === "1",
+        compareRes: parseCompareRes(sp.res),
       }}
       gymId={id}
       viewer={viewer}

@@ -20,14 +20,27 @@ import { SidePanel } from "@/components/ui/side-panel";
 import {
   MemberAvatar,
   MemberChip,
-  avatarText,
   memberCallName,
   memberLabel,
-  nameHue,
   type MemberCardData,
 } from "@/components/gym/member-card";
 import { useCatalogWithFullFallback } from "@/components/gym/pair-picker";
 import { TypeIcon } from "@/components/sync-pair-badges";
+import {
+  AV,
+  AV_GAP,
+  FONT,
+  TYPE_HEX,
+  downloadCanvas,
+  drawAvatar,
+  loadImages,
+  roundRect,
+  shade,
+  tint,
+  wrap,
+  wrapLabel,
+  type ExportMember,
+} from "@/components/gym/export-image";
 import { SyncPairCard } from "@/components/sync-pair-card";
 import { TYPE_COLORS, TYPE_LABELS } from "@/data/sync-pairs";
 import { matchTemplate } from "@/lib/gym/battle-templates";
@@ -75,137 +88,8 @@ function toPlan(fields: PlanFieldRow[], slots: PlanSlotRow[], note: string): Pla
 }
 
 // ── 匯出圖片 (2026-10-02 使用者:「這個區塊要可以單獨匯出」) ──
-// 排刀表最後是貼到賴群的 → 匯出成 PNG。自己用 canvas 畫, 不加截圖套件:
-// 版面就是一張格子表, 畫起來比讓套件去抓 DOM (字型、捲動中的表格、側板) 穩。
-const TYPE_HEX: Record<SyncPairType, string> = {
-  normal: "#a8a878",
-  fire: "#f08030",
-  water: "#6890f0",
-  electric: "#f8d030",
-  grass: "#78c850",
-  ice: "#98d8d8",
-  fighting: "#c03028",
-  poison: "#a040a0",
-  ground: "#e0c068",
-  flying: "#a890f0",
-  psychic: "#f85888",
-  bug: "#a8b820",
-  rock: "#b8a038",
-  ghost: "#705898",
-  dragon: "#7038f8",
-  dark: "#705848",
-  steel: "#b8b8d0",
-  fairy: "#ee99ac",
-};
-const FONT = '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif';
-
-/** 依寬度斷行 (中文沒有空白, 逐字量) */
-function wrap(ctx: CanvasRenderingContext2D, text: string, width: number): string[] {
-  const out: string[] = [];
-  for (const para of text.split("\n")) {
-    let line = "";
-    for (const ch of para) {
-      if (line && ctx.measureText(line + ch).width > width) {
-        out.push(line);
-        line = ch;
-      } else line += ch;
-    }
-    out.push(line);
-  }
-  return out;
-}
-
-/** 名字放不下時從括號前斷 (「小伊布(Norma / n)」→「小伊布 / (Norman)」), 括號裡再放不下才逐字斷 */
-function wrapLabel(ctx: CanvasRenderingContext2D, label: string, width: number): string[] {
-  const i = label.indexOf("(");
-  if (ctx.measureText(label).width <= width || i <= 0) return wrap(ctx, label, width);
-  return [...wrap(ctx, label.slice(0, i), width), ...wrap(ctx, label.slice(i), width)];
-}
-
-/** 成員在圖上的樣子 = 頭像 + 社群名(遊戲名), 與畫面上一致 */
-type ExportMember = { m: MemberCardData | undefined; label: string };
-
-const AV = 24; // 頭像直徑
-const AV_GAP = 6;
-
-function drawAvatar(
-  ctx: CanvasRenderingContext2D,
-  em: ExportMember,
-  images: Map<string, HTMLImageElement>,
-  x: number,
-  cy: number,
-) {
-  const r = AV / 2;
-  const cx = x + r;
-  const img = em.m?.avatarUrl ? images.get(em.m.avatarUrl) : undefined;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  if (img) {
-    ctx.clip();
-    ctx.drawImage(img, cx - r, cy - r, AV, AV);
-  } else {
-    // 沒頭貼 = 與 MemberAvatar 同一個底色與縮寫
-    const hue = nameHue(em.m?.displayName ?? em.label);
-    ctx.fillStyle = `hsl(${hue} 52% 52%)`;
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `bold 11px ${FONT}`;
-    ctx.textAlign = "center";
-    ctx.fillText(em.m ? avatarText(em.m) : "?", cx, cy + 0.5);
-  }
-  ctx.restore();
-}
-
-/** 頭貼是外部網址: 抓不到 (或 CORS 不給) 就退回縮寫圓圈, 不讓整張圖匯不出來 */
-async function loadAvatars(urls: string[]): Promise<Map<string, HTMLImageElement>> {
-  const out = new Map<string, HTMLImageElement>();
-  await Promise.all(
-    [...new Set(urls)].map(
-      (url) =>
-        new Promise<void>((resolve) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          const timer = setTimeout(resolve, 4000);
-          img.onload = () => {
-            clearTimeout(timer);
-            out.set(url, img);
-            resolve();
-          };
-          img.onerror = () => {
-            clearTimeout(timer);
-            resolve();
-          };
-          img.src = url;
-        }),
-    ),
-  );
-  return out;
-}
-
-/** 把屬性色往黑色混 (f=0.45 → 深 45%), 給卡頭的字用 */
-function shade(hex: string, f: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  const ch = (v: number) => Math.round(v * (1 - f));
-  return `rgb(${ch((n >> 16) & 255)} ${ch((n >> 8) & 255)} ${ch(n & 255)})`;
-}
-/** 屬性色的淡底 (= 畫面上 TYPE_COLORS 那種 20% 底色) */
-function tint(hex: string, a: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgb(${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255} / ${a})`;
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number | number[],
-) {
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, r);
-}
+// 排刀表最後是貼到賴群的 → 匯出成 PNG。畫法的零件 (頭像 / 字型 / 斷行 / 下載) 在 components/gym/export-image.ts,
+// 與成員頁「比較」的匯出圖共用。
 
 /**
  * 匯出的圖 = 畫面的長相 (2026-10-02 使用者:「下載圖片的圖也好看一點」):
@@ -739,21 +623,13 @@ export function BattlePlan({
         c.members.map((id) => byId.get(id)?.avatarUrl).filter((u): u is string => !!u),
       ),
     );
-    const images = await loadAvatars(urls);
+    const images = await loadImages(urls);
     const withLeader = stages.map((s) => {
       const l = leaders?.byType.get(s.weak_type);
       return { ...s, leader: l ? `${l.leader}＆${l.pokemon}` : undefined };
     });
     const cv = drawPlanImage("排刀表", battleName, withLeader, plan, memberOf, images);
-    cv.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${battleName}-排刀表.png`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }, "image/png");
+    downloadCanvas(cv, `${battleName}-排刀表.png`);
   };
 
   // 版面跟著站上其他地方走 (2026-10-02 使用者:「表格的 UI 可以不要長那麼死板嗎? 跟我們系統的 UI 對齊」):

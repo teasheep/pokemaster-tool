@@ -60,7 +60,7 @@ import { type PairSortKey } from "@/lib/pairs/name";
 import { cn } from "@/lib/utils";
 import { buildMembersCsv, downloadCsv } from "@/lib/gym/export-csv";
 import { useUrlState } from "@/lib/use-url-state";
-import { COMPARE_ID, resolveCompareMembers } from "@/lib/gym/compare-params";
+import { COMPARE_ID, resolveCompareMembers, type CompareResKey } from "@/lib/gym/compare-params";
 import { CompareView, type CompareState } from "./compare-view";
 import type { CollectionEntry } from "@/lib/collection";
 import { cycleEntry, cyclePromotion, defaultEntry } from "@/lib/collection-entry";
@@ -157,8 +157,14 @@ type Props = {
     /** ?show= 卡片下方多顯示哪些資訊 (「顯示」多選下拉; page.tsx 用 parseCardInfo 讀) */
     show: CardInfoKey[];
     /** 「比較」: ?cmp= 成員短碼 (null = 網址沒帶, 用預設: 只選自己) / ?types= 屬性 */
-    compareMembers: string[] | null;
+    compareMembers: string[] | null | "all";
     compareTypes: SyncPairType[];
+    comparePairs: string[];
+    compareSort: string[];
+    /** ?cards=1 比較畫成卡片 (預設是精簡表格) */
+    compareCards: boolean;
+    /** ?res= 比較的資源 (背包道具分組 / 投入屬性) */
+    compareRes: CompareResKey[];
   };
   /** 成員 id → 拍組最後更新 (0086, 帳號那一份的時間; 顧問與沒資料的人不在裡面) */
   pairsUpdatedAt: Record<string, string>;
@@ -554,6 +560,10 @@ export function MembersClient({
             gymViewMembers.map((m) => m.id)
           ),
     types: initialView.compareTypes,
+    pairs: initialView.comparePairs,
+    sort: initialView.compareSort,
+    cards: initialView.compareCards,
+    res: initialView.compareRes,
     scope: initialView.scope,
     show: initialView.show,
   }));
@@ -662,6 +672,7 @@ export function MembersClient({
             setState={setCompare}
             catalog={catalogAll}
             gymPairIds={gymPairIds}
+            gymId={gymId}
           />
         ) : selectedId === ALL_GYM ? (
           <GymPairsClient

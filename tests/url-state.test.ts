@@ -91,17 +91,25 @@ describe("道館分頁記住上次停在哪 (2026-11-04)", () => {
 });
 
 describe("寫進網址的參數, server 端都要讀得回來", () => {
-  it("成員頁的「比較」: 寫 cmp / types, page.tsx 就要讀 cmp / types 並傳下去", () => {
+  it("成員頁的「比較」: 寫 cmp / types / pairs, page.tsx 就要讀 cmp / types / pairs 並傳下去", () => {
     const view = read("src/app/gyms/[id]/members/compare-view.tsx");
     const page = read("src/app/gyms/[id]/members/page.tsx");
-    expect(view).toMatch(/useUrlState\(\{[\s\S]{0,200}cmp:[\s\S]{0,200}types:/);
-    for (const key of ["cmp", "types"]) {
+    expect(view).toMatch(/useUrlState\(\{[\s\S]{0,200}cmp:[\s\S]{0,200}types:[\s\S]{0,200}pairs:/);
+    for (const key of ["cmp", "types", "pairs", "sort", "cards", "res"]) {
       expect(page, `成員頁的 page.tsx 沒讀 ${key}`).toMatch(
         new RegExp(`searchParams[\\s\\S]{0,400}${key}\\?:`)
       );
     }
     expect(page).toContain("compareMembers: parseCompareMembers(sp.cmp)");
     expect(page).toContain("compareTypes: parseCompareTypes(sp.types)");
+    expect(page).toContain("comparePairs: parseComparePairs(sp.pairs)");
+    expect(page).toContain('compareCards: sp.cards === "1"');
+    expect(view).toMatch(/useUrlState\(\{[\s\S]{0,600}cards: cards \? "1" : null/);
+    expect(read("src/app/gyms/[id]/members/members-client.tsx")).toContain("pairs: initialView.comparePairs");
+    expect(read("src/app/gyms/[id]/members/members-client.tsx")).toContain("cards: initialView.compareCards");
+    expect(page).toContain("compareRes: parseCompareRes(sp.res)");
+    expect(view).toMatch(/useUrlState\(\{[\s\S]{0,700}res: serializeCompareRes\(res\)/);
+    expect(read("src/app/gyms/[id]/members/members-client.tsx")).toContain("res: initialView.compareRes");
   });
 
   it("道館戰一覽: 寫 open (展開了哪幾場), page.tsx 就要讀 open", () => {

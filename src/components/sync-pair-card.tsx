@@ -98,6 +98,23 @@ export function UpcomingTag({ className }: { className?: string }) {
   );
 }
 
+/**
+ * 官方卡面的網址 (`<pairId>_<3|4|5|EX>.webp`, 規則見 SyncPairCard 裡 cardUrl 那段註解)。
+ * 卡片與匯出圖 (成員頁「比較」的下載圖片) 共用 —— 不要在別處自己拼檔名。
+ * 沒傳 promotion = 原始星級那張 (混多人的地方就是這樣用)。
+ */
+export function cardImageUrl(
+  pair: Pick<ClientPairRecord, "pairId" | "basePotential" | "hasSixEx">,
+  promotion?: number,
+  /** 卡片的 `ex` prop (EX 模式) —— 等同 6★EX, 但沒有 EX 圖時照星數那張 */
+  ex = false,
+): string {
+  const base = Math.max(1, Math.min(5, pair.basePotential ?? 5));
+  const promo = Math.max(base, Math.min(6, promotion ?? base));
+  const tier = (promo >= 6 || ex) && pair.hasSixEx ? "EX" : String(Math.min(5, promo));
+  return `/reference/card/${pair.pairId}_${tier}.webp`;
+}
+
 /** 卡片名稱前的狀態標籤: 未上線 / NEW / 無 —— 兩處卡牆共用, 不要各寫各的判斷 */
 export function PairStatusTag({ pair }: { pair: Pick<ClientPairRecord, "releaseDate"> }) {
   if (isUpcomingPair(pair)) return <UpcomingTag />;
@@ -257,8 +274,6 @@ export const SyncPairCard = memo(function SyncPairCard({
   const showArt = everShown || eager || near;
   if (showArt && !everShown) setEverShown(true);
 
-  const isSixEx = promo >= 6 || !!ex;
-
   /**
    * 官方卡面 —— 卡片本體現在是**一張圖**, 不再自己合成 (2026-09-09 使用者指定:
    * 「那邊只有壓平的成品卡, 那就把我們的卡全面改成那邊的成品卡」)。
@@ -275,8 +290,7 @@ export const SyncPairCard = memo(function SyncPairCard({
    * 實測 hasSixEx=true 的每一筆都有 _EX 檔, 反向只有 1 筆例外 (小菊兒（合眾）&電飛鼠,
    * 那是我方 wiki 抓取的頁名歸屬錯誤, 修在資料端不是這裡)。
    */
-  const cardTier = isSixEx && pair.hasSixEx ? "EX" : String(Math.min(5, promo));
-  const cardUrl = `/reference/card/${pair.pairId}_${cardTier}.webp`;
+  const cardUrl = cardImageUrl(pair, promo, !!ex);
 
   /**
    * 「圖載好了沒」**不能只靠 `<image onLoad>`** —— 那條路有兩個洞, 症狀都是

@@ -275,7 +275,6 @@ export function PairPicker({
   fullCatalogUrl?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
   /** compact 的懸浮面板: 貼齊卡片下緣, 超出視窗右緣時往左推 (不讓頁面橫向捲動) */
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -310,43 +309,8 @@ export function PairPicker({
       document.removeEventListener("touchstart", onDown);
     };
   }, [compact, open]);
-  // 有限縮池時預設「全部」(池子本身已窄, 且要看得到跨屬性的通用輔助)
-  const [typeFilter, setTypeFilter] = useState<SyncPairType | "all">(
-    allowedPairIds ? "all" : (filterType ?? "all")
-  );
-  const [showAll, setShowAll] = useState(false);
-  /** 抓回來的整本 (勾「全圖鑑」才會有); null = 還沒抓 */
+  /** 抓回來的整本 (勾「全圖鑑」才會有); null = 還沒抓 —— 已選槽位名單外的拍組靠它畫得出卡 */
   const fullCatalog = useLoadedFullCatalog();
-  const [loadingFull, setLoadingFull] = useState(false);
-  // 結果區是自己捲的框 (max-h-96) — 卡片的延遲載圖要以它為 root。不給的話 rootMargin 擴張的
-  // 是 viewport 而不是這個框, 框裡看不見的卡完全沒有預載邊界, 捲一格才補一格 (pop-in)。
-  // 用 state 不用 ref: ref 在第一次渲染時還是 null, 卡片拿不到 root 就會退回 viewport。
-  const [resultsEl, setResultsEl] = useState<HTMLDivElement | null>(null);
-
-  /** 骨架只在「勾著全圖鑑而且還在抓」時出現 (抓一半改回候選池就不該再擋著) */
-  const loadingCatalog = loadingFull && showAll;
-
-  /**
-   * 勾「全圖鑑」才去抓整本 (靜態資產優先, 抓不到退到 fullCatalogUrl; module 快取, 同分頁只有一次)。
-   * 失敗 = 退回候選池 + toast: 面板絕不可以變成空白 —
-   * 「入口還在但功能斷掉」是點名過的前科。
-   */
-  function toggleShowAll(next: boolean) {
-    setShowAll(next);
-    if (!next || !fullCatalogUrl || fullCatalog) return;
-    setLoadingFull(true);
-    loadFullCatalog(fullCatalogUrl)
-      .catch((e: unknown) => {
-        setShowAll(false);
-        // 使用者看得到的字一律繁中 — 只有我們自己丟的訊息才往外顯示,
-        // 瀏覽器/執行期產生的英文例外 (SyntaxError、TypeError: Failed to fetch…) 一律換掉
-        const msg = e instanceof Error ? e.message : "";
-        toast.error("全圖鑑載入失敗", {
-          description: /[\u4e00-\u9fff]/.test(msg) ? msg : "網路或連線問題, 請再勾一次",
-        });
-      })
-      .finally(() => setLoadingFull(false));
-  }
 
   /** 已選槽位查得到卡 = 子集 + 抓回來的整本 (只給子集時, 名單外的拍組要靠後者) */
   const pairById = useMemo(() => {
@@ -354,31 +318,7 @@ export function PairPicker({
     for (const p of fullCatalog ?? []) if (!map.has(p.pairId)) map.set(p.pairId, p);
     return map;
   }, [catalog, fullCatalog]);
-  const allowedSet = useMemo(
-    () => (allowedPairIds ? new Set(allowedPairIds) : null),
-    [allowedPairIds]
-  );
   const chosen = useMemo(() => new Set(picked.map((p) => p.pairId)), [picked]);
-
-  // 不砍數量 (「全部」就真的是全部, 面板內自己捲) — 隊伍屬性的拍組排最前, 其餘最新在前
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const cmp = pairComparator("release-desc");
-    // 解鎖全圖鑑時來源換成整本 (沒給 fullCatalogUrl 的呼叫端, catalog 本身就是全量)
-    const source = showAll && fullCatalog ? fullCatalog : catalog;
-    return source
-      .filter((c) => (allowedSet && !showAll ? allowedSet.has(c.pairId) : true))
-      .filter((c) => typeFilter === "all" || c.type === typeFilter)
-      .filter((c) => (q ? pairHaystack(c).includes(q) : true))
-      .sort((a, b) => {
-        if (filterType) {
-          const pa = a.type === filterType ? 0 : 1;
-          const pb = b.type === filterType ? 0 : 1;
-          if (pa !== pb) return pa - pb;
-        }
-        return cmp(a, b);
-      });
-  }, [catalog, fullCatalog, query, typeFilter, allowedSet, showAll, filterType]);
 
   /** 點結果卡: 已選 → 移除; 未選且有空位 → 加入 (面板保持開啟, 連選到滿) */
   function toggle(pairId: string) {
@@ -499,134 +439,247 @@ export function PairPicker({
       {/* 搜尋面板 — 開一次連選到滿; 點已選的卡取消。
           compact = 懸浮在卡片下方 (寬度不受 328px 卡片限縮), 超出視窗會自動內推 */}
       {open && !readOnly ? (
-        <div
+        <PairSearchPanel
           ref={panelRef}
           style={compact ? { transform: `translateX(${shiftX}px)` } : undefined}
-          className={cn(
-            "space-y-2 rounded-xl border p-2.5",
+          className={
             compact
               ? "absolute left-0 top-full z-30 mt-1 w-[min(32rem,calc(100vw-1rem))] bg-popover shadow-xl"
               : "bg-muted/30"
+          }
+          catalog={catalog}
+          chosen={chosen}
+          full={picked.length >= slots}
+          countLabel={`已選 ${picked.length}/${slots}`}
+          onToggle={toggle}
+          onClose={compact ? undefined : () => setOpen(false)}
+          allowedPairIds={allowedPairIds}
+          filterType={filterType}
+          fullCatalogUrl={fullCatalogUrl}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * 搜尋面板 —— PairPicker 開出來的那一塊, 抽出來給「選幾組拍組」的其他地方共用
+ * (2026-11-06 成員頁的比較:「選拍組的下拉選單怎麼長那樣 不要亂長」—— 第一版自己刻了一份列表,
+ *  跟隊伍庫長得不一樣)。搜尋 + 屬性快篩 + 卡片格, 點卡加入、再點取消, 面板開著連選。
+ */
+export function PairSearchPanel({
+  ref,
+  style,
+  className,
+  catalog,
+  chosen,
+  full,
+  countLabel,
+  onToggle,
+  onClose,
+  allowedPairIds,
+  filterType,
+  fullCatalogUrl,
+}: {
+  ref?: React.Ref<HTMLDivElement>;
+  style?: React.CSSProperties;
+  className?: string;
+  /** 候選池; 呼叫端只給子集時要一併給 fullCatalogUrl (勾「全圖鑑」才抓整本) */
+  catalog: ClientPairRecord[];
+  chosen: ReadonlySet<string>;
+  /** 已選滿 —— 沒選的卡變灰, 點不了 */
+  full: boolean;
+  /** 搜尋框左邊那一格 (「已選 2/3」) */
+  countLabel: string;
+  onToggle: (pairId: string) => void;
+  /** 有給才畫「收起」鈕 */
+  onClose?: () => void;
+  /** 候選池限縮; 有給才有「全圖鑑」勾選 */
+  allowedPairIds?: string[] | null;
+  /** 這個屬性排最前 (無限縮時也是預設的屬性快篩) */
+  filterType?: SyncPairType;
+  fullCatalogUrl?: string;
+}) {
+  const [query, setQuery] = useState("");
+  const allowedSet = useMemo(
+    () => (allowedPairIds ? new Set(allowedPairIds) : null),
+    [allowedPairIds]
+  );
+  // 有限縮池時預設「全部」(池子本身已窄, 且要看得到跨屬性的通用輔助)
+  const [typeFilter, setTypeFilter] = useState<SyncPairType | "all">(
+    allowedPairIds ? "all" : (filterType ?? "all")
+  );
+  const [showAll, setShowAll] = useState(false);
+  const fullCatalog = useLoadedFullCatalog();
+  const [loadingFull, setLoadingFull] = useState(false);
+  // 結果區是自己捲的框 (max-h-96) — 卡片的延遲載圖要以它為 root。不給的話 rootMargin 擴張的
+  // 是 viewport 而不是這個框, 框裡看不見的卡完全沒有預載邊界, 捲一格才補一格 (pop-in)。
+  // 用 state 不用 ref: ref 在第一次渲染時還是 null, 卡片拿不到 root 就會退回 viewport。
+  const [resultsEl, setResultsEl] = useState<HTMLDivElement | null>(null);
+
+  /** 骨架只在「勾著全圖鑑而且還在抓」時出現 (抓一半改回候選池就不該再擋著) */
+  const loadingCatalog = loadingFull && showAll;
+
+  /**
+   * 勾「全圖鑑」才去抓整本 (靜態資產優先, 抓不到退到 fullCatalogUrl; module 快取, 同分頁只有一次)。
+   * 失敗 = 退回候選池 + toast: 面板絕不可以變成空白 —
+   * 「入口還在但功能斷掉」是點名過的前科。
+   */
+  function toggleShowAll(next: boolean) {
+    setShowAll(next);
+    if (!next || !fullCatalogUrl || fullCatalog) return;
+    setLoadingFull(true);
+    loadFullCatalog(fullCatalogUrl)
+      .catch((e: unknown) => {
+        setShowAll(false);
+        // 使用者看得到的字一律繁中 — 只有我們自己丟的訊息才往外顯示,
+        // 瀏覽器/執行期產生的英文例外 (SyntaxError、TypeError: Failed to fetch…) 一律換掉
+        const msg = e instanceof Error ? e.message : "";
+        toast.error("全圖鑑載入失敗", {
+          description: /[\u4e00-\u9fff]/.test(msg) ? msg : "網路或連線問題, 請再勾一次",
+        });
+      })
+      .finally(() => setLoadingFull(false));
+  }
+
+  // 不砍數量 (「全部」就真的是全部, 面板內自己捲) — 隊伍屬性的拍組排最前, 其餘最新在前
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const cmp = pairComparator("release-desc");
+    // 解鎖全圖鑑時來源換成整本 (沒給 fullCatalogUrl 的呼叫端, catalog 本身就是全量)
+    const source = showAll && fullCatalog ? fullCatalog : catalog;
+    return source
+      .filter((c) => (allowedSet && !showAll ? allowedSet.has(c.pairId) : true))
+      .filter((c) => typeFilter === "all" || c.type === typeFilter)
+      .filter((c) => (q ? pairHaystack(c).includes(q) : true))
+      .sort((a, b) => {
+        if (filterType) {
+          const pa = a.type === filterType ? 0 : 1;
+          const pb = b.type === filterType ? 0 : 1;
+          if (pa !== pb) return pa - pb;
+        }
+        return cmp(a, b);
+      });
+  }, [catalog, fullCatalog, query, typeFilter, allowedSet, showAll, filterType]);
+
+  return (
+    <div ref={ref} style={style} className={cn("space-y-2 rounded-xl border p-2.5", className)}>
+      <div className="flex items-center gap-2">
+        <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
+          {countLabel}
+        </span>
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="輸入訓練家或寶可夢名稱"
+            className="h-8 pl-7"
+          />
+        </div>
+        {allowedSet ? (
+          <label className="flex shrink-0 cursor-pointer items-center gap-1 text-[11px] text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={showAll}
+              onChange={(e) => toggleShowAll(e.target.checked)}
+              className="h-3.5 w-3.5 accent-primary"
+            />
+            全圖鑑
+          </label>
+        ) : null}
+        {onClose ? (
+          <button
+            onClick={onClose}
+            className="rounded p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+            title="收起"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        ) : null}
+      </div>
+
+      {/* 屬性快篩 */}
+      <div className="flex flex-wrap gap-1">
+        <button
+          onClick={() => setTypeFilter("all")}
+          className={cn(
+            "rounded-full border px-2 py-0.5 text-[11px] transition-colors",
+            typeFilter === "all" ? "border-primary font-medium" : "text-muted-foreground"
           )}
         >
-          <div className="flex items-center gap-2">
-            <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
-              已選 {picked.length}/{slots}
-            </span>
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="輸入訓練家或寶可夢名稱"
-                className="h-8 pl-7"
-              />
-            </div>
-            {allowedSet ? (
-              <label className="flex shrink-0 cursor-pointer items-center gap-1 text-[11px] text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={showAll}
-                  onChange={(e) => toggleShowAll(e.target.checked)}
-                  className="h-3.5 w-3.5 accent-primary"
-                />
-                全圖鑑
-              </label>
-            ) : null}
-            {!compact ? (
-              <button
-                onClick={() => setOpen(false)}
-                className="rounded p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-                title="收起"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
-
-          {/* 屬性快篩 */}
-          <div className="flex flex-wrap gap-1">
-            <button
-              onClick={() => setTypeFilter("all")}
-              className={cn(
-                "rounded-full border px-2 py-0.5 text-[11px] transition-colors",
-                typeFilter === "all" ? "border-primary font-medium" : "text-muted-foreground"
-              )}
-            >
-              全部
-            </button>
-            {ALL_TYPES.map((t) => (
-              <button
-                key={t}
-                onClick={() => setTypeFilter(t)}
-                title={TYPE_LABELS[t]}
-                className={cn(
-                  "rounded-full border p-0.5 transition-all",
-                  // 未選中用去彩度 (不用降透明度 — 看起來像 disabled 且對比不足)
-                  typeFilter === t
-                    ? "border-primary bg-accent"
-                    : "border-transparent grayscale hover:grayscale-0"
-                )}
-              >
-                <TypeIcon type={t} className="h-4 w-4" />
-              </button>
-            ))}
-          </div>
-
-          <div
-            ref={setResultsEl}
-            aria-busy={loadingCatalog}
-            className="grid max-h-96 grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2 overflow-y-auto"
+          全部
+        </button>
+        {ALL_TYPES.map((t) => (
+          <button
+            key={t}
+            onClick={() => setTypeFilter(t)}
+            title={TYPE_LABELS[t]}
+            className={cn(
+              "rounded-full border p-0.5 transition-all",
+              // 未選中用去彩度 (不用降透明度 — 看起來像 disabled 且對比不足)
+              typeFilter === t
+                ? "border-primary bg-accent"
+                : "border-transparent grayscale hover:grayscale-0"
+            )}
           >
-            {loadingCatalog
-              ? /* 全圖鑑抓取中 — 骨架與結果卡同構 (96px 卡 + 兩行卡名), 長出來時版面不跳 */
-                Array.from({ length: 12 }, (_, i) => (
-                  <div key={`sk-${i}`} className="flex flex-col items-center gap-0.5 p-1">
-                    <Sk className="h-24 w-24 rounded-xl" delay={i * 100} />
-                    <Sk className="mt-0.5 h-2 w-20" delay={i * 100} />
-                    <Sk className="h-2 w-14" delay={i * 100 + 50} />
-                  </div>
-                ))
-              : results.map((c) => {
-                  const isChosen = chosen.has(c.pairId);
-                  const full = !isChosen && picked.length >= slots;
-                  return (
-                    <button
-                      key={c.pairId}
-                      onClick={() => toggle(c.pairId)}
-                      disabled={full}
-                      className={cn(
-                        "flex flex-col items-center gap-0.5 rounded-lg p-1 transition-all hover:-translate-y-0.5 hover:bg-accent active:scale-95",
-                        full &&
-                          "cursor-not-allowed opacity-40 hover:translate-y-0 hover:bg-transparent"
-                      )}
-                      title={isChosen ? `${pairName(c)} — 點擊移除` : pairName(c)}
-                    >
-                      <SyncPairCard
-                        pair={c}
-                        size="sm"
-                        showName={false}
-                        minimal
-                        selected={isChosen}
-                        scrollRoot={resultsEl}
-                      />
-                      <span className="line-clamp-2 text-center text-[10px] leading-tight">
-                        {pairName(c)}
-                      </span>
-                    </button>
-                  );
-                })}
-            {!loadingCatalog && results.length === 0 ? (
-              <p className="col-span-full p-3 text-center text-xs text-muted-foreground">
-                {allowedSet && !showAll
-                  ? "候選池找不到 — 勾「全圖鑑」搜整本, 或先到道館成員拍組頁把拍組加進名單"
-                  : "找不到拍組"}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+            <TypeIcon type={t} className="h-4 w-4" />
+          </button>
+        ))}
+      </div>
+
+      <div
+        ref={setResultsEl}
+        aria-busy={loadingCatalog}
+        className="grid max-h-96 grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2 overflow-y-auto"
+      >
+        {loadingCatalog
+          ? /* 全圖鑑抓取中 — 骨架與結果卡同構 (96px 卡 + 兩行卡名), 長出來時版面不跳 */
+            Array.from({ length: 12 }, (_, i) => (
+              <div key={`sk-${i}`} className="flex flex-col items-center gap-0.5 p-1">
+                <Sk className="h-24 w-24 rounded-xl" delay={i * 100} />
+                <Sk className="mt-0.5 h-2 w-20" delay={i * 100} />
+                <Sk className="h-2 w-14" delay={i * 100 + 50} />
+              </div>
+            ))
+          : results.map((c) => {
+              const isChosen = chosen.has(c.pairId);
+              const blocked = !isChosen && full;
+              return (
+                <button
+                  key={c.pairId}
+                  onClick={() => onToggle(c.pairId)}
+                  disabled={blocked}
+                  className={cn(
+                    "flex flex-col items-center gap-0.5 rounded-lg p-1 transition-all hover:-translate-y-0.5 hover:bg-accent active:scale-95",
+                    blocked &&
+                      "cursor-not-allowed opacity-40 hover:translate-y-0 hover:bg-transparent"
+                  )}
+                  title={isChosen ? `${pairName(c)} — 點擊移除` : pairName(c)}
+                >
+                  <SyncPairCard
+                    pair={c}
+                    size="sm"
+                    showName={false}
+                    minimal
+                    selected={isChosen}
+                    scrollRoot={resultsEl}
+                  />
+                  <span className="line-clamp-2 text-center text-[10px] leading-tight">
+                    {pairName(c)}
+                  </span>
+                </button>
+              );
+            })}
+        {!loadingCatalog && results.length === 0 ? (
+          <p className="col-span-full p-3 text-center text-xs text-muted-foreground">
+            {allowedSet && !showAll
+              ? "候選池找不到 — 勾「全圖鑑」搜整本, 或先到道館成員拍組頁把拍組加進名單"
+              : "找不到拍組"}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

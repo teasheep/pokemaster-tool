@@ -125,6 +125,11 @@ export function candyForRole(role: SyncPairRole | null): CandyType | null {
   return role; // 其餘五種角色與角色糖同名 (strike/tech/support/sprint/field)
 }
 
+/** 道具圖 —— 畫面與匯出圖 (比較的下載圖片) 共用這一支, 不要各自拼路徑 */
+export function candyIconSrc(type: CandyType): string {
+  return `/reference/ui/candy/${type}.webp`;
+}
+
 export function CandyIcon({
   type,
   size = 22,
@@ -136,7 +141,7 @@ export function CandyIcon({
 }) {
   return (
     <img
-      src={`/reference/ui/candy/${type}.webp`}
+      src={candyIconSrc(type)}
       alt={CANDY_LABELS[type]}
       width={size}
       height={size}
@@ -183,6 +188,11 @@ const PLATE_SRC = {
   rainbow: "/reference/ui/item_plate_rainbow.webp",
 } as const;
 
+/** 這個道具坐的那一種圓盤 (匯出圖也吃這一支 —— 稀有度的顏色只有 PLATE 一份) */
+export function candyPlateSrc(type: CandyType): string {
+  return PLATE_SRC[PLATE[type] ?? "gold"];
+}
+
 /**
  * 遊戲內道具袋的圓盤底座 (`item_bg_*`) —— 糖果圖疊在它上面就是背包裡那一格的長相。
  * 2026-09-09 使用者指定抄 pomasters 的背包分頁版面。
@@ -207,7 +217,7 @@ export function CandyPlate({
       style={{ width: size, height: size }}
     >
       <img
-        src={PLATE_SRC[PLATE[type] ?? "gold"]}
+        src={candyPlateSrc(type)}
         alt=""
         aria-hidden
         width={size}
