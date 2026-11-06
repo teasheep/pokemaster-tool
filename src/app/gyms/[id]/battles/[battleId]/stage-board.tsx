@@ -54,6 +54,8 @@ import {
 import { reportBattleLog } from "@/lib/gym/battle-log";
 import { pairName } from "@/lib/pairs/name";
 import { cn } from "@/lib/utils";
+import { useUrlState } from "@/lib/use-url-state";
+import { serializePositions } from "@/lib/url-params";
 import { TypeIcon } from "@/components/sync-pair-badges";
 import { ALL_TYPES, TYPE_COLORS, TYPE_LABELS, roleAssetToRole } from "@/data/sync-pairs";
 import { createClient } from "@/lib/supabase/client";
@@ -101,8 +103,21 @@ export type StageBoardProps = {
   gymPairsList?: { pairId: string; type: SyncPairType }[];
   /** 「規則」開關 (在賽事頁標題列, 狀態同步進 `?rules=1`): 開了才畫每一輪的規則 tag */
   showRules?: boolean;
+  /** 收合/展開狀態的初始值 (page.tsx 從網址讀, 見 BoardView) */
+  initialView?: BoardView;
   onChanged: () => Promise<void>;
 };
+
+/**
+ * 看板上每一關的收合/展開 —— 全部進網址, 重新整理不要又全部彈回預設
+ * (2026-11-04 使用者:「點人 刷新頁面 會自動跳回去 盡量不要 道館戰頁面也是」)。
+ * 值是**第幾關** (1 起算, = stages 的順序), 不是關卡 id: 8 關的 uuid 寫進網址太長,
+ * 而一場賽事的關卡順序不會變。
+ *   fold  = 整關收起來的
+ *   done  = 「前 N 輪已完成」點開了的
+ *   ahead = 「展開 Ex…」(下一輪之後) 點開了的
+ */
+export type BoardView = { fold: number[]; done: number[]; ahead: number[] };
 
 export type StageTeamRow = Pick<
   Database["public"]["Tables"]["stage_teams"]["Row"],
@@ -130,14 +145,28 @@ export function StageBoard(props: StageBoardProps) {
    * 狀態放在這一層不放在卡片裡: 從上面的關卡摘要跳過去時要順便把那一關展開,
    * 否則跳過去只看到一條標題列, 像是沒跳成功。
    */
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
-  const toggleCollapsed = (id: string) =>
-    setCollapsed((prev) => {
+  const initialView = props.initialView;
+  const idsAt = (ps: readonly number[] | undefined) =>
+    new Set((ps ?? []).map((p) => stages[p - 1]?.id).filter((v): v is string => !!v));
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => idsAt(initialView?.fold));
+  /** 每一關的「已完成輪次」「下一輪之後」展開了沒 —— 從卡片裡提上來, 才寫得進網址 */
+  const [pastOpen, setPastOpen] = useState<Set<string>>(() => idsAt(initialView?.done));
+  const [aheadOpen, setAheadOpen] = useState<Set<string>>(() => idsAt(initialView?.ahead));
+  const flip = (set: typeof setCollapsed) => (id: string, on?: boolean) =>
+    set((prev) => {
+      const want = on ?? !prev.has(id);
+      if (want === prev.has(id)) return prev;
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (want) next.add(id);
+      else next.delete(id);
       return next;
     });
+  const toggleCollapsed = flip(setCollapsed);
+  const togglePast = flip(setPastOpen);
+  const toggleAhead = flip(setAheadOpen);
+  const positionsOf = (ids: Set<string>) =>
+    serializePositions(stages.flatMap((s, i) => (ids.has(s.id) ? [i + 1] : [])));
+  useUrlState({ fold: positionsOf(collapsed), done: positionsOf(pastOpen), ahead: positionsOf(aheadOpen) });
 
   /**
    * 本輪每關的進度 (已用券 / 我出過沒) — 手機的關卡摘要列用。
@@ -219,6 +248,10 @@ export function StageBoard(props: StageBoardProps) {
             showRules={showRules}
             collapsed={collapsed.has(s.id)}
             onToggleCollapsed={() => toggleCollapsed(s.id)}
+            showAllRounds={pastOpen.has(s.id)}
+            setShowAllRounds={(on) => togglePast(s.id, on)}
+            showFuture={aheadOpen.has(s.id)}
+            toggleShowFuture={() => toggleAhead(s.id)}
             {...props}
           />
         ))}
@@ -301,12 +334,20 @@ function StageCard({
   showRules,
   collapsed,
   onToggleCollapsed,
+  showAllRounds,
+  setShowAllRounds,
+  showFuture,
+  toggleShowFuture,
 }: StageBoardProps & {
   stage: StageRow;
   templateStage: TemplateStageRules | null;
   showRules: boolean;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  showAllRounds: boolean;
+  setShowAllRounds: (on: boolean) => void;
+  showFuture: boolean;
+  toggleShowFuture: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   // 側板勾過「全圖鑑」之後, 名單外的拍組也要畫得出來 (否則隊伍卡掉成灰字 pair_id)。
@@ -401,14 +442,13 @@ function StageCard({
    * 預設只展開「目前輪/下一輪」— 推到 Ex10 時一關會有 13+ 行,
    * 早就打完的 R1 跟今天要推的輪一樣搶眼, 卡片長到一屏放不下 (且舊輪的出刀鈕還會誤觸)。
    */
-  const [showAllRounds, setShowAllRounds] = useState(false);
+  // (展開狀態在 StageBoard, 跟著網址走)
   const visibleRounds = showAllRounds ? allRounds : allRounds.filter((r) => r >= round);
   const hiddenRounds = allRounds.length - visibleRounds.length;
   /**
    * 「下一輪」之後的輪次 (開了規則才會出現, 一關最多十幾列) 預設也收起來 ——
    * 使用者:「Ex 輪也做可以展開收納的功能, 避免太長」。排隊伍要提前看後面的限制時再點開。
    */
-  const [showFuture, setShowFuture] = useState(false);
   const futureRounds = visibleRounds.filter((r) => r > round + 1);
   const shownRounds = showFuture ? visibleRounds : visibleRounds.filter((r) => r <= round + 1);
   const hiddenTickets = allRounds
@@ -1067,7 +1107,7 @@ function StageCard({
           {futureRounds.length > 0 ? (
             <button
               type="button"
-              onClick={() => setShowFuture((v) => !v)}
+              onClick={toggleShowFuture}
               aria-expanded={showFuture}
               className="flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-left text-xs text-muted-foreground transition-colors hover:bg-accent/50 pointer-coarse:min-h-11"
             >

@@ -8,6 +8,8 @@ import { fetchGymGrades, getGymContext, getMyPendingGyms } from "@/lib/gym/queri
 import { CATALOG_VERSION, loadPairsById, loadPairsForClient } from "@/lib/pairs/loader";
 import { pickParam } from "@/lib/url-params";
 import { parseCardInfo } from "@/lib/pairs/potentials";
+import { parseCompareMembers, parseCompareTypes } from "@/lib/gym/compare-params";
+import { requestNowMs } from "@/lib/gym/pairs-updated";
 import { MembersClient } from "./members-client";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +20,16 @@ export default async function GymMembersPage({
 }: {
   params: Promise<{ id: string }>;
   // 重新整理要留在原本的畫面 → 這幾個決定畫面長相的狀態走網址 (見 lib/use-url-state.ts)
-  searchParams: Promise<{ member?: string; view?: string; scope?: string; owned?: string; show?: string }>;
+  // cmp / types = 名冊「比較」那一項選了誰、哪些屬性 (compare-view.tsx 寫)
+  searchParams: Promise<{
+    member?: string;
+    view?: string;
+    scope?: string;
+    owned?: string;
+    show?: string;
+    cmp?: string;
+    types?: string;
+  }>;
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
@@ -52,7 +63,7 @@ export default async function GymMembersPage({
 
   // 我自己算不算這一館的一員 (顧問的練度不屬於這一館, 0072)
   const mirrorMe = viewer.memberId && !viewer.isAdvisor ? viewer.memberId : null;
-  const [{ data: gymPairs }, gradesNow, { data: invite }, myOwned] = await Promise.all([
+  const [{ data: gymPairs }, gradesNow, { data: invite }, myOwned, lastUpdated] = await Promise.all([
     supabase.from("gym_pairs").select("id, pair_label, pair_id, type").eq("gym_id", id),
     // 全館持有 (分頁全量 — 這張表早就破 2000 列, 忘了分頁持有率會默默少算)
     fetchGymGrades(id),
@@ -61,7 +72,15 @@ export default async function GymMembersPage({
       : Promise.resolve({ data: null }),
     // 跟上面平行打, 不多花時間: 只是要知道「我帳號有、這一館卻沒有」的卡有沒有
     mirrorMe ? fetchMyOwnedPairIds(supabase, user.id) : Promise.resolve([] as string[]),
+    // 每位成員「拍組最後更新」(0086, 帳號那一份的時間)。讀不到 (migration 還沒套) 就是沒有那一行,
+    // 不擋整頁 —— 名冊照樣畫得出來
+    supabase.rpc("gym_pairs_last_updated", { p_gym: id }).then(
+      (r) => (r.error ? [] : (r.data ?? [])),
+      () => []
+    ),
   ]);
+  const pairsUpdatedAt: Record<string, string> = {};
+  for (const r of lastUpdated) if (r.updated_at) pairsUpdatedAt[r.member_id] = r.updated_at;
 
   /**
    * 拍組跟著帳號走 (0080): **我自己的卡在這一館有缺, 就先同步完再畫**。
@@ -131,6 +150,8 @@ export default async function GymMembersPage({
         scope: pickParam(sp.scope, ["gym", "all"] as const, "gym"),
         ownedOnly: sp.owned === "1",
         show: parseCardInfo(sp.show),
+        compareMembers: parseCompareMembers(sp.cmp),
+        compareTypes: parseCompareTypes(sp.types),
       }}
       gymId={id}
       viewer={viewer}
@@ -165,6 +186,9 @@ export default async function GymMembersPage({
       }))}
       catalog={catalog}
       fullCatalogUrl={`/api/catalog?v=${CATALOG_VERSION}`}
+      pairsUpdatedAt={pairsUpdatedAt}
+      // 「幾天前」的基準由 server 給 (見 lib/gym/pairs-updated.ts: client 自己取會跨午夜對不起來)
+      nowMs={requestNowMs()}
     />
   );
 }

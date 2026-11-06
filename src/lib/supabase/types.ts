@@ -857,6 +857,14 @@ export type Database = {
         Returns: number;
       };
       /**
+       * 每位正式成員「拍組最後更新」(0086) —— 帳號那一份 (user_collection) 的最後修改時間,
+       * 沒綁帳號的退回鏡像。只回時間, 顧問與待確認的人不在裡面。
+       */
+      gym_pairs_last_updated: {
+        Args: { p_gym: string };
+        Returns: { member_id: string; updated_at: string | null }[];
+      };
+      /**
        * 我還在等確認的道館 (0071) —— 待確認的人讀不到 gyms 也讀不到自己那一列,
        * 所以「我的道館」清單要靠這支才問得到館名。只回呼叫者自己的申請。
        */

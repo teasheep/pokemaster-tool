@@ -11,7 +11,16 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { pickParam } from "@/lib/url-params";
+import { gymSectionOf } from "@/lib/gym/tab-memory";
+import {
+  parsePositions,
+  parseShortIds,
+  pickParam,
+  resolveShortIds,
+  serializePositions,
+  serializeShortIds,
+  shortId,
+} from "@/lib/url-params";
 
 const read = (p: string) => fs.readFileSync(path.join(process.cwd(), p), "utf8");
 
@@ -32,7 +41,95 @@ describe("pickParam", () => {
   });
 });
 
+describe("一組 id / 第幾個 的網址值", () => {
+  const A = "1a2b3c4d-0000-4000-8000-000000000001";
+  const B = "9f8e7d6c-0000-4000-8000-000000000002";
+
+  it("短碼來回: 寫出去再讀回來是同一組 (照原本清單的順序)", () => {
+    const raw = serializeShortIds([B, A], [A]);
+    expect(raw).toBe(`${shortId(B)},${shortId(A)}`);
+    expect(resolveShortIds(parseShortIds(raw ?? undefined) ?? [], [A, B])).toEqual([A, B]);
+  });
+
+  it("等於預設就不寫; 全部取消寫 none —— 否則重整會被當成「沒帶」又選回預設", () => {
+    expect(serializeShortIds([A], [A])).toBeNull();
+    expect(serializeShortIds([], [A])).toBe("none");
+    expect(parseShortIds("none")).toEqual([]);
+    expect(parseShortIds(undefined)).toBeNull();
+  });
+
+  it("手改網址塞垃圾不會壞", () => {
+    expect(parseShortIds("zz,<script>,1a2b3c4d")).toEqual(["1a2b3c4d"]);
+    expect(parsePositions("3,1,x,0,99,3", 8)).toEqual([1, 3]);
+    expect(serializePositions([])).toBeNull();
+    expect(serializePositions([5, 2, 5])).toBe("2,5");
+  });
+});
+
+describe("道館分頁記住上次停在哪 (2026-11-04)", () => {
+  it("認得出是哪一館的哪個分頁; 全館拍組的舊路徑 /pairs 算在「成員與拍組」頭上", () => {
+    expect(gymSectionOf("/gyms/abc/members")).toEqual({ gymId: "abc", section: "members" });
+    expect(gymSectionOf("/gyms/abc/pairs")).toEqual({ gymId: "abc", section: "members" });
+    expect(gymSectionOf("/gyms/abc/battles/xyz")).toEqual({ gymId: "abc", section: "battles" });
+    expect(gymSectionOf("/gyms/abc/guides")).toBeNull();
+    expect(gymSectionOf("/pairs")).toBeNull();
+  });
+
+  it("分頁連結吃記住的網址, 而 useUrlState 改網址時會通知它", () => {
+    const tabs = read("src/app/gyms/[id]/gym-tabs.tsx");
+    expect(tabs).toContain("rememberGymUrl");
+    expect(tabs).toContain("href={isActive(t) ? t.href : (rememberedOf(t.section) ?? t.href)}");
+    // server 那份要是空的 (= 固定連結), 不然 hydration 對不起來
+    expect(tabs).toMatch(/useSyncExternalStore\([\s\S]{0,200}\(\) => ""\s*\)/);
+    // 沒有這一行的話, 在同一頁裡選人 (replaceState) 不會被記下來, 只記得剛進來那一刻
+    expect(read("src/lib/use-url-state.ts")).toContain("URL_STATE_EVENT");
+  });
+
+  it("重新整理的捲動還原掛在道館 layout 上", () => {
+    expect(read("src/app/gyms/[id]/layout.tsx")).toContain("<ReloadScrollRestore />");
+  });
+});
+
 describe("寫進網址的參數, server 端都要讀得回來", () => {
+  it("成員頁的「比較」: 寫 cmp / types, page.tsx 就要讀 cmp / types 並傳下去", () => {
+    const view = read("src/app/gyms/[id]/members/compare-view.tsx");
+    const page = read("src/app/gyms/[id]/members/page.tsx");
+    expect(view).toMatch(/useUrlState\(\{[\s\S]{0,200}cmp:[\s\S]{0,200}types:/);
+    for (const key of ["cmp", "types"]) {
+      expect(page, `成員頁的 page.tsx 沒讀 ${key}`).toMatch(
+        new RegExp(`searchParams[\\s\\S]{0,400}${key}\\?:`)
+      );
+    }
+    expect(page).toContain("compareMembers: parseCompareMembers(sp.cmp)");
+    expect(page).toContain("compareTypes: parseCompareTypes(sp.types)");
+  });
+
+  it("道館戰一覽: 寫 open (展開了哪幾場), page.tsx 就要讀 open", () => {
+    const client = read("src/app/gyms/[id]/battles-index-client.tsx");
+    const page = read("src/app/gyms/[id]/battles/page.tsx");
+    expect(client).toMatch(/useUrlState\(\{\s*open:/);
+    expect(page).toMatch(/searchParams[\s\S]{0,300}open\?:/);
+    expect(page).toContain("initialOpen={parseShortIds(sp.open)}");
+  });
+
+  it("賽事頁: 看板的收合 (fold / done / ahead) 與開著的側板 (panel) 都要讀得回來", () => {
+    const board = read("src/app/gyms/[id]/battles/[battleId]/stage-board.tsx");
+    const client = read("src/app/gyms/[id]/battles/[battleId]/battle-client.tsx");
+    const page = read("src/app/gyms/[id]/battles/[battleId]/page.tsx");
+    expect(board).toMatch(/useUrlState\(\{\s*fold:[\s\S]{0,80}done:[\s\S]{0,80}ahead:/);
+    expect(client).toMatch(/useUrlState\(\{[\s\S]{0,120}panel:/);
+    for (const key of ["panel", "fold", "done", "ahead"]) {
+      expect(page, `賽事頁的 page.tsx 沒讀 ${key}`).toMatch(
+        new RegExp(`searchParams[\\s\\S]{0,400}${key}\\?:`)
+      );
+    }
+    // 讀回來要真的傳到看板, 不是停在 battle-client
+    expect(client).toContain("initialView={initialBoardView}");
+    // 收合狀態要在看板那一層 —— 卡片自己的 useState 寫不進網址, 一重新整理就沒了
+    expect(board).not.toMatch(/const \[showAllRounds, setShowAllRounds\] = useState/);
+    expect(board).not.toMatch(/const \[showFuture, setShowFuture\] = useState/);
+  });
+
   it("/pairs: 寫 tab / owned, page.tsx 就要讀 tab / owned", () => {
     const client = read("src/app/pairs/pairs-hub.tsx");
     const page = read("src/app/pairs/page.tsx");
@@ -95,6 +192,11 @@ describe("寫進網址的參數, server 端都要讀得回來", () => {
       "src/app/pairs/pairs-hub.tsx",
       "src/app/gyms/[id]/members/members-client.tsx",
       "src/app/gyms/[id]/pairs/pairs-client.tsx",
+      "src/app/gyms/[id]/members/compare-view.tsx",
+      "src/app/gyms/[id]/battles-index-client.tsx",
+      "src/app/gyms/[id]/battles/[battleId]/battle-client.tsx",
+      "src/app/gyms/[id]/battles/[battleId]/stage-board.tsx",
+      "src/app/gyms/[id]/gym-tabs.tsx",
     ]) {
       expect(read(f), `${f} 用了 useSearchParams`).not.toContain("useSearchParams");
     }
@@ -108,6 +210,9 @@ describe("寫進網址的參數, server 端都要讀得回來", () => {
     // 只看檔案開頭的**指示詞**, 不是內文提到的字 (註解裡會寫「這支不可以標 use client」)
     const directive = (p: string) => read(p).trimStart().startsWith('"use client"');
     expect(directive("src/lib/url-params.ts"), "url-params 不該標 use client").toBe(false);
+    // 成員頁「比較」的參數 (page.tsx 要呼叫它的 parse)、分頁記憶 (use-url-state 要 import 它的事件名)
+    expect(directive("src/lib/gym/compare-params.ts"), "compare-params 不該標 use client").toBe(false);
+    expect(directive("src/lib/gym/tab-memory.ts"), "tab-memory 不該標 use client").toBe(false);
     expect(directive("src/lib/use-url-state.ts"), "hook 檔要標 use client").toBe(true);
     // 2026-09-10 又踩了一次: 道館紀錄的值域本來放在 activity-client.tsx (use client),
     // server 的 page.tsx import 到的是 client reference 不是陣列 →

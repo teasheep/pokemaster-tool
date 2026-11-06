@@ -44,6 +44,7 @@ import {
   type BattleLogRow,
   type StageRow,
   type StageTeamRow,
+  type BoardView,
 } from "./stage-board";
 import { ReportRunSheet } from "./report-run-sheet";
 import { BattlePlan } from "./battle-plan";
@@ -178,6 +179,10 @@ type Props = {
   initialPlan: { fields: PlanFieldRow[]; slots: PlanSlotRow[]; note: string };
   /** 「排刀」開關的初始值 (?plan=1) */
   initialShowPlan?: boolean;
+  /** 看板每一關的收合/展開 (?fold= / ?done= / ?ahead=) */
+  initialBoardView?: BoardView;
+  /** 重新整理前開著的側板 (?panel=tickets|logs) */
+  initialPanel?: "tickets" | "logs" | null;
 };
 
 export function BattleClient({
@@ -202,6 +207,8 @@ export function BattleClient({
   initialShowRules,
   initialPlan,
   initialShowPlan,
+  initialBoardView,
+  initialPanel = null,
 }: Props) {
   const router = useRouter();
   /** 換賽事是 router.push (不是 Link, 吃不到 useLinkStatus) → 用 transition 自己給回饋 */
@@ -224,7 +231,16 @@ export function BattleClient({
   const [showRules, setShowRules] = useState(initialShowRules ?? false);
   /** 排刀表區塊展開/收起 —— 狀態進網址 (?plan=1), 重整與貼連結都留得住 */
   const [showPlan, setShowPlan] = useState(initialShowPlan ?? false);
-  useUrlState({ rules: showRules ? "1" : null, plan: showPlan ? "1" : null });
+  /** 「對戰紀錄」側滑面板 */
+  const [panelOpen, setPanelOpen] = useState(initialPanel === "logs");
+  /** 挑戰券側板 (點了才出現, 不常駐佔版面) */
+  const [ticketsOpen, setTicketsOpen] = useState(initialPanel === "tickets");
+  // 開著哪個側板也進網址 —— 重新整理不要把剛打開的挑戰券/對戰紀錄收掉
+  useUrlState({
+    rules: showRules ? "1" : null,
+    plan: showPlan ? "1" : null,
+    panel: ticketsOpen ? "tickets" : panelOpen ? "logs" : null,
+  });
   const hasRules = useMemo(() => matchTemplate(stages.map((s) => s.weak_type)) !== null, [stages]);
   /** 目前輪 — 由出戰紀錄推導 (最大已回報輪; 0047 起不再存欄位, 同狀態推導哲學) */
   const round = useMemo(
@@ -234,12 +250,8 @@ export function BattleClient({
   const [dates, setDates] = useState({ startsOn: battle.startsOn, endsOn: battle.endsOn });
   /** 狀態由賽期日期推導 (籌備中/進行中/已結束) — 改日期就換狀態, 沒有手動下拉 */
   const status = battleStatusFromDates(dates.startsOn, dates.endsOn);
-  /** 「對戰紀錄」側滑面板 */
-  const [panelOpen, setPanelOpen] = useState(false);
   /** 賽事改名中 (管理員, 失焦儲存) */
   const [renaming, setRenaming] = useState(false);
-  /** 挑戰券側板 (點了才出現, 不常駐佔版面) */
-  const [ticketsOpen, setTicketsOpen] = useState(false);
   /** 手機底部主行動鈕「我要出刀」的 bottom sheet */
   const [runSheetOpen, setRunSheetOpen] = useState(false);
 
@@ -689,6 +701,7 @@ export function BattleClient({
             stageTeams={stageTeams}
             roundNotes={roundNotes}
             showRules={showRules}
+            initialView={initialBoardView}
             gymPairsList={gymPairsList}
             onChanged={refetchBoard}
           />

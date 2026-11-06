@@ -198,11 +198,14 @@ export function MemberCard({
   footer,
   strongTypes,
   me,
+  subline,
 }: {
   member: MemberCardData;
   selected?: boolean;
   onClick?: () => void;
   footer?: React.ReactNode;
+  /** 名字正下方那一行 (例如名冊的「3 天前更新」) —— 在出沒時段前面 */
+  subline?: React.ReactNode;
   /** 這一列是自己 —— 名字後面標「（我）」。**不要把它接進 displayName**:
       那樣括號裡的遊戲名會變成「Eric（我）」, 而那不是他的遊戲名 */
   me?: boolean;
@@ -250,6 +253,9 @@ export function MemberCard({
             </Badge>
           ) : null}
         </span>
+        {subline ? (
+          <span className="block truncate text-[11px] text-muted-foreground max-sm:text-xs">{subline}</span>
+        ) : null}
         {member.availability ? (
           <span className="block truncate text-[11px] text-muted-foreground max-sm:text-xs">
             🕐 {member.availability}

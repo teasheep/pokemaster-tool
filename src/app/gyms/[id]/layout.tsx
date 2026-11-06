@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { PageShell } from "@/components/page-shell";
 import { ActiveGymSync } from "@/components/gym/active-gym-sync";
+import { ReloadScrollRestore } from "@/components/reload-scroll-restore";
 import { GymNavSkeleton } from "@/components/skeletons";
 import { GymNav } from "./gym-nav";
 
@@ -30,6 +31,8 @@ export default async function GymLayout({
   return (
     <>
       <ActiveGymSync gymId={id} />
+      {/* 重新整理之後回到原本捲到的位置 (內容是串流進來的, 瀏覽器自己的還原捲不到) */}
+      <ReloadScrollRestore />
       {/* 骨架與真實導覽列同一層 sticky/同高度, 否則資料到位時底下的內容會彈一下 */}
       <Suspense fallback={<GymNavSkeleton />}>
         <GymNav gymId={id} />

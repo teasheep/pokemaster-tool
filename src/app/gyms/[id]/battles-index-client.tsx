@@ -3,7 +3,7 @@
 // 道館賽一覽 — 道館戰入口頁 (不再直接跳進單場看板)。
 // 每場一張可展開的卡: 收合看狀態/賽期/戰果, 展開看每一關打成怎樣 (屬性/館主/出刀/分數)。
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -15,6 +15,8 @@ import { TypeIcon } from "@/components/sync-pair-badges";
 import { TYPE_LABELS } from "@/data/sync-pairs";
 import type { BattleStatus, SyncPairType } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
+import { useUrlState } from "@/lib/use-url-state";
+import { resolveShortIds, serializeShortIds } from "@/lib/url-params";
 import { cn } from "@/lib/utils";
 
 export type BattleListItem = {
@@ -62,17 +64,33 @@ export function BattlesIndexClient({
   gymId,
   battles,
   isAdmin,
+  initialOpen = null,
 }: {
   gymId: string;
   battles: BattleListItem[];
   isAdmin: boolean;
+  /** 網址 ?open= 的短碼 (page.tsx 讀); null = 沒帶 → 用預設 */
+  initialOpen?: string[] | null;
 }) {
   const router = useRouter();
   // 進行中/籌備中預設展開; 都打完了就展開最新那場 (否則整頁只剩一排收合的標題)
-  const [expanded, setExpanded] = useState<Set<string>>(() => {
+  const defaultOpen = useMemo(() => {
     const open = battles.filter((b) => b.status !== "finished").map((b) => b.id);
-    return new Set(open.length > 0 ? open : battles.slice(0, 1).map((b) => b.id));
-  });
+    return open.length > 0 ? open : battles.slice(0, 1).map((b) => b.id);
+  }, [battles]);
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () =>
+      new Set(
+        initialOpen === null
+          ? defaultOpen
+          : resolveShortIds(
+              initialOpen,
+              battles.map((b) => b.id)
+            )
+      )
+  );
+  // 展開了哪幾場進網址 (?open=) —— 重新整理不要又縮回預設 (2026-11-04 使用者:「道館戰頁面也是」)
+  useUrlState({ open: serializeShortIds(expanded, defaultOpen) });
   const toggle = (id: string) =>
     setExpanded((prev) => {
       const next = new Set(prev);

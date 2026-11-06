@@ -16,6 +16,7 @@ import type { ClientPairRecord } from "@/lib/pairs/types";
 import { DEFAULT_CARD_INFO, skillIcon, type CardInfoKey, type PotentialData } from "@/lib/pairs/potentials";
 import { CookieIcon, usePotentials } from "@/components/potential-picker";
 import type { SyncPairType } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
 
 export type GridItem = {
   /** 唯一 key (gym_pairs.id 或 pairId) */
@@ -63,7 +64,9 @@ const DEFAULT_EAGER_COUNT = 24;
 
 // 單格抽成 memo 元件的重點不只是少重繪 — 點擊閉包要在「格子裡」建立, 整面牆才能共用
 // 同一顆 grid 級 onSelect/onCount (每格各給一顆 inline 閉包的話, memo 永遠擋不住)。
-const GridCell = memo(function GridCell({
+// **export 給「比較」那張表的每一格用** (2026-11-05 使用者:「前面的那種表格好像也不錯
+// 只是顯示按照拍組顯示」) —— 表格的格子與卡牆是同一張卡, 不要另外長一套。
+export const PairCell = memo(function PairCell({
   item,
   size,
   eager,
@@ -74,6 +77,8 @@ const GridCell = memo(function GridCell({
   first = false,
   show,
   potentials,
+  className,
+  showName = true,
 }: {
   item: GridItem;
   size: "sm" | "md";
@@ -88,6 +93,10 @@ const GridCell = memo(function GridCell({
   show: readonly CardInfoKey[];
   /** 潛能資料 (勾了「潛能」才載入; 還沒到就先不畫) */
   potentials: PotentialData | null;
+  /** 格子寬度 (預設 = 卡牆的手機一列四張 / 桌機 96px); 放進表格時改成固定寬 */
+  className?: string;
+  /** 卡下的名稱那兩行 —— 表格那一列的開頭已經寫了是哪一組, 每格再寫一次只是雜訊 */
+  showName?: boolean;
 }) {
   const key = item.key;
   const select = useCallback(() => onSelect?.(key), [onSelect, key]);
@@ -103,7 +112,7 @@ const GridCell = memo(function GridCell({
 
   return (
     <div
-      className="relative w-[24%] max-w-24 sm:w-24"
+      className={cn("relative", className ?? "w-[24%] max-w-24 sm:w-24")}
       // 給 QA 腳本抓的穩定 hook —— **不要用樣式 class 當選擇器**
       // (前科 2026-09-10: qa:click 用 `div.relative.w-24`, 手機版面一改成
       //  `w-[24%] max-w-24 sm:w-24` 就整批抓不到, 四條檢查連帶沒跑到)
@@ -150,15 +159,17 @@ const GridCell = memo(function GridCell({
       {/* 名稱一律「人名 & 寶可夢名」— 兩行, 單行會被截斷。
           固定兩行高 (leading-tight × 2 = 2.5em): 名字一行/兩行的卡混在一起時,
           下面的持有率長條才會對齊在同一條水平線上。 */}
-      <div
-        className="mt-0.5 line-clamp-2 h-[2.5em] w-full text-center text-[10px] leading-tight text-muted-foreground"
-        title={item.pair ? pairName(item.pair) : item.fallbackLabel}
-      >
-        {/* NEW 畫在名稱前面 (2026-09-09 使用者指定) —— 名稱這一區本來就是固定兩行高,
-            所以有沒有 NEW 都不影響卡牆的對齊, 也不會蓋到官方卡面。 */}
-        {item.pair ? <PairStatusTag pair={item.pair} /> : null}
-        {item.pair ? pairName(item.pair) : (item.fallbackLabel ?? "")}
-      </div>
+      {showName ? (
+        <div
+          className="mt-0.5 line-clamp-2 h-[2.5em] w-full text-center text-[10px] leading-tight text-muted-foreground"
+          title={item.pair ? pairName(item.pair) : item.fallbackLabel}
+        >
+          {/* NEW 畫在名稱前面 (2026-09-09 使用者指定) —— 名稱這一區本來就是固定兩行高,
+              所以有沒有 NEW 都不影響卡牆的對齊, 也不會蓋到官方卡面。 */}
+          {item.pair ? <PairStatusTag pair={item.pair} /> : null}
+          {item.pair ? pairName(item.pair) : (item.fallbackLabel ?? "")}
+        </div>
+      ) : null}
       {/* 拍檔石盤自己一行, 在名稱下面 (2026-09-29 使用者:「讓它多一行, 不要放在名字前面了」——
           擠在名稱前面會吃掉名字的兩行空間)。索引 0 (=60) 一樣不畫。 */}
       {item.syncGrid && show.includes("grid") ? (
@@ -187,6 +198,64 @@ const GridCell = memo(function GridCell({
       {item.footer ? (
         <div className="w-full text-center text-[10px] leading-tight">{item.footer}</div>
       ) : null}
+    </div>
+  );
+});
+
+/**
+ * 一排卡 (不分組、不排序, 照傳進來的順序) —— 卡牆的一段。
+ * **卡牆的排法只有這一份**, PairTypeGrid 每個屬性那一段也是畫它; `skeletons.tsx` 的
+ * PairWallSkeleton 要跟這裡的 class 逐字相同 (見那邊的註解)。
+ */
+export const PairCardList = memo(function PairCardList({
+  items,
+  size = "sm",
+  eagerFrom = 0,
+  eagerCount = DEFAULT_EAGER_COUNT,
+  scrollRoot,
+  onSelect,
+  onCount,
+  onPromote,
+  tourFirst = false,
+  show = DEFAULT_CARD_INFO,
+  potentials = null,
+}: {
+  items: GridItem[];
+  size?: "sm" | "md";
+  /** 這一排第一張在整面牆的流水號 (eager 要跨段連續算, 見 PairTypeGrid) */
+  eagerFrom?: number;
+  eagerCount?: number;
+  scrollRoot?: Element | null;
+  onSelect?: (key: string) => void;
+  onCount?: (key: string) => void;
+  onPromote?: (key: string) => void;
+  /** 流水號 0 的那張要標使用教學的目標 —— 只有成員卡牆要, 比較不要 */
+  tourFirst?: boolean;
+  show?: readonly CardInfoKey[];
+  /** 勾了「潛能」才有 (呼叫端用 usePotentials 載) */
+  potentials?: PotentialData | null;
+}) {
+  return (
+    /* 手機一列四張、間距 4px、整列置中 (2026-09-10 使用者:「間隔可以再小一點…
+       不要都靠左然後右邊空很大一塊」)。數字照參考站的 mobile.css:
+       `#syncPairs { gap: 4px }` + `.syncPair { max-width: 24% }` + `justify-content: center`。
+       **桌機維持原樣** (左對齊 / gap 10px / 一列 13 張) —— 那個數字是 eagerCount 在算的。 */
+    <div className="flex flex-wrap justify-center gap-1 sm:justify-start sm:gap-2.5">
+      {items.map((it, i) => (
+        <PairCell
+          key={it.key}
+          item={it}
+          size={size}
+          eager={eagerFrom + i < eagerCount}
+          scrollRoot={scrollRoot}
+          onSelect={onSelect}
+          onCount={onCount}
+          onPromote={onPromote}
+          first={tourFirst && eagerFrom + i === 0}
+          show={show}
+          potentials={potentials}
+        />
+      ))}
     </div>
   );
 });
@@ -316,27 +385,19 @@ export const PairTypeGrid = memo(function PairTypeGrid({
           <div className="mb-2.5 flex items-center gap-2 border-b border-border/60 pb-1.5">
             <TypeBadge type={type} />
           </div>
-          {/* 手機一列四張、間距 4px、整列置中 (2026-09-10 使用者:「間隔可以再小一點…
-              不要都靠左然後右邊空很大一塊」)。數字照參考站的 mobile.css:
-              `#syncPairs { gap: 4px }` + `.syncPair { max-width: 24% }` + `justify-content: center`。
-              **桌機維持原樣** (左對齊 / gap 10px / 一列 13 張) —— 那個數字是 eagerCount 在算的。 */}
-          <div className="flex flex-wrap justify-center gap-1 sm:justify-start sm:gap-2.5">
-            {list.map((it, i) => (
-              <GridCell
-                key={it.key}
-                item={it}
-                size={size}
-                eager={offset + i < eagerCount}
-                scrollRoot={scrollRoot}
-                onSelect={onSelect}
-                onCount={onCount}
-                onPromote={onPromote}
-                first={offset + i === 0}
-                show={show}
-                potentials={potentials}
-              />
-            ))}
-          </div>
+          <PairCardList
+            items={list}
+            size={size}
+            eagerFrom={offset}
+            eagerCount={eagerCount}
+            scrollRoot={scrollRoot}
+            onSelect={onSelect}
+            onCount={onCount}
+            onPromote={onPromote}
+            tourFirst
+            show={show}
+            potentials={potentials}
+          />
         </section>
       ))}
       {/* 還沒畫的部分先擺骨架 — 與真實卡牆同構 (96px 卡 + 兩行卡名 + 屬性徽章列),

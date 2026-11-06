@@ -10,7 +10,7 @@ import {
   useTransition,
 } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronsUpDown, Copy, Download, Pencil, UserPlus, Users, X } from "lucide-react";
+import { Check, ChevronsUpDown, Columns3, Copy, Download, Pencil, UserPlus, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +60,8 @@ import { type PairSortKey } from "@/lib/pairs/name";
 import { cn } from "@/lib/utils";
 import { buildMembersCsv, downloadCsv } from "@/lib/gym/export-csv";
 import { useUrlState } from "@/lib/use-url-state";
+import { COMPARE_ID, resolveCompareMembers } from "@/lib/gym/compare-params";
+import { CompareView, type CompareState } from "./compare-view";
 import type { CollectionEntry } from "@/lib/collection";
 import { cycleEntry, cyclePromotion, defaultEntry } from "@/lib/collection-entry";
 import { createClient } from "@/lib/supabase/client";
@@ -67,6 +69,7 @@ import type { ClientPairRecord } from "@/lib/pairs/types";
 import { pairLabel, pairName } from "@/lib/pairs/name";
 import type { GymViewer } from "@/lib/gym/queries";
 import type { MemberPairExtra } from "@/lib/gym/types";
+import { formatTaipeiDateTime, pairsUpdatedAgo } from "@/lib/gym/pairs-updated";
 import { CardInfoSelect } from "@/components/gym/card-info-select";
 import { serializeCardInfo, type CardInfoKey } from "@/lib/pairs/potentials";
 import type { SyncPairType } from "@/lib/supabase/types";
@@ -153,11 +156,20 @@ type Props = {
     ownedOnly: boolean;
     /** ?show= 卡片下方多顯示哪些資訊 (「顯示」多選下拉; page.tsx 用 parseCardInfo 讀) */
     show: CardInfoKey[];
+    /** 「比較」: ?cmp= 成員短碼 (null = 網址沒帶, 用預設: 只選自己) / ?types= 屬性 */
+    compareMembers: string[] | null;
+    compareTypes: SyncPairType[];
   };
+  /** 成員 id → 拍組最後更新 (0086, 帳號那一份的時間; 顧問與沒資料的人不在裡面) */
+  pairsUpdatedAt: Record<string, string>;
+  /** 「幾天前」的基準 (server 的現在時間, 見 lib/gym/pairs-updated.ts) */
+  nowMs: number;
 };
 
 /** 名冊第一項 = 全館視角 (不是某個成員) */
 const ALL_GYM = "__gym__";
+/** 名冊上不是某個成員的那幾項 (全館拍組 / 比較) —— 不去抓 member_pairs */
+const isPseudoMember = (id: string | null) => id === ALL_GYM || id === COMPARE_ID;
 
 /**
  * 整本圖鑑 (645 筆) 的按需載入 — 「所有遊戲拍組」範圍才需要, 抓一次就留著
@@ -225,9 +237,22 @@ export function MembersClient({
   grades,
   initialView,
   pending = [],
+  pairsUpdatedAt: initialPairsUpdatedAt,
+  nowMs,
 }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  /**
+   * 拍組最後更新。在這一頁改了誰的練度 (本人或管理員代改都會寫帳號, 0030/0031),
+   * 名冊那一行就當場變成「今天更新」, 不用重新整理才看得到。
+   */
+  const [pairsUpdatedAt, setPairsUpdatedAt] = useState(initialPairsUpdatedAt);
+  const [seenUpdatedAt, setSeenUpdatedAt] = useState(initialPairsUpdatedAt);
+  if (seenUpdatedAt !== initialPairsUpdatedAt) {
+    // server 送了新的一份 (router.refresh) → 以它為準 (render 期間調整 state, 同 gymPairs)
+    setSeenUpdatedAt(initialPairsUpdatedAt);
+    setPairsUpdatedAt(initialPairsUpdatedAt);
+  }
   /**
    * 整本圖鑑只有「所有遊戲拍組」範圍用得到 → 按需抓, 兩個範圍切換器共用這一份。
    * 沒抓之前 catalogAll === catalog (同一個參考), 卡牆的 memo 不會白白失效。
@@ -302,6 +327,11 @@ export function MembersClient({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialView.member ?? viewer.memberId ?? ALL_GYM
   );
+  /** 樂觀更新那顆 callback 要知道「改的是誰」, 但不能把 selectedId 綁進 deps (卡牆 memo 會失效) */
+  const selectedRef = useRef(selectedId);
+  useEffect(() => {
+    selectedRef.current = selectedId;
+  }, [selectedId]);
   /** 成員底下的分頁 (拍組 / 資源) —— 也要跟著網址走 */
   const [view, setView] = useState<"pairs" | "resources">(initialView.view);
   /**
@@ -374,12 +404,12 @@ export function MembersClient({
   useEffect(() => {
     // 標準的 effect 資料抓取: setState 都在 await 之後 (非同步), 規則誤報
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (selectedId && selectedId !== ALL_GYM) void loadMember(selectedId);
+    if (selectedId && !isPseudoMember(selectedId)) void loadMember(selectedId);
   }, [selectedId, loadMember]);
 
   /** 練度改完後重抓目前這位 — 穩定的一顆, 才不會每次 render 都換掉卡牆的 handler */
   const reloadSelected = useCallback(() => {
-    if (selectedId && selectedId !== ALL_GYM) void loadMember(selectedId);
+    if (selectedId && !isPseudoMember(selectedId)) void loadMember(selectedId);
   }, [selectedId, loadMember]);
 
   /**
@@ -444,6 +474,9 @@ export function MembersClient({
         };
         return next;
       });
+      // 名冊上這個人的「N 天前更新」當場變成今天 (失敗會重抓練度; 這一行差一點沒關係, 下次進頁就對了)
+      const who = selectedRef.current;
+      if (who) setPairsUpdatedAt((prev) => ({ ...prev, [who]: new Date().toISOString() }));
     },
     []
   );
@@ -507,6 +540,23 @@ export function MembersClient({
         })),
     [members]
   );
+  /** 比較預設選自己 (正式成員才有; 顧問的練度不屬於這一館) */
+  const compareDefault = useMemo(
+    () => (viewer.memberId && gymViewMembers.some((m) => m.id === viewer.memberId) ? [viewer.memberId] : []),
+    [viewer.memberId, gymViewMembers]
+  );
+  const [compare, setCompare] = useState<CompareState>(() => ({
+    members:
+      initialView.compareMembers === null
+        ? compareDefault
+        : resolveCompareMembers(
+            initialView.compareMembers,
+            gymViewMembers.map((m) => m.id)
+          ),
+    types: initialView.compareTypes,
+    scope: initialView.scope,
+    show: initialView.show,
+  }));
 
   return (
     <>
@@ -541,7 +591,14 @@ export function MembersClient({
         className="flex min-h-14 w-full items-center gap-2.5 rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-accent/40"
         data-tour="gym-pairs-row"
       >
-        {selectedId === ALL_GYM || !selected ? (
+        {selectedId === COMPARE_ID ? (
+          <>
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-muted">
+              <Columns3 className="h-5 w-5 text-muted-foreground" />
+            </span>
+            <span className="min-w-0 flex-1 truncate font-semibold">比較</span>
+          </>
+        ) : selectedId === ALL_GYM || !selected ? (
           <>
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-muted">
               <Users className="h-5 w-5 text-muted-foreground" />
@@ -582,6 +639,8 @@ export function MembersClient({
           selectedId={selectedId}
           viewerMemberId={viewer.memberId}
           canManage={viewer.isAdmin}
+          pairsUpdatedAt={pairsUpdatedAt}
+          nowMs={nowMs}
           onSelect={selectMember}
           onEdit={setEditing}
         />
@@ -595,7 +654,16 @@ export function MembersClient({
           switching && "opacity-60"
         )}
       >
-        {selectedId === ALL_GYM ? (
+        {selectedId === COMPARE_ID ? (
+          <CompareView
+            members={gymViewMembers}
+            defaultMemberIds={compareDefault}
+            state={compare}
+            setState={setCompare}
+            catalog={catalogAll}
+            gymPairIds={gymPairIds}
+          />
+        ) : selectedId === ALL_GYM ? (
           <GymPairsClient
             initialScope={initialView.scope}
             gymId={gymId}
@@ -619,6 +687,7 @@ export function MembersClient({
         ) : (
           <Tabs value={view} onValueChange={(v) => setView(v === "resources" ? "resources" : "pairs")}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 lg:mb-4">
+              <div className="min-w-0">
               {/* 手機: 上面那條選擇器已經寫著「現在在看誰」, 這裡不再重複一次名字 */}
               <h2 className="hidden items-center gap-2 text-lg font-semibold lg:flex">
                 {memberLabel(selected)}
@@ -633,6 +702,14 @@ export function MembersClient({
                   <span className="text-sm font-normal text-muted-foreground">(唯讀)</span>
                 )}
               </h2>
+              {/* 名冊只講區間 (「3 天前更新」), 點進來才給精確的日期與時間 (2026-11-05 使用者指定)。
+                  手機也要有 —— 這一行不跟著上面的 h2 藏起來 */}
+              {pairsUpdatedAt[selected.id] ? (
+                <p className="text-xs text-muted-foreground" data-pairs-updated-exact>
+                  拍組最後更新 {formatTaipeiDateTime(pairsUpdatedAt[selected.id])}
+                </p>
+              ) : null}
+              </div>
               {/* 手機: 兩個分頁等寬填滿一列 (44px 高); 桌機維持靠右的小分段控制項 */}
               <div className="flex w-full items-center gap-2 lg:w-auto">
                 {/*
@@ -706,6 +783,8 @@ export function MembersClient({
           selectedId={selectedId}
           viewerMemberId={viewer.memberId}
           canManage={viewer.isAdmin}
+          pairsUpdatedAt={pairsUpdatedAt}
+          nowMs={nowMs}
           onSelect={(id) => {
             selectMember(id);
             setPickerOpen(false);
@@ -734,8 +813,13 @@ function Roster({
   canManage,
   onSelect,
   onEdit,
+  pairsUpdatedAt,
+  nowMs,
 }: {
   members: MemberItem[];
+  /** 成員 id → 拍組最後更新 (名冊第二行的「N 天前更新」) */
+  pairsUpdatedAt: Record<string, string>;
+  nowMs: number;
   /** 待確認的申請 (0071) — 非管理員一律是空陣列 (page.tsx 就擋掉了) */
   pending?: PendingItem[];
   decidingId?: string | null;
@@ -762,6 +846,19 @@ function Roster({
         </span>
         <span className="font-semibold">全館拍組</span>
       </button>
+      {/* 比較 (2026-11-04): 與「全館拍組」同一種偽成員, 不是新分頁 —— 回答的還是「誰有什麼」 */}
+      <button
+        onClick={() => onSelect(COMPARE_ID)}
+        className={cn(
+          "flex min-h-14 w-full items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left transition-colors",
+          selectedId === COMPARE_ID ? "border-primary/60 bg-accent font-medium" : "hover:bg-accent/50"
+        )}
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-muted">
+          <Columns3 className="h-5 w-5 text-muted-foreground" />
+        </span>
+        <span className="font-semibold">比較</span>
+      </button>
       {/* 待確認排在名冊最上面 (只有管理員看得到): 這是一件**等他處理**的事,
           擺在 20 個人下面等於沒有人會看到。平常一列都沒有, 完全不佔版面。 */}
       {pending.length > 0 && onDecide ? (
@@ -779,6 +876,8 @@ function Roster({
             canManage={canManage}
             onSelect={() => onSelect(m.id)}
             onEdit={() => onEdit(m)}
+            updatedAt={pairsUpdatedAt[m.id] ?? null}
+            nowMs={nowMs}
           />
         ))}
 
@@ -931,6 +1030,8 @@ function MemberRow({
   onSelect,
   onEdit,
   first = false,
+  updatedAt = null,
+  nowMs = 0,
 }: {
   member: MemberItem;
   isMe: boolean;
@@ -940,7 +1041,11 @@ function MemberRow({
   onEdit: () => void;
   /** 名冊第一位 — 使用教學要框的目標 (只標一位) */
   first?: boolean;
+  /** 拍組最後更新 (顧問不給 —— 他的練度不屬於這一館, 0072) */
+  updatedAt?: string | null;
+  nowMs?: number;
 }) {
+  const ago = pairsUpdatedAgo(updatedAt, nowMs);
   return (
     <div className="group relative" data-tour={first ? "member-row" : undefined}>
       <MemberCard
@@ -956,6 +1061,15 @@ function MemberRow({
         selected={selected}
         me={isMe}
         onClick={onSelect}
+        // 名字底下第二行 (2026-11-05 使用者:「側邊欄顯示在第二行…用區間來顯示」);
+        // 精確時間在點進去之後的明細標題底下, 這裡滑過去也看得到
+        subline={
+          ago ? (
+            <span data-pairs-updated title={`拍組最後更新 ${formatTaipeiDateTime(updatedAt)}`}>
+              {ago}
+            </span>
+          ) : null
+        }
       />
       {/* 管理員可以改每一位; **一般成員可以改自己那一列** (2026-09-10 使用者:
           「頭貼的文字可以多一欄自定義, 讓使用者自己改」)。RLS 的 gym_members_update_self

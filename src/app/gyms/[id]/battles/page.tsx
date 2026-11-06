@@ -7,6 +7,7 @@ import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { getGymContext } from "@/lib/gym/queries";
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { battleStatusFromDates } from "@/lib/gym/types";
+import { parseShortIds } from "@/lib/url-params";
 import { BattlesIndexClient, type BattleListItem } from "../battles-index-client";
 import { CreateBattleButton } from "../create-battle-button";
 import type { Database } from "@/lib/supabase/types";
@@ -21,8 +22,15 @@ export const dynamic = "force-dynamic";
  * 每輪都要一次往返 ≈ 2 秒。現在只剩兩輪, 屬性戰力矩陣改成展開時才由 client 抓
  * (它要讀 2000+ 列, 不該擋著整頁)。
  */
-export default async function BattlesIndexPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function BattlesIndexPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  // open = 展開了哪幾場 (battles-index-client 的 useUrlState 寫, 賽事 id 短碼)
+  searchParams: Promise<{ open?: string }>;
+}) {
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const user = await getSessionUser();
   if (!user) {
@@ -145,7 +153,12 @@ export default async function BattlesIndexPage({ params }: { params: Promise<{ i
         title="道館戰"
         action={viewer.isAdmin ? <CreateBattleButton gymId={id} /> : null}
       />
-      <BattlesIndexClient gymId={id} battles={items} isAdmin={viewer.isAdmin} />
+      <BattlesIndexClient
+        gymId={id}
+        battles={items}
+        isAdmin={viewer.isAdmin}
+        initialOpen={parseShortIds(sp.open)}
+      />
     </>
   );
 }

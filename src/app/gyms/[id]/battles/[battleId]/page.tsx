@@ -7,7 +7,7 @@ import { fetchGymGrades, getGymContext } from "@/lib/gym/queries";
 import { battleStatusFromDates } from "@/lib/gym/types";
 import { CATALOG_VERSION, loadPairsForClient } from "@/lib/pairs/loader";
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
-import { pickParam } from "@/lib/url-params";
+import { parsePositions, pickParam } from "@/lib/url-params";
 import type { Database, SyncPairType } from "@/lib/supabase/types";
 import { BattleClient } from "./battle-client";
 import { PLAN_FIELD_COLS, PLAN_SLOT_COLS, type PlanFieldRow, type PlanSlotRow } from "./battle-plan-data";
@@ -25,8 +25,17 @@ export default async function BattlePage({
   searchParams,
 }: {
   params: Promise<{ id: string; battleId: string }>;
-  // 重新整理要留在原本的畫面 —「關卡規則」開關 (stage-board 的 useUrlState 寫 ?rules=1)
-  searchParams: Promise<{ rules?: string; plan?: string }>;
+  // 重新整理要留在原本的畫面 (useUrlState 寫回去的那幾個):
+  //   rules / plan / panel = battle-client 的「規則」「排刀表」開關與開著的側板
+  //   fold / done / ahead  = stage-board 每一關的收合/展開 (第幾關, 見 BoardView)
+  searchParams: Promise<{
+    rules?: string;
+    plan?: string;
+    panel?: string;
+    fold?: string;
+    done?: string;
+    ahead?: string;
+  }>;
 }) {
   const [{ id, battleId }, sp] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
@@ -259,6 +268,15 @@ export default async function BattlePage({
               note: planNote?.note ?? "",
             }}
             initialShowPlan={pickParam(sp.plan, ["1", "0"] as const, "0") === "1"}
+            initialBoardView={{
+              fold: parsePositions(sp.fold, 20),
+              done: parsePositions(sp.done, 20),
+              ahead: parsePositions(sp.ahead, 20),
+            }}
+            initialPanel={(() => {
+              const v = pickParam(sp.panel, ["tickets", "logs", ""] as const, "");
+              return v === "" ? null : v;
+            })()}
             gymPairsList={(gymPairRows ?? [])
               .filter((g) => g.pair_id)
               .map((g) => ({ pairId: g.pair_id!, type: g.type as SyncPairType }))}

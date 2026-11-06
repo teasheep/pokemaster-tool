@@ -26,6 +26,8 @@
 
 import { useEffect, useRef } from "react";
 
+import { URL_STATE_EVENT } from "@/lib/gym/tab-memory";
+
 /**
  * 把一組值同步進網址。`null` / `undefined` = 從網址移除 (等於預設值就不要留在網址上,
  * 網址才不會長出一串沒有意義的參數)。
@@ -51,6 +53,8 @@ export function useUrlState(values: Record<string, string | null | undefined>): 
     last.current = url;
     if (url !== window.location.pathname + window.location.search) {
       window.history.replaceState(null, "", url);
+      // 道館分頁要記住「上次停在哪」(gym/tab-memory.ts) —— replaceState 本身沒有事件可以聽
+      window.dispatchEvent(new Event(URL_STATE_EVENT));
     }
   }, [serialized]);
 }

@@ -3,9 +3,18 @@
 // 道館子導覽 tabs — 所有 /gyms/[id]/** 頁共用, 解決「隊伍庫/攻略庫只能從賽事頁按鈕進」
 // 的孤島問題。usePathname 高亮目前分頁。
 
+import { useEffect, useSyncExternalStore } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 
+import {
+  GYM_SECTIONS,
+  URL_STATE_EVENT,
+  readGymUrl,
+  rememberGymUrl,
+  subscribeGymUrls,
+  type GymSection,
+} from "@/lib/gym/tab-memory";
 import { cn } from "@/lib/utils";
 
 /**
@@ -32,6 +41,30 @@ function TabPending() {
 export function GymTabs({ gymId }: { gymId: string }) {
   const pathname = usePathname();
   const base = `/gyms/${gymId}`;
+
+  /**
+   * 每個分頁記住上次停在哪 (gym/tab-memory.ts): 成員頁選了某個人、去道館戰看一下再回來,
+   * 要回到那個人, 不是又跳回自己。換頁時記一次, 頁面改網址 (useUrlState) 時再記一次。
+   */
+  useEffect(() => {
+    rememberGymUrl(window.location.pathname, window.location.search);
+  }, [pathname]);
+  useEffect(() => {
+    const save = () => rememberGymUrl(window.location.pathname, window.location.search);
+    window.addEventListener(URL_STATE_EVENT, save);
+    return () => window.removeEventListener(URL_STATE_EVENT, save);
+  }, []);
+  // server 那份一律是空的 (= 原本的固定連結), hydration 之後才換成記住的網址, 兩邊對得起來。
+  // snapshot 要是基本型別 (每次回新陣列會無限重繪) → 用空白串起來 (網址裡的空白一定是 %20, 不會撞)
+  const remembered = useSyncExternalStore(
+    subscribeGymUrls,
+    () => GYM_SECTIONS.map((s) => readGymUrl(gymId, s) ?? "-").join(" "),
+    () => ""
+  );
+  const rememberedOf = (s: GymSection) => {
+    const url = remembered.split(" ")[GYM_SECTIONS.indexOf(s)];
+    return url && url !== "-" ? url : null;
+  };
   // 分頁名稱 = 頁面 h1 = 該頁唯一職責, 三者必須一致 (改任一個就三個一起改):
   //   成員與拍組 — 誰是誰、誰有什麼 (名冊/角色/邀請碼 + 全館拍組總覽 + 個人練度/糖果)
   //     ↑ 排最前 = 道館根路徑的預設頁 (使用者指定)
@@ -40,11 +73,11 @@ export function GymTabs({ gymId }: { gymId: string }) {
   //   道館紀錄 — 誰在什麼時候改了誰的什麼 (2026-09-10 使用者要求加回來)
   // (道館攻略仍然下架 — 只拔入口, 頁面與資料留著, 之後重做; next.config 把 /guides 轉回 members)
   // (AI 串接改成個人的「資料連線」, 在頭像選單底下 — 金鑰跟人走不跟道館走)
-  const tabs = [
-    { href: `${base}/members`, label: "成員與拍組", match: [`${base}/pairs`], tour: "gym-tab-members" },
-    { href: `${base}/battles`, label: "道館戰", tour: "gym-tab-battles" },
-    { href: `${base}/teams`, label: "隊伍庫" },
-    { href: `${base}/activity`, label: "道館紀錄" },
+  const tabs: { href: string; label: string; section: GymSection; match?: string[]; tour?: string }[] = [
+    { href: `${base}/members`, label: "成員與拍組", section: "members", match: [`${base}/pairs`], tour: "gym-tab-members" },
+    { href: `${base}/battles`, label: "道館戰", section: "battles", tour: "gym-tab-battles" },
+    { href: `${base}/teams`, label: "隊伍庫", section: "teams" },
+    { href: `${base}/activity`, label: "道館紀錄", section: "activity" },
   ];
 
   const isActive = (t: { href: string; match?: string[] }) =>
@@ -58,7 +91,8 @@ export function GymTabs({ gymId }: { gymId: string }) {
       {tabs.map((t) => (
         <Link
           key={t.href}
-          href={t.href}
+          // 目前這個分頁 = 回到它的首頁 (例如從單場看板回賽事一覽); 其他分頁 = 回到上次停的地方
+          href={isActive(t) ? t.href : (rememberedOf(t.section) ?? t.href)}
           data-tour={t.tour}
           className={cn(
             // 等寬之後文字置中; 觸控裝置把每格撐到 44px (pointer-coarse, 與寬度無關)
