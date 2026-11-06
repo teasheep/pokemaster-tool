@@ -954,6 +954,6 @@ export type GymMemberStatus = "pending" | "active";
 export type AttackCategory = "physical" | "special";
 /** 由賽期日期推導 (battleStatusFromDates), 不是 DB 欄位 (0047 drop) */
 export type BattleStatus = "planning" | "active" | "finished";
-/** debuff = 0078 之前的「降抗」(沒分物/特), 只留給舊資料; 新的一律 debuff_physical / debuff_special */
+/** 出刀的降抗一律 debuff (2026-11-05 起不分物/特); debuff_physical / debuff_special 只剩 0078 那段時間的舊列 */
 export type BattleLogRole = "main" | "assist" | "debuff" | "debuff_physical" | "debuff_special";
 export type TeamTag = "debuff" | "debuff_physical" | "debuff_special" | "physical" | "special" | "closer";

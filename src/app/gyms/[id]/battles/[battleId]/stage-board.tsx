@@ -979,7 +979,7 @@ function StageCard({
                           </SelectContent>
                         </Select>
                       ) : null}
-                      {/* 角色: 主力 / 補刀 / 物降抗 / 特降抗 (登記自己的紀錄也要選) */}
+                      {/* 角色: 主力 / 補刀 / 降抗 (降抗不分物特; 登記自己的紀錄也要選) */}
                       <span className="flex overflow-hidden rounded-full border">
                         {BATTLE_ROLES.map((ro) => (
                           <button
@@ -1032,7 +1032,7 @@ function StageCard({
                             setAddRole("main");
                             setAddFor({ r, admin: false });
                           }}
-                          title="登記我在本輪的對戰紀錄 — 選角色 (主力/補刀/物降抗/特降抗) 與挑戰券張數"
+                          title="登記我在本輪的對戰紀錄 — 選角色 (主力/補刀/降抗) 與挑戰券張數"
                           aria-label="登記我在本輪的對戰紀錄"
                           className="inline-flex items-center justify-center rounded-full border p-2 text-muted-foreground transition-all hover:border-primary hover:text-primary active:scale-90 pointer-coarse:min-h-11 pointer-coarse:min-w-11"
                         >

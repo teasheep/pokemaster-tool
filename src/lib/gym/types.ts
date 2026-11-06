@@ -86,22 +86,25 @@ export const roundLabel = (r: number) => (r <= 3 ? `R${r}` : `Ex${r - 3}`);
 export const TICKETS_MAX = 30;
 
 /**
- * 戰鬥紀錄的分工。降抗分成物降抗 / 特降抗 (0078, 2026-09-29 使用者指定)。
- * `debuff` 是之前沒分的「降抗」—— 舊紀錄 (第三次道館戰匯入的 81 筆) 看不出是哪一種, **不猜**,
- * 照原樣顯示; 新登記的選項裡沒有它 (見 BATTLE_ROLES)。
+ * 戰鬥紀錄的分工: 主力 / 補刀 / 降抗。**出刀的降抗不分物 / 特** (2026-11-05 使用者:
+ * 「道館戰選幾票打什麼的時候 降抗不用分物特」) —— 物 / 特是**隊伍庫**的分類 (TEAM_TAG_LABELS),
+ * 那邊照舊分開。
+ * 0078 到這天之間登記的是 `debuff_physical` / `debuff_special` (第四次道館戰 131 筆), 資料不動,
+ * 畫面一律顯示「降抗」—— 同一張對戰紀錄表裡一半寫「物降抗」一半寫「降抗」就是兩種說法。
+ * 資料庫的 check 照舊允許這兩個值 (舊列要合法), 只是登記時不會再寫進去。
  */
 export const BATTLE_ROLE_LABELS = {
   main: "主力",
   assist: "補刀",
-  debuff_physical: "物降抗",
-  debuff_special: "特降抗",
   debuff: "降抗",
+  debuff_physical: "降抗",
+  debuff_special: "降抗",
 } as const;
 
-/** 登記出刀時可以選的分工 (不含舊的 debuff) —— 順序 = 按鈕順序 */
-export const BATTLE_ROLES = ["main", "assist", "debuff_physical", "debuff_special"] as const;
+/** 登記出刀時可以選的分工 —— 順序 = 按鈕順序 */
+export const BATTLE_ROLES = ["main", "assist", "debuff"] as const;
 
-/** 物降抗 / 特降抗 / 舊的降抗 —— 著色用 (降抗一族同一個色系) */
+/** 降抗 (含 0078 那段時間的物 / 特) —— 著色用 (降抗一族同一個色系) */
 export const isDebuffRole = (r: string) => r === "debuff" || r.startsWith("debuff_");
 
 /**

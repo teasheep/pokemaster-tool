@@ -1,4 +1,5 @@
-// 降抗分成物降抗 / 特降抗 (0078, 2026-09-29 使用者指定) —— 隊伍庫的分類與出刀的分工。
+// 降抗分成物降抗 / 特降抗 (0078, 2026-09-29 使用者指定) —— 隊伍庫的分類。
+// 出刀的分工 2026-11-05 又合回一個「降抗」(見最下面那段)。
 //
 // 壞掉都沒有徵兆: 前端多一個值而 check 沒放寬 = 一選就「新增失敗」;
 // 舊的 'debuff' 被拿掉 = 17 支隊伍與 81 筆紀錄的標籤變成空白 (或整區消失)。
@@ -51,10 +52,20 @@ describe("隊伍的屬性 (2026-09-29 一起修)", () => {
   });
 });
 
+// 出刀的降抗不分物特 (2026-11-05 使用者:「道館戰選幾票打什麼的時候 降抗不用分物特」) ——
+// 物 / 特只留在隊伍庫的分類 (上面那段)。
 describe("出刀的分工", () => {
-  it("登記時的選項: 主力 / 補刀 / 物降抗 / 特降抗 (舊的「降抗」只給舊紀錄顯示)", () => {
-    expect([...BATTLE_ROLES]).toEqual(["main", "assist", "debuff_physical", "debuff_special"]);
+  it("登記時的選項: 主力 / 補刀 / 降抗 (不分物特)", () => {
+    expect([...BATTLE_ROLES]).toEqual(["main", "assist", "debuff"]);
+  });
+  it("0078 那段時間登記的物降抗 / 特降抗, 畫面上也只寫「降抗」", () => {
     expect(BATTLE_ROLE_LABELS.debuff).toBe("降抗");
+    expect(BATTLE_ROLE_LABELS.debuff_physical).toBe("降抗");
+    expect(BATTLE_ROLE_LABELS.debuff_special).toBe("降抗");
+  });
+  it("手機「我要出刀」那排按鈕的欄數 = 選項數 (少一個就空一格)", () => {
+    const sheet = read("src/app/gyms/[id]/battles/[battleId]/report-run-sheet.tsx");
+    expect(sheet).toContain(`grid grid-cols-${BATTLE_ROLES.length} overflow-hidden rounded-lg border`);
   });
   it("資料庫的 check 允許的值 = 全部分工 (含舊的 debuff)", () => {
     expect(new Set(checkValues("battle_logs_role_check"))).toEqual(new Set(Object.keys(BATTLE_ROLE_LABELS)));
