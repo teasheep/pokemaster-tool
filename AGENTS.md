@@ -959,7 +959,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   (`#syncPairs { gap: 4px }` + `.syncPair { max-width: 24% }`, 桌機那份本來就有 justify-content: center)。
   手機那一列的卡寬是 `w-[24%] max-w-24` —— **上限要留著**, 不然平板會把卡拉得比桌機還大。
   卡片本身跟著格子走 (`h-auto w-full`): SVG 有 viewBox, 只鎖寬度不給 h-auto 會照
-  preserveAspectRatio 留出上下白邊。
+  preserveAspectRatio 留出上下白邊。⚠ **`<svg>` 自己也要 `max-w-full h-auto`** (`sync-pair-card.tsx`):
+  它帶 `width={96}` 屬性, 只把外框縮成 88px 的話 svg 還是 96px —— 2026-11-05 量到手機卡牆每張卡
+  右緣被切掉 8px (360 寬的手機 15px), 可點的卡則是溢出去壓在下一張底下, 一直沒有人回報。
   ⚠ **`components/skeletons.tsx` 的 `PairWallSkeleton` 要逐字跟著改** —— 骨架與真實卡牆
   不同構的話, 真卡長出來的那一刻整片會重排 (那正是骨架要避免的事)。
 - **卡片重圖一律延遲載入** (2026-08-19): SVG 的 `<image>` **不吃 `loading="lazy"`**, 所以走

@@ -358,7 +358,10 @@ export const SyncPairCard = memo(function SyncPairCard({
         width={dim}
         height={dim}
         className={cn(
-          "block transition-[filter,opacity] duration-300 ease-out motion-reduce:transition-none",
+          // max-w-full + h-auto: 外框比 dim 窄時跟著縮 (等比例, viewBox 是正方形)。
+          // ⚠ 少了它, 手機卡牆的格子 (一列四張 = 88px, 360 寬的手機 81px) 裡塞的是 96px 的 svg,
+          // 每張卡右緣被切掉 8-15px, 可點的卡則是溢出去壓在下一張底下 (2026-11-05 量到的)
+          "block h-auto max-w-full transition-[filter,opacity] duration-300 ease-out motion-reduce:transition-none",
           // ⚠ **最外層的 <svg> 自己也會裁**: UA 樣式表對 outermost svg 是 overflow:hidden,
           // 所以只在外面那顆 div/button 開 overflow-visible 沒有用 —— 放大的六角超出
           // viewBox (0 0 128 128) 的那一圈還是會被 SVG viewport 切掉
