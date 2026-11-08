@@ -2,10 +2,11 @@
 
 // 道館看板 — 每關一張卡片 (關卡沒有順序概念, 一律以屬性稱呼):
 //   標題列: 屬性 (管理員可改) / 本輪進度
-//   隊伍: 從隊伍庫綁多套 (降抗/物攻/特攻/磨隊), 每套各自列三色符合度 (純檢視)
+//   隊伍: 從隊伍庫綁多套 (降抗/物攻/特攻/磨隊), 每套各自列綠 / 黃符合度 (純檢視)
+//   必要拍組: 這一關挑幾組拍組 + 要求寶數 (0089/0090), 長相與一套隊伍一樣
 //   輪次: R1-R3 + Ex 輪縱向列出, 每輪行內出刀 (選角色+券數, 同對戰紀錄) 與敘述
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Layers, Plus, Swords, X } from "lucide-react";
 import { toast } from "sonner";
@@ -21,7 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { COARSE_HIT_AREA } from "@/components/ui/button";
+import { Button, COARSE_HIT_AREA } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -31,7 +32,9 @@ import {
 } from "@/components/ui/select";
 import { MemberAvatar, MemberOption, memberLabel } from "@/components/gym/member-card";
 import type { MemberCardData } from "@/components/gym/member-card";
-import { useCatalogWithFullFallback } from "@/components/gym/pair-picker";
+import { PairPicker, useCatalogWithFullFallback, type PickedPair } from "@/components/gym/pair-picker";
+import { useCoalescedWrite } from "@/lib/pairs/use-coalesced-write";
+import { MAX_STAGE_REQUIRED_PAIRS, type StageRequiredPairRow } from "./battle-plan-data";
 import { candyForRole, type CandyCounts, type CandyType } from "@/components/gym/candy";
 import {
   TAG_STYLES,
@@ -97,6 +100,8 @@ export type StageBoardProps = {
   teams: TeamRow[];
   teamPairs: TeamPairRow[];
   stageTeams: StageTeamRow[];
+  /** 關卡的必要拍組 (0089) —— 跟挑戰隊伍放在同一區, 管理員設定 */
+  requiredPairs?: StageRequiredPairRow[];
   /** 每關每輪的敘述 (stage_round_notes) — 管理員可編 */
   roundNotes: { stage_id: string; round: number; note: string }[];
   /** 道館拍組名單 — 隊伍編輯候選池 */
@@ -327,6 +332,7 @@ function StageCard({
   teams,
   teamPairs,
   stageTeams,
+  requiredPairs = [],
   roundNotes,
   gymPairsList,
   onChanged,
@@ -352,7 +358,10 @@ function StageCard({
   const supabase = useMemo(() => createClient(), []);
   // 側板勾過「全圖鑑」之後, 名單外的拍組也要畫得出來 (否則隊伍卡掉成灰字 pair_id)。
   // needed: 別人在這個分頁開著的時候把名單外的拍組加進某隊 → refetch 後自動補抓一次整本
-  const neededPairIds = useMemo(() => teamPairs.map((p) => p.pair_id), [teamPairs]);
+  const neededPairIds = useMemo(
+    () => [...teamPairs.map((p) => p.pair_id), ...requiredPairs.map((p) => p.pair_id)],
+    [teamPairs, requiredPairs]
+  );
   const catalog = useCatalogWithFullFallback(catalogSubset, {
     ids: neededPairIds,
     fullCatalogUrl,
@@ -394,6 +403,13 @@ function StageCard({
   const stageTeamList = TEAM_TAG_ORDER.flatMap((tag) =>
     teams.filter((t) => myTeamIds.includes(t.id) && t.tag === tag)
   );
+  /** 本關的必要拍組 (0089/0090), 照加進去的順序; 要穩定的參照 (下面的樂觀值與符合度吃它) */
+  const myRequired = useMemo(
+    () => requiredPairs.filter((r) => r.stage_id === stage.id),
+    [requiredPairs, stage.id]
+  );
+  /** 選必要拍組的候選池 = 道館拍組名單 (勾「全圖鑑」才搜整本); 要穩定的參照, 面板的 useMemo 吃它 */
+  const gymPairIds = useMemo(() => (gymPairsList ?? []).map((g) => g.pairId), [gymPairsList]);
   const allStageLogs = logs.filter((l) => l.stage_id === stage.id);
   const ticketsUsed = allStageLogs.reduce((s, l) => s + l.tickets_used, 0);
 
@@ -459,156 +475,35 @@ function StageCard({
       0
     );
 
-  /**
-   * 每套隊伍各自媒合, 分兩級:
-   *   direct    — 全部達標
-   *   withCandy — 缺口可用糖補足 (遊戲規則, 見 Bulbapedia Superawakening):
-   *     寶數缺口: 該拍組「角色」的角色糖優先, 不夠用通用糖 (黃糖)
-   *     超覺醒缺口: 專屬超覺糖可用 棒棒糖 / 通用糖 / 該拍組角色糖 任一兌換 —
-   *       分配順序 棒棒糖 → 角色糖 → 通用糖
-   *     (要求超覺醒但寶未滿: 先補寶到 5 再補缺的覺醒級數, 兩段都算)
-   */
-  const teamCandidates = useMemo(() => {
-    const roleOf = new Map(catalog.map((p) => [p.pairId, roleAssetToRole(p.roleAsset)]));
-    const map = new Map<
-      string,
-      {
-        direct: { member: MemberCardData; grades: number[] }[];
-        withCandy: { member: MemberCardData; cost: number }[];
-        /** 三隻都有但寶數不夠 (糖也補不到) — 催練/調度參考 */
-        nearMiss: { member: MemberCardData; grades: number[] }[];
-      }
-    >();
-    // 算「全部」隊伍 (不只本關已綁的) — 選隊側板也要看每套隊伍有幾人可打
-    for (const t of teams) {
-      const req = teamPairs
-        .filter((p) => p.team_id === t.id)
-        .sort((a, b) => a.slot - b.slot);
-      if (req.length === 0) continue;
-      const direct: { member: MemberCardData; grades: number[] }[] = [];
-      const withCandy: { member: MemberCardData; cost: number }[] = [];
-      const nearMiss: { member: MemberCardData; grades: number[] }[] = [];
-      for (const m of members) {
-        const g = memberGrades[m.id] ?? {};
-        const grades = req.map((pp) => g[pp.pair_id] ?? 0);
-        if (req.every((pp, i) => grades[i] >= pp.min_grade)) {
-          direct.push({ member: m, grades });
-          continue;
-        }
-        // 缺口統計: 寶數與超覺醒都按拍組角色歸類 (角色糖兩者皆可用)
-        const candies = memberCandies[m.id] ?? {};
-        const needByRole: Partial<Record<CandyType, number>> = {};
-        const awakeningByRole: Partial<Record<CandyType | "none", number>> = {};
-        let awakeningTotal = 0;
-        for (const [i, pp] of req.entries()) {
-          const grade = grades[i];
-          if (grade >= pp.min_grade) continue;
-          // 複合角色 (multi) 沒有專屬糖 → 一律歸通用糖
-          const candyRole = candyForRole(roleOf.get(pp.pair_id) ?? null);
-          const roleKey = (candyRole ?? "none") as CandyType | "none";
-          if (pp.min_grade >= 6) {
-            // 0038 起 6-10 = 超覺醒1-5: 先補寶到 5, 再補缺的覺醒級數 (一級一顆)
-            const potentialGap = Math.max(0, 5 - Math.min(grade, 5));
-            if (potentialGap > 0) {
-              const k = candyRole ?? "universal";
-              needByRole[k] = (needByRole[k] ?? 0) + potentialGap;
-            }
-            const awakenGap = pp.min_grade - Math.max(grade, 5);
-            awakeningByRole[roleKey] = (awakeningByRole[roleKey] ?? 0) + awakenGap;
-            awakeningTotal += awakenGap;
-          } else {
-            const gap = pp.min_grade - grade;
-            const k = candyRole ?? "universal";
-            needByRole[k] = (needByRole[k] ?? 0) + gap;
-          }
-        }
-        // 分配順序: 覺醒缺口先吃棒棒糖 (跨角色通用), 剩的併入該角色的糖需求;
-        // 再逐角色吃角色糖, 最後缺額全部由通用糖吸收
-        let lollipopLeft = candies.superawakening ?? 0;
-        const useLollipop = Math.min(lollipopLeft, awakeningTotal);
-        lollipopLeft -= useLollipop;
-        let remainingAwaken = awakeningTotal - useLollipop;
-        for (const [roleKey, cnt] of Object.entries(awakeningByRole)) {
-          if (remainingAwaken <= 0) break;
-          const take = Math.min(cnt, remainingAwaken);
-          remainingAwaken -= take;
-          const k = roleKey === "none" ? "universal" : (roleKey as CandyType);
-          needByRole[k] = (needByRole[k] ?? 0) + take;
-        }
-        let universalNeed = needByRole.universal ?? 0;
-        let cost = universalNeed;
-        for (const [roleType, need] of Object.entries(needByRole)) {
-          if (roleType === "universal") continue;
-          const have = candies[roleType as CandyType] ?? 0;
-          const useTyped = Math.min(have, need);
-          universalNeed += need - useTyped;
-          cost += need;
-        }
-        cost += useLollipop;
-        if (cost > 0 && universalNeed <= (candies.universal ?? 0)) {
-          withCandy.push({ member: m, cost });
-        } else if (grades.every((x) => x > 0)) {
-          // 三隻都有, 但寶數 (連吃糖都) 不夠 — 列出來供催練/hover 看差多少
-          nearMiss.push({ member: m, grades });
-        }
-      }
-      withCandy.sort((a, b) => a.cost - b.cost);
-      nearMiss.sort(
-        (a, b) => b.grades.reduce((s, x) => s + x, 0) - a.grades.reduce((s, x) => s + x, 0)
-      );
-      map.set(t.id, { direct, withCandy, nearMiss });
-    }
-    return map;
-    // stageTeamList 由 stageTeams+teams 推導
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [members, memberGrades, memberCandies, stageTeams, teams, teamPairs, catalog]);
+  /** 拍組 → 角色 (吃糖補寶數用哪一種角色糖) */
+  const roleOf = useMemo(
+    () => new Map(catalog.map((p) => [p.pairId, roleAssetToRole(p.roleAsset)])),
+    [catalog]
+  );
 
-  /** 三列符合度 (綠/黃/紅) — 看板隊伍列與選隊側板共用 */
+  /**
+   * 符合度 (綠 / 黃) — 看板隊伍列與選隊側板共用。
+   * 算「全部」隊伍 (不只本關已綁的) — 選隊側板也要看每套隊伍有幾人可打。
+   * 同一支 fitGroupsOf 也拿來算這一關的必要拍組 (StageRequiredPairs)。
+   */
   const teamFitGroups = useMemo(() => {
-    const candyOf = new Map<string, Map<string, number>>();
-    for (const [teamId, c] of teamCandidates) {
-      candyOf.set(teamId, new Map(c.withCandy.map((w) => [w.member.id, w.cost])));
-    }
     const map = new Map<string, TeamFitGroups>();
     for (const t of teams) {
       const req = teamPairs.filter((p) => p.team_id === t.id).sort((a, b) => a.slot - b.slot);
       if (req.length === 0) continue;
-      const g: TeamFitGroups = { green: [], yellow: [], red: [] };
-      for (const m of members) {
-        if (m.role === "advisor") continue;
-        const grades = req.map((pp) => (memberGrades[m.id] ?? {})[pp.pair_id] ?? 0);
-        const owned = grades.every((x) => x > 0);
-        const meets = owned && req.every((pp, i) => grades[i] >= pp.min_grade);
-        if (meets) g.green.push({ m });
-        else if (owned) g.yellow.push({ m, candy: candyOf.get(t.id)?.get(m.id) });
-        else g.red.push({ m });
-      }
-      g.yellow.sort((a, b) => (a.candy ?? 99) - (b.candy ?? 99));
-      map.set(t.id, g);
+      map.set(t.id, fitGroupsOf(req, members, memberGrades, memberCandies, roleOf));
     }
     return map;
-  }, [teams, teamPairs, members, memberGrades, teamCandidates]);
+  }, [teams, teamPairs, members, memberGrades, memberCandies, roleOf]);
 
   /** hover 明細: 這個人對這套隊伍的逐拍組寶數 (「小霞 寶3/需寶5、96皮 超覺醒✓」) */
-  const teamGradeTooltip = useMemo(() => {
-    const nameOf = new Map(catalog.map((p) => [p.pairId, pairName(p)]));
-    return (teamId: string, memberId: string) => {
-      const req = teamPairs
-        .filter((p) => p.team_id === teamId)
-        .sort((a, b) => a.slot - b.slot);
-      const g = memberGrades[memberId] ?? {};
-      return req
-        .map((pp) => {
-          const have = g[pp.pair_id] ?? 0;
-          const ok = have >= pp.min_grade;
-          const haveLabel = have === 0 ? "未持有" : GRADE_LABELS[have];
-          return `${nameOf.get(pp.pair_id) ?? pp.pair_id} ${haveLabel}${
-            ok ? "✓" : `／需${GRADE_LABELS[pp.min_grade]}`
-          }`;
-        })
-        .join("、");
-    };
-  }, [teamPairs, memberGrades, catalog]);
+  const nameOf = useMemo(() => new Map(catalog.map((p) => [p.pairId, pairName(p)])), [catalog]);
+  const teamGradeTooltip = (teamId: string, memberId: string) =>
+    gradeTooltip(
+      teamPairs.filter((p) => p.team_id === teamId).sort((a, b) => a.slot - b.slot),
+      memberGrades[memberId] ?? {},
+      nameOf
+    );
 
   async function setWeakType(type: SyncPairType) {
     const { error } = await supabase
@@ -848,7 +743,14 @@ function StageCard({
             >
               挑戰隊伍
               <span>
-                {stageTeamList.length > 0 ? `(${stageTeamList.length} 套)` : "(未設定)"}
+                (
+                {[
+                  stageTeamList.length > 0 ? `${stageTeamList.length} 套` : "",
+                  myRequired.length > 0 ? `必要拍組 ${myRequired.length}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "未設定"}
+                )
               </span>
               <ChevronDown
                 className={cn("h-3.5 w-3.5 transition-transform", teamsOpen && "rotate-180")}
@@ -906,10 +808,10 @@ function StageCard({
                         pairs={teamPairs.filter((p) => p.team_id === t.id)}
                         catalog={catalog}
                       />
-                      {/* 這個隊伍誰有誰沒有 — 三列 (與選隊側板同一個元件, 純檢視); 券數是另一件事 */}
+                      {/* 這個隊伍誰能打 — 綠 / 黃 (與選隊側板同一個元件, 純檢視); 券數是另一件事 */}
                       <div className="min-w-[11rem] flex-1 self-stretch py-1">
                         <TeamFitRows
-                          groups={teamFitGroups.get(t.id) ?? { green: [], yellow: [], red: [] }}
+                          groups={teamFitGroups.get(t.id) ?? { green: [], yellow: [] }}
                           tooltipOf={(memberId) => teamGradeTooltip(t.id, memberId)}
                         />
                       </div>
@@ -920,6 +822,26 @@ function StageCard({
               })}
             </div>
           )}
+          {/* 必要拍組 (0089/0090) —— 跟隊伍放同一區 (一關好幾套隊伍、其實共用那幾隻)。
+              沒設的時候只有管理員看得到這一排 (其他人看到的會是一排空的標題) */}
+          {myRequired.length > 0 || isAdmin ? (
+            <StageRequiredPairs
+              gymId={gymId}
+              battleId={battleId}
+              stage={stage}
+              rows={myRequired}
+              isAdmin={isAdmin}
+              members={members}
+              memberGrades={memberGrades}
+              memberCandies={memberCandies}
+              roleOf={roleOf}
+              nameOf={nameOf}
+              catalog={catalog}
+              fullCatalogUrl={fullCatalogUrl}
+              gymPairIds={gymPairIds}
+              onChanged={onChanged}
+            />
+          ) : null}
           </div>
         </div>
 
@@ -1163,6 +1085,279 @@ function StageCard({
         onToggle={isAdmin ? toggleTeam : undefined}
         teamFit={teamFitGroups}
       />
+    </div>
+  );
+}
+
+/** 一組要求: 一套隊伍的三格, 或一關的必要拍組 (同一條練度軸, 1-5 寶 / 6-10 超覺醒) */
+type FitReq = { pair_id: string; min_grade: number };
+type RoleOf = ReadonlyMap<string, ReturnType<typeof roleAssetToRole>>;
+
+/**
+ * 寶數不夠的人吃糖補得到嗎 —— 補得到回傳要吃幾顆, 補不到 (或根本不缺) 回傳 undefined。
+ * 遊戲規則 (見 Bulbapedia Superawakening):
+ *   寶數缺口: 該拍組「角色」的角色糖優先, 不夠用通用糖 (黃糖)
+ *   超覺醒缺口: 專屬超覺糖可用 棒棒糖 / 通用糖 / 該拍組角色糖 任一兌換 —
+ *     分配順序 棒棒糖 → 角色糖 → 通用糖
+ *   (要求超覺醒但寶未滿: 先補寶到 5 再補缺的覺醒級數, 兩段都算)
+ */
+function candyCostToMeet(
+  req: readonly FitReq[],
+  grades: readonly number[],
+  candies: CandyCounts,
+  roleOf: RoleOf
+): number | undefined {
+  // 缺口統計: 寶數與超覺醒都按拍組角色歸類 (角色糖兩者皆可用)
+  const needByRole: Partial<Record<CandyType, number>> = {};
+  const awakeningByRole: Partial<Record<CandyType | "none", number>> = {};
+  let awakeningTotal = 0;
+  for (const [i, pp] of req.entries()) {
+    const grade = grades[i] ?? 0;
+    if (grade >= pp.min_grade) continue;
+    // 複合角色 (multi) 沒有專屬糖 → 一律歸通用糖
+    const candyRole = candyForRole(roleOf.get(pp.pair_id) ?? null);
+    const roleKey = (candyRole ?? "none") as CandyType | "none";
+    if (pp.min_grade >= 6) {
+      // 0038 起 6-10 = 超覺醒1-5: 先補寶到 5, 再補缺的覺醒級數 (一級一顆)
+      const potentialGap = Math.max(0, 5 - Math.min(grade, 5));
+      if (potentialGap > 0) {
+        const k = candyRole ?? "universal";
+        needByRole[k] = (needByRole[k] ?? 0) + potentialGap;
+      }
+      const awakenGap = pp.min_grade - Math.max(grade, 5);
+      awakeningByRole[roleKey] = (awakeningByRole[roleKey] ?? 0) + awakenGap;
+      awakeningTotal += awakenGap;
+    } else {
+      const k = candyRole ?? "universal";
+      needByRole[k] = (needByRole[k] ?? 0) + (pp.min_grade - grade);
+    }
+  }
+  // 分配順序: 覺醒缺口先吃棒棒糖 (跨角色通用), 剩的併入該角色的糖需求;
+  // 再逐角色吃角色糖, 最後缺額全部由通用糖吸收
+  const useLollipop = Math.min(candies.superawakening ?? 0, awakeningTotal);
+  let remainingAwaken = awakeningTotal - useLollipop;
+  for (const [roleKey, cnt] of Object.entries(awakeningByRole)) {
+    if (remainingAwaken <= 0) break;
+    const take = Math.min(cnt, remainingAwaken);
+    remainingAwaken -= take;
+    const k = roleKey === "none" ? "universal" : (roleKey as CandyType);
+    needByRole[k] = (needByRole[k] ?? 0) + take;
+  }
+  let universalNeed = needByRole.universal ?? 0;
+  let cost = universalNeed;
+  for (const [roleType, need] of Object.entries(needByRole)) {
+    if (roleType === "universal") continue;
+    const useTyped = Math.min(candies[roleType as CandyType] ?? 0, need);
+    universalNeed += need - useTyped;
+    cost += need;
+  }
+  cost += useLollipop;
+  return cost > 0 && universalNeed <= (candies.universal ?? 0) ? cost : undefined;
+}
+
+/**
+ * 一組要求誰能打 (看板的隊伍列、選隊側板、關卡的必要拍組共用):
+ *   綠 = 每一組都有而且達標; 黃 = 每一組都有、有的寶數不夠 (candy = 吃幾顆糖補得到)。
+ *   缺任何一組的人不列 —— **沒有紅燈** (2026-11-08 使用者:「紅燈可以拿掉了」)。顧問不算 (0028/0072)。
+ */
+function fitGroupsOf(
+  req: readonly FitReq[],
+  members: MemberCardData[],
+  memberGrades: Record<string, Record<string, number>>,
+  memberCandies: Record<string, CandyCounts>,
+  roleOf: RoleOf
+): TeamFitGroups {
+  const g: TeamFitGroups = { green: [], yellow: [] };
+  if (req.length === 0) return g;
+  for (const m of members) {
+    if (m.role === "advisor") continue;
+    const grades = req.map((pp) => memberGrades[m.id]?.[pp.pair_id] ?? 0);
+    if (!grades.every((x) => x > 0)) continue;
+    if (req.every((pp, i) => grades[i]! >= pp.min_grade)) g.green.push({ m });
+    else g.yellow.push({ m, candy: candyCostToMeet(req, grades, memberCandies[m.id] ?? {}, roleOf) });
+  }
+  g.yellow.sort((a, b) => (a.candy ?? 99) - (b.candy ?? 99));
+  return g;
+}
+
+/** hover 明細: 逐拍組寶數 (「小霞 寶3／需寶5、96皮 超覺醒1✓」) */
+function gradeTooltip(
+  req: readonly FitReq[],
+  grades: Record<string, number>,
+  nameOf: ReadonlyMap<string, string>
+): string {
+  return req
+    .map((pp) => {
+      const have = grades[pp.pair_id] ?? 0;
+      const haveLabel = have === 0 ? "未持有" : GRADE_LABELS[have];
+      return `${nameOf.get(pp.pair_id) ?? pp.pair_id} ${haveLabel}${
+        have >= pp.min_grade ? "✓" : `／需${GRADE_LABELS[pp.min_grade]}`
+      }`;
+    })
+    .join("、");
+}
+
+/**
+ * 關卡的必要拍組 (0089/0090, 2026-11-08 使用者:「有時候 其實會有很多隊 但共用拍組 所以可以選幾組拍組好像更好用一點」
+ * →「必要拍組還是可以設定寶數 然後跟隊伍一樣顯示誰綠燈誰黃燈這樣」)。
+ * **長相與一套隊伍一模一樣**: 拍組卡 (`TeamPairs`, 左下角是要求的寶數) + 綠 / 黃兩列 (`TeamFitRows`);
+ * 管理員按「選拍組 / 編輯拍組」原地換成隊伍庫的編輯器 (`PairPicker`, 寶數下拉 + 左下角循環 + 搜尋面板),
+ * 只是格子數不固定 (已選的 + 一格空的, 最多 MAX_STAGE_REQUIRED_PAIRS)。
+ */
+function StageRequiredPairs({
+  gymId,
+  battleId,
+  stage,
+  rows,
+  isAdmin,
+  members,
+  memberGrades,
+  memberCandies,
+  roleOf,
+  nameOf,
+  catalog,
+  fullCatalogUrl,
+  gymPairIds,
+  onChanged,
+}: {
+  gymId: string;
+  battleId: string;
+  stage: StageRow;
+  /** 這一關目前的必要拍組 (伺服器那一份, 照 sort_order) */
+  rows: StageRequiredPairRow[];
+  isAdmin: boolean;
+  members: MemberCardData[];
+  memberGrades: Record<string, Record<string, number>>;
+  memberCandies: Record<string, CandyCounts>;
+  roleOf: RoleOf;
+  nameOf: ReadonlyMap<string, string>;
+  catalog: ClientPairRecord[];
+  fullCatalogUrl?: string;
+  gymPairIds: string[];
+  onChanged: () => Promise<void>;
+}) {
+  const supabase = useMemo(() => createClient(), []);
+  const [editing, setEditing] = useState(false);
+  /**
+   * 樂觀值: 點下去畫面就動 (與隊伍庫的 draftPairs 同一個理由 —— 2026-09-10「加寶數還是會卡頓」)。
+   * 網路那一段同一關 450ms 內只送最後一次 (useCoalescedWrite), 而且排隊送 (後到先至會把新的蓋回舊的)。
+   * 送完、重抓回來, 而且這段時間沒有更新的改動, 才換回伺服器那一份 (失敗的那一筆就在這時候彈回去)。
+   */
+  const [draft, setDraft] = useState<PickedPair[] | null>(null);
+  const latest = useRef<PickedPair[] | null>(null);
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const picked = useMemo(
+    () => draft ?? rows.map((r) => ({ pairId: r.pair_id, minGrade: r.min_grade })),
+    [draft, rows]
+  );
+  const req = useMemo(() => picked.map((p) => ({ pair_id: p.pairId, min_grade: p.minGrade })), [picked]);
+  /** TeamPairs 吃隊伍列的形狀; id 用 pairId (同一組拍組換寶數時卡片不重新掛載, 圖不閃) */
+  const displayRows = useMemo(
+    () =>
+      picked.map((p, i) => ({
+        id: p.pairId,
+        team_id: stage.id,
+        slot: i + 1,
+        pair_id: p.pairId,
+        min_grade: p.minGrade,
+      })),
+    [picked, stage.id]
+  );
+  const fit = useMemo(
+    () => fitGroupsOf(req, members, memberGrades, memberCandies, roleOf),
+    [req, members, memberGrades, memberCandies, roleOf]
+  );
+
+  const flush = useCallback(
+    async (_key: string, { next }: { next: PickedPair[] }) => {
+      const run = queue.current.then(async () => {
+        // 整份送: 已選的 upsert (新的加進去、舊的改寶數與順序), 成功了才刪掉沒選的。
+        // ⚠ **不要改成平行送** (隊伍庫那邊是平行的): upsert 失敗時 delete 照樣會成功, 結果是「加不進去、
+        // 原本的反而被刪光」—— 部署前端比套 0090 早的那幾分鐘就是這樣 (min_grade 欄位還不存在)。
+        // 一趟往返的代價藏在樂觀更新後面, 使用者感覺不到。
+        if (next.length > 0) {
+          const { error } = await supabase.from("stage_required_pairs").upsert(
+            next.map((p, i) => ({
+              gym_id: gymId,
+              battle_id: battleId,
+              stage_id: stage.id,
+              pair_id: p.pairId,
+              min_grade: p.minGrade,
+              sort_order: i,
+            })),
+            { onConflict: "stage_id,pair_id" }
+          );
+          if (error) {
+            toast.error("儲存必要拍組失敗", { description: error.message });
+            return;
+          }
+        }
+        let del = supabase.from("stage_required_pairs").delete().eq("stage_id", stage.id);
+        if (next.length > 0) del = del.not("pair_id", "in", `(${next.map((p) => `"${p.pairId}"`).join(",")})`);
+        const { error } = await del;
+        if (error) toast.error("儲存必要拍組失敗", { description: error.message });
+      });
+      queue.current = run;
+      await run;
+      if (queue.current !== run) return; // 後面還有排著的, 等最後一趟再重抓
+      await onChanged();
+      if (latest.current === next) setDraft(null);
+    },
+    [supabase, gymId, battleId, stage.id, onChanged]
+  );
+  const schedule = useCoalescedWrite<{ next: PickedPair[] }>(flush, (_prev, n) => n);
+  const save = (next: PickedPair[]) => {
+    latest.current = next;
+    setDraft(next);
+    schedule(stage.id, { next });
+  };
+
+  return (
+    <div className="mt-3 space-y-1.5">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground">必要拍組</span>
+        {isAdmin && !editing ? (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="ml-auto inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors hover:bg-accent active:scale-95 pointer-coarse:min-h-11 pointer-coarse:px-3"
+          >
+            <Layers className="h-3 w-3" />
+            {picked.length > 0 ? "編輯拍組" : "選拍組"}
+          </button>
+        ) : null}
+      </div>
+      {editing ? (
+        <div className="space-y-2">
+          <PairPicker
+            compact
+            inlinePanel
+            slots={MAX_STAGE_REQUIRED_PAIRS}
+            growUpTo={MAX_STAGE_REQUIRED_PAIRS}
+            addAtMax
+            picked={picked}
+            catalog={catalog}
+            fullCatalogUrl={fullCatalogUrl}
+            filterType={stage.weak_type}
+            allowedPairIds={gymPairIds}
+            onChange={save}
+          />
+          <Button size="sm" className="max-sm:w-full" onClick={() => setEditing(false)}>
+            完成
+          </Button>
+        </div>
+      ) : picked.length > 0 ? (
+        // 與上面的隊伍同一個排法: 拍組在左、誰能打填右側 (窄卡自動換行回到下方)
+        <div className="flex flex-wrap items-start gap-x-4 gap-y-1">
+          <TeamPairs pairs={displayRows} catalog={catalog} slots={0} />
+          <div className="min-w-[11rem] flex-1 self-stretch py-1">
+            <TeamFitRows
+              groups={fit}
+              tooltipOf={(memberId) => gradeTooltip(req, memberGrades[memberId] ?? {}, nameOf)}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -560,6 +560,41 @@ export type Database = {
         };
         Relationships: [];
       };
+      // 關卡的必要拍組 (0089): 一關挑幾組拍組 (不是一套隊伍), 排刀時切過去看每個人那幾隻幾寶
+      // min_grade (0090): 要求練度, 與 gym_team_pairs 同一條軸 (1-5 寶 / 6-10 超覺醒)
+      stage_required_pairs: {
+        Row: {
+          id: string;
+          gym_id: string;
+          battle_id: string;
+          stage_id: string;
+          pair_id: string;
+          min_grade: number;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          battle_id: string;
+          stage_id: string;
+          pair_id: string;
+          min_grade?: number;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          gym_id?: string;
+          battle_id?: string;
+          stage_id?: string;
+          pair_id?: string;
+          min_grade?: number;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       // 道館拍組庫 (0008): ★ 名單 (該屬性建議練的拍組)
       gym_pairs: {
         Row: {
@@ -740,6 +775,40 @@ export type Database = {
           battle_id?: string;
           gym_id?: string;
           note?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      // 0087 試排: 一份一列, 整份內容 (PlanDoc) 存在 plan; 只有建立的人讀寫得到
+      battle_plan_drafts: {
+        Row: {
+          id: string;
+          gym_id: string;
+          battle_id: string;
+          user_id: string;
+          name: string;
+          plan: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          battle_id: string;
+          user_id?: string;
+          name?: string;
+          plan?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          gym_id?: string;
+          battle_id?: string;
+          user_id?: string;
+          name?: string;
+          plan?: Json;
           created_at?: string;
           updated_at?: string;
         };

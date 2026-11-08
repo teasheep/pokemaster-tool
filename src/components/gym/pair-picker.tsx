@@ -254,8 +254,27 @@ export function PairPicker({
   allowedPairIds,
   compact,
   fullCatalogUrl,
+  growUpTo,
+  inlinePanel,
+  addAtMax,
 }: {
   slots: number;
+  /**
+   * 新加的拍組預設這一組的最高練度 (能超覺醒 = 超覺醒5, 不能 = 寶5)。關卡的必要拍組用
+   * (2026-11-08 使用者:「之後加入拍組 預設是最高寶數(超覺醒數)就對了」—— 他手設的 25 組
+   * 全部都是這樣設的)。不給 = 寶5 (隊伍庫照舊)。
+   */
+  addAtMax?: boolean;
+  /**
+   * compact 的搜尋面板改成排在下面 (不懸浮)。關卡卡片是 overflow-hidden 的,
+   * 懸浮面板會被卡片邊緣切掉 (手機上左右各切幾 px、關卡輪次少的時候下緣也切)。
+   */
+  inlinePanel?: boolean;
+  /**
+   * 格子數不固定、最多到這個數 (關卡的必要拍組, 0089/0090): 只畫「已選的 + 一格空的」,
+   * 不要一次攤開十個虛線框。給了就蓋過 slots。
+   */
+  growUpTo?: number;
   picked: PickedPair[];
   /** 候選池與槽位卡的資料來源; 呼叫端只給子集時要一併給 fullCatalogUrl */
   catalog: ClientPairRecord[];
@@ -275,12 +294,16 @@ export function PairPicker({
   fullCatalogUrl?: string;
 }) {
   const [open, setOpen] = useState(false);
+  /** 最多選幾組 / 畫幾格 (growUpTo: 已選的 + 一格空的) */
+  const limit = growUpTo ?? slots;
+  const shownSlots = growUpTo ? Math.min(growUpTo, picked.length + 1) : slots;
   /** compact 的懸浮面板: 貼齊卡片下緣, 超出視窗右緣時往左推 (不讓頁面橫向捲動) */
+  const floating = !!compact && !inlinePanel;
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [shiftX, setShiftX] = useState(0);
   useLayoutEffect(() => {
-    if (!compact || !open) return;
+    if (!floating || !open) return;
     const el = panelRef.current;
     if (!el) return;
     const clamp = () => {
@@ -295,20 +318,22 @@ export function PairPicker({
     el.scrollIntoView({ block: "nearest", behavior: "smooth" });
     window.addEventListener("resize", clamp);
     return () => window.removeEventListener("resize", clamp);
-  }, [compact, open]);
+  }, [floating, open]);
   // 點面板外 = 收起 (懸浮面板的標準行為)
+  // ⚠ 排在下面的面板 (inlinePanel) 要等 click 才收, 不能在 mousedown 收:
+  // 它佔著版面, 一收起來下面的東西就往上跳 —— 按下去的時候在「完成」上, 放開時已經不在了,
+  // click 不成立, 要按兩次 (2026-11-08 實測抓到)。click 的時候被點的那顆已經處理完了。
   useLayoutEffect(() => {
     if (!compact || !open) return;
-    const onDown = (e: MouseEvent | TouchEvent) => {
+    const onOutside = (e: Event) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("touchstart", onDown);
+    const events = floating ? (["mousedown", "touchstart"] as const) : (["click"] as const);
+    for (const ev of events) document.addEventListener(ev, onOutside);
     return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("touchstart", onDown);
+      for (const ev of events) document.removeEventListener(ev, onOutside);
     };
-  }, [compact, open]);
+  }, [compact, open, floating]);
   /** 抓回來的整本 (勾「全圖鑑」才會有); null = 還沒抓 —— 已選槽位名單外的拍組靠它畫得出卡 */
   const fullCatalog = useLoadedFullCatalog();
 
@@ -324,8 +349,9 @@ export function PairPicker({
   function toggle(pairId: string) {
     if (chosen.has(pairId)) {
       onChange(picked.filter((p) => p.pairId !== pairId));
-    } else if (picked.length < slots) {
-      onChange([...picked, { pairId, minGrade: 5 }]);
+    } else if (picked.length < limit) {
+      const minGrade = addAtMax && pairById.get(pairId)?.hasAwakening === true ? 10 : 5;
+      onChange([...picked, { pairId, minGrade }]);
     }
   }
 
@@ -353,7 +379,7 @@ export function PairPicker({
     <div ref={rootRef} className={cn("space-y-3", compact && "relative")}>
       {/* 已選的位置 — 卡片夠大, 圖不壓縮 */}
       <div className="grid grid-cols-3 gap-3">
-        {Array.from({ length: slots }).map((_, i) => {
+        {Array.from({ length: shownSlots }).map((_, i) => {
           const p = picked[i];
           const rec = p ? pairById.get(p.pairId) : undefined;
 
@@ -437,22 +463,23 @@ export function PairPicker({
       </div>
 
       {/* 搜尋面板 — 開一次連選到滿; 點已選的卡取消。
-          compact = 懸浮在卡片下方 (寬度不受 328px 卡片限縮), 超出視窗會自動內推 */}
+          compact = 懸浮在卡片下方 (寬度不受 328px 卡片限縮), 超出視窗會自動內推;
+          inlinePanel = 照舊排在下面 (放在 overflow-hidden 的容器裡時) */}
       {open && !readOnly ? (
         <PairSearchPanel
           ref={panelRef}
-          style={compact ? { transform: `translateX(${shiftX}px)` } : undefined}
+          style={floating ? { transform: `translateX(${shiftX}px)` } : undefined}
           className={
-            compact
+            floating
               ? "absolute left-0 top-full z-30 mt-1 w-[min(32rem,calc(100vw-1rem))] bg-popover shadow-xl"
               : "bg-muted/30"
           }
           catalog={catalog}
           chosen={chosen}
-          full={picked.length >= slots}
-          countLabel={`已選 ${picked.length}/${slots}`}
+          full={picked.length >= limit}
+          countLabel={`已選 ${picked.length}/${limit}`}
           onToggle={toggle}
-          onClose={compact ? undefined : () => setOpen(false)}
+          onClose={floating ? undefined : () => setOpen(false)}
           allowedPairIds={allowedPairIds}
           filterType={filterType}
           fullCatalogUrl={fullCatalogUrl}

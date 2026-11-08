@@ -48,7 +48,13 @@ import {
 } from "./stage-board";
 import { ReportRunSheet } from "./report-run-sheet";
 import { BattlePlan } from "./battle-plan";
-import type { PlanFieldRow, PlanSlotRow } from "./battle-plan-data";
+import {
+  STAGE_REQUIRED_PAIR_COLS,
+  type PlanDraftRow,
+  type PlanFieldRow,
+  type PlanSlotRow,
+  type StageRequiredPairRow,
+} from "./battle-plan-data";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { reportBattleLog } from "@/lib/gym/battle-log";
@@ -167,6 +173,8 @@ type Props = {
   initialTeams: TeamRow[];
   initialTeamPairs: TeamPairRow[];
   initialStageTeams: StageTeamRow[];
+  /** 關卡的必要拍組 (0089) —— 看板設定、排刀側板切過去看 */
+  initialRequiredPairs: StageRequiredPairRow[];
   /** 本道館的所有賽事 (切換器用, 依建立時間新→舊) */
   allBattles: { id: string; name: string; status: BattleStatus }[];
   /** 每關每輪的敘述 (stage_round_notes) */
@@ -176,7 +184,16 @@ type Props = {
   /** 「關卡規則」開關的初始值 (page.tsx 從 ?rules=1 讀) */
   initialShowRules?: boolean;
   /** 排刀表 (0083) 的初始資料 */
-  initialPlan: { fields: PlanFieldRow[]; slots: PlanSlotRow[]; note: string };
+  initialPlan: {
+    fields: PlanFieldRow[];
+    slots: PlanSlotRow[];
+    note: string;
+    /** 排刀表的分頁 (0087/0088, 全館的) 與網址 ?draft= 指到的那一個 */
+    drafts: PlanDraftRow[];
+    draftId: string | null;
+    /** 分頁是誰加的: user_id → 成員 id */
+    memberIdByUser: Record<string, string>;
+  };
   /** 「排刀」開關的初始值 (?plan=1) */
   initialShowPlan?: boolean;
   /** 看板每一關的收合/展開 (?fold= / ?done= / ?ahead=) */
@@ -201,6 +218,7 @@ export function BattleClient({
   initialTeams,
   initialTeamPairs,
   initialStageTeams,
+  initialRequiredPairs,
   allBattles,
   initialRoundNotes,
   gymPairsList,
@@ -222,6 +240,7 @@ export function BattleClient({
   const [teams, setTeams] = useState(initialTeams);
   const [teamPairs, setTeamPairs] = useState(initialTeamPairs);
   const [stageTeams, setStageTeams] = useState(initialStageTeams);
+  const [requiredPairs, setRequiredPairs] = useState(initialRequiredPairs);
   const [roundNotes, setRoundNotes] = useState(initialRoundNotes);
   /**
    * 「規則」開關: 預設關 —— 每輪 3-6 顆 tag × 15 輪 × 8 關, 平常出刀時會把看板淹掉。
@@ -330,17 +349,26 @@ export function BattleClient({
   }, [supabase, battle.id]);
 
   const refetchTeams = useCallback(async () => {
-    const [{ data: t }, { data: tp }, { data: st }] = await Promise.all([
+    const [{ data: t }, { data: tp }, { data: st }, { data: rp }] = await Promise.all([
       supabase.from("gym_teams").select("id, type, name, tag, note, sort_order").eq("gym_id", gymId),
       supabase
         .from("gym_team_pairs")
         .select("id, team_id, slot, pair_id, min_grade")
         .eq("gym_id", gymId),
       supabase.from("stage_teams").select("stage_id, team_id").eq("battle_id", battle.id),
+      // 必要拍組 (0089) 跟挑戰隊伍放在同一區, 一起重抓 (欄位、排序與 page.tsx 同一組)
+      supabase
+        .from("stage_required_pairs")
+        .select(STAGE_REQUIRED_PAIR_COLS)
+        .eq("battle_id", battle.id)
+        .order("sort_order")
+        .order("created_at")
+        .order("id"),
     ]);
     if (t) setTeams(t);
     if (tp) setTeamPairs(tp);
     if (st) setStageTeams(st);
+    if (rp) setRequiredPairs(rp);
   }, [supabase, gymId, battle.id]);
 
   /** 8 關看板的任一操作後: 一次刷新相關資料 */
@@ -663,6 +691,11 @@ export function BattleClient({
           initialFields={initialPlan.fields}
           initialSlots={initialPlan.slots}
           initialNote={initialPlan.note}
+          initialDrafts={initialPlan.drafts}
+          initialDraftId={initialPlan.draftId}
+          memberIdByUser={initialPlan.memberIdByUser}
+          myUserId={viewer.userId}
+          isAdmin={viewer.isAdmin}
           open={showPlan}
           onOpenChange={setShowPlan}
           battleId={battle.id}
@@ -675,6 +708,7 @@ export function BattleClient({
           catalog={catalog}
           fullCatalogUrl={fullCatalogUrl}
           gymPairsList={gymPairsList}
+          requiredPairs={requiredPairs}
         />
       ) : null}
 
@@ -699,6 +733,7 @@ export function BattleClient({
             teams={teams}
             teamPairs={teamPairs}
             stageTeams={stageTeams}
+            requiredPairs={requiredPairs}
             roundNotes={roundNotes}
             showRules={showRules}
             initialView={initialBoardView}

@@ -243,15 +243,18 @@ export function TeamPairs({
   );
 }
 
-/** 隊伍符合度三列: 綠=符合 黃=有拍組寶數不足 (candy=可吃糖補的顆數) 紅=缺拍組 */
+/**
+ * 隊伍符合度兩列: 綠=符合 黃=拍組都有、寶數不足 (candy=可吃糖補的顆數)。
+ * **沒有紅燈** (2026-11-08 使用者:「紅燈可以拿掉了」): 缺拍組的人本來就排不上這套,
+ * 列出來只是一長串灰色頭像。隊伍與關卡的必要拍組 (0089/0090) 共用這兩列。
+ */
 export type TeamFitGroups = {
   green: { m: MemberCardData; candy?: number }[];
   yellow: { m: MemberCardData; candy?: number }[];
-  red: { m: MemberCardData }[];
 };
 
 /**
- * 三列成員顯示 — 看板與選隊側板共用同一個長相 (純檢視, 不觸發派遣)。
+ * 符合度成員列 — 看板與選隊側板共用同一個長相 (純檢視, 不觸發派遣)。
  * 人數列常駐; 滑過 (桌機) 或點一下 (手機) 往下長出完整名單 — 版面不跳、有高度動畫。
  */
 export function TeamFitRows({
@@ -266,7 +269,6 @@ export function TeamFitRows({
   const rows = [
     { key: "green", dot: "bg-emerald-500", label: "符合", hint: "符合需求", list: groups.green },
     { key: "yellow", dot: "bg-amber-400", label: "寶數不足", hint: "有拍組, 寶數不足 (🍬 = 吃幾顆糖可補)", list: groups.yellow },
-    { key: "red", dot: "bg-red-400", label: "缺拍組", hint: "缺拍組", list: groups.red },
   ] as const;
   const shown = rows.filter((r) => r.list.length > 0);
   if (shown.length === 0) return null;
@@ -278,7 +280,7 @@ export function TeamFitRows({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        title="符合 / 寶數不足 / 缺拍組 — 展開看名單"
+        title="符合 / 寶數不足 — 展開看名單"
         className="flex items-center gap-3 rounded-full border px-2.5 py-1 text-xs tabular-nums transition-colors hover:bg-accent pointer-coarse:min-h-11 pointer-coarse:px-3"
       >
         {shown.map((r) => (
@@ -296,7 +298,10 @@ export function TeamFitRows({
         )}
       >
         <div className="overflow-hidden">
-          <div className="space-y-1.5 pt-1.5">
+          {/* pb: 頭像右下角的 🍬 徽章往下凸 4px (-bottom-1), 不留底的話最後一列會被上面的
+              overflow-hidden 切掉 (2026-11-08 使用者:「展開看名單有時候底部會被切掉」—— 「有時候」=
+              最後一列是寶數不足、而且有人吃糖補得到的時候) */}
+          <div className="space-y-1.5 pb-1.5 pt-1.5">
             {shown.map((r) => (
               <div key={r.key} className="flex items-start gap-1.5">
                 <span className="inline-flex w-16 shrink-0 items-center gap-1 pt-1.5 text-[11px] text-muted-foreground max-sm:text-xs">
@@ -305,18 +310,14 @@ export function TeamFitRows({
                 </span>
                 <div className="flex flex-wrap gap-1">
                   {r.list.map((entry) => {
-                    const { m } = entry;
-                    const candy = "candy" in entry ? entry.candy : undefined;
+                    const { m, candy } = entry;
                     return (
                       <span
                         key={m.id}
                         title={`${memberLabel(m)} — ${r.hint}${
                           candy !== undefined ? `｜吃 ${candy} 顆糖可符合` : ""
                         }${tooltipOf ? `｜${tooltipOf(m.id)}` : ""}`}
-                        className={cn(
-                          "relative rounded-full",
-                          r.key === "red" && "opacity-40 grayscale"
-                        )}
+                        className="relative rounded-full"
                       >
                         <MemberAvatar member={m} size="sm" className="h-7 w-7" />
                         {candy !== undefined ? (

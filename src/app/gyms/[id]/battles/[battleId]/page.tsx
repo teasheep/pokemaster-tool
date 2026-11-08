@@ -7,10 +7,18 @@ import { fetchGymGrades, getGymContext } from "@/lib/gym/queries";
 import { battleStatusFromDates } from "@/lib/gym/types";
 import { CATALOG_VERSION, loadPairsForClient } from "@/lib/pairs/loader";
 import { fetchAllRows } from "@/lib/supabase/fetch-all";
-import { parsePositions, pickParam } from "@/lib/url-params";
+import { parsePositions, parseShortIds, pickParam, resolveShortIds } from "@/lib/url-params";
 import type { Database, SyncPairType } from "@/lib/supabase/types";
 import { BattleClient } from "./battle-client";
-import { PLAN_FIELD_COLS, PLAN_SLOT_COLS, type PlanFieldRow, type PlanSlotRow } from "./battle-plan-data";
+import {
+  PLAN_DRAFT_COLS,
+  PLAN_FIELD_COLS,
+  PLAN_SLOT_COLS,
+  STAGE_REQUIRED_PAIR_COLS,
+  normalizeDraftRow,
+  type PlanFieldRow,
+  type PlanSlotRow,
+} from "./battle-plan-data";
 
 /** 分頁查詢用的投影型別 — 欄位清單與下面的 select 一起改 */
 type BattleLogRow = Pick<
@@ -28,9 +36,11 @@ export default async function BattlePage({
   // 重新整理要留在原本的畫面 (useUrlState 寫回去的那幾個):
   //   rules / plan / panel = battle-client 的「規則」「排刀表」開關與開著的側板
   //   fold / done / ahead  = stage-board 每一關的收合/展開 (第幾關, 見 BoardView)
+  //   draft                = 排刀表正在看哪一個分頁 (0087/0088, id 短碼)
   searchParams: Promise<{
     rules?: string;
     plan?: string;
+    draft?: string;
     panel?: string;
     fold?: string;
     done?: string;
@@ -75,6 +85,8 @@ export default async function BattlePage({
     { data: planFields },
     { data: planSlots },
     { data: planNote },
+    { data: draftRows },
+    { data: requiredPairs },
   ] = await Promise.all([
     // select 一律明列欄位 — '*' 白送 gym_id/battle_id/時間戳, battle_logs 一場 290 列就多 40KB
     // (欄位清單 = stage-board.tsx 的 StageRow / BattleLogRow 投影, 兩邊一起改)
@@ -127,7 +139,25 @@ export default async function BattlePage({
       .order("created_at")
       .order("id"),
     supabase.from("battle_plans").select("note").eq("battle_id", battleId).maybeSingle(),
+    // 排刀表的分頁 (0087/0088): 全館的都撈 (0088 之前 RLS 只回自己的, 照樣畫得出來)。
+    // 表還不存在 (migration 沒套) 時回 error + null, 等於沒有分頁, 整頁照常。
+    supabase
+      .from("battle_plan_drafts")
+      .select(PLAN_DRAFT_COLS)
+      .eq("battle_id", battleId)
+      .order("created_at")
+      .order("id"),
+    // 關卡的必要拍組 (0089/0090): 一關幾組, 一場最多幾十列。順序 = 編輯器裡的第幾格 (sort_order)。
+    // 表還不存在 (migration 沒套) 時回 null, 等於每關都沒設。
+    supabase
+      .from("stage_required_pairs")
+      .select(STAGE_REQUIRED_PAIR_COLS)
+      .eq("battle_id", battleId)
+      .order("sort_order")
+      .order("created_at")
+      .order("id"),
   ]);
+  const drafts = (draftRows ?? []).map(normalizeDraftRow);
 
   const memberCandies: Record<string, Record<string, number>> = {};
   for (const c of candyRows ?? []) {
@@ -189,6 +219,8 @@ export default async function BattlePage({
   const neededPairIds = new Set<string>();
   for (const g of gymPairRows ?? []) if (g.pair_id) neededPairIds.add(g.pair_id);
   for (const tp of teamPairs ?? []) neededPairIds.add(tp.pair_id);
+  // 必要拍組可以挑名單外的 (勾「全圖鑑」), 少了這行那一張會掉成灰字 pair_id
+  for (const rp of requiredPairs ?? []) neededPairIds.add(rp.pair_id);
   const catalogForClient = (await loadPairsForClient().catch(() => [])).filter((p) =>
     neededPairIds.has(p.pairId)
   );
@@ -255,6 +287,7 @@ export default async function BattlePage({
             initialTeams={teams ?? []}
             initialTeamPairs={teamPairs ?? []}
             initialStageTeams={stageTeams ?? []}
+            initialRequiredPairs={requiredPairs ?? []}
             allBattles={(allBattles ?? []).map((b) => ({
               id: b.id,
               name: b.name,
@@ -266,6 +299,16 @@ export default async function BattlePage({
               fields: (planFields ?? []) as PlanFieldRow[],
               slots: (planSlots ?? []) as PlanSlotRow[],
               note: planNote?.note ?? "",
+              drafts,
+              // 分頁是誰加的: user_id → 名冊上的那一列 (查不到 = 已經不在名冊上, 畫面寫「（已離開）」)
+              memberIdByUser: Object.fromEntries(
+                members.filter((m) => m.user_id).map((m) => [m.user_id!, m.id]),
+              ),
+              draftId:
+                resolveShortIds(
+                  parseShortIds(sp.draft) ?? [],
+                  drafts.map((d) => d.id),
+                )[0] ?? null,
             }}
             initialShowPlan={pickParam(sp.plan, ["1", "0"] as const, "0") === "1"}
             initialBoardView={{

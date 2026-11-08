@@ -14,6 +14,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Download, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { Chip } from "@/components/pair-filter-bar";
 import { Badge } from "@/components/ui/badge";
 import { Button, COARSE_HIT_AREA } from "@/components/ui/button";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -44,31 +45,52 @@ import {
 import { SyncPairCard } from "@/components/sync-pair-card";
 import { TYPE_COLORS, TYPE_LABELS } from "@/data/sync-pairs";
 import { matchTemplate } from "@/lib/gym/battle-templates";
+import { formatTaipeiDateTime } from "@/lib/gym/pairs-updated";
 import { GRADE_LABELS } from "@/lib/gym/types";
+import { useCoalescedWrite } from "@/lib/pairs/use-coalesced-write";
 import { pairName } from "@/lib/pairs/name";
 import type { ClientPairRecord } from "@/lib/pairs/types";
 import type { SyncPairType } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
+import { shortId } from "@/lib/url-params";
+import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 import {
+  MAX_PLAN_DRAFTS,
+  PLAN_DRAFT_COLS,
   PLAN_FIELD_COLS,
   PLAN_SLOT_COLS,
+  PLAN_WIDE,
+  normalizeDraftRow,
+  type PlanCell,
+  type PlanDoc,
+  type PlanDraftRow,
   type PlanFieldRow,
+  type PlanRow,
   type PlanSlotRow,
+  type StageRequiredPairRow,
 } from "./battle-plan-data";
 
-type Cell = { members: string[]; text: string };
-type PlanRow = {
-  id: string;
-  label: string;
-  wide: boolean;
-  cells: Record<string, Cell>;
-};
-type Plan = { rows: PlanRow[]; note: string };
+type Cell = PlanCell;
+type Plan = PlanDoc;
 
-/** 整場一格的列, cells 只用這個 key */
-const WIDE = "all";
+const WIDE = PLAN_WIDE;
 const EMPTY_CELL: Cell = { members: [], text: "" };
+
+/** 分頁裡改一格: 回傳新的一份 (原本那份不動, 畫面才看得到變化) */
+function withCell(doc: Plan, rowId: string, cellKey: string, fn: (c: Cell) => Cell): Plan {
+  return {
+    ...doc,
+    rows: doc.rows.map((r) => {
+      if (r.id !== rowId) return r;
+      const next = fn(r.cells[cellKey] ?? EMPTY_CELL);
+      const cells = { ...r.cells };
+      if (next.members.length || next.text) cells[cellKey] = next;
+      else delete cells[cellKey];
+      return { ...r, cells };
+    }),
+  };
+}
 
 /** 三張表 → 畫面用的 Plan (格子的 key: 關卡 id, 全場是 WIDE) */
 function toPlan(fields: PlanFieldRow[], slots: PlanSlotRow[], note: string): Plan {
@@ -360,9 +382,15 @@ export function BattlePlan({
   catalog,
   fullCatalogUrl,
   gymPairsList,
+  requiredPairs,
   initialFields,
   initialSlots,
   initialNote,
+  initialDrafts,
+  initialDraftId,
+  memberIdByUser,
+  myUserId,
+  isAdmin,
 }: {
   /** 區塊展開/收起 (由 battle-client 管, 狀態進網址 ?plan=1) */
   open: boolean;
@@ -379,19 +407,149 @@ export function BattlePlan({
   /** 「全部該屬性拍組」要整本圖鑑, 按需載入 */
   fullCatalogUrl: string;
   gymPairsList: { pairId: string; type: SyncPairType }[];
+  /** 關卡的必要拍組 (0089, 看板上設定) —— 選人側板可以切過去看「每個人那幾隻幾寶」 */
+  requiredPairs: StageRequiredPairRow[];
   initialFields: PlanFieldRow[];
   initialSlots: PlanSlotRow[];
   initialNote: string;
+  /** 排刀表的分頁 (0087/0088, 全館的); 表還沒套上時是空陣列 */
+  initialDrafts: PlanDraftRow[];
+  /** 網址 ?draft= 指到的那一個 (server 已經從短碼解回完整 id) */
+  initialDraftId: string | null;
+  /** 分頁是誰加的: user_id → 成員 id (查不到 = 已經不在名冊上) */
+  memberIdByUser: Record<string, string>;
+  myUserId: string;
+  /** 管理員刪得掉別人的分頁 (人離開之後要收得掉) —— 與 0088 的 delete policy 同一條 */
+  isAdmin: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [fields, setFields] = useState(initialFields);
   const [slots, setSlots] = useState(initialSlots);
   const [note, setNote] = useState(initialNote);
-  const plan = useMemo(() => toPlan(fields, slots, note), [fields, slots, note]);
+  const officialPlan = useMemo(() => toPlan(fields, slots, note), [fields, slots, note]);
+
+  // ── 分頁 (0087 試排 → 0088 改成全館看得到。2026-11-07 使用者:「改成所有人都可以加排刀表 …
+  //    排刀表可以有分頁1 分頁2...的長相 然後標註是誰 在什麼時候加的就好 也可以自己命名」) ──
+  // 同一套卡片 / 側板 / 匯出, 只是資料來源換成那一個分頁 (battle_plan_drafts 一份一列),
+  // 正式那三張表一個字都不碰 (仍然沒有「套用成正式」)。全館看得到; **只有建立的人改得動** ——
+  // 整份存一格 jsonb, 兩個人一起改就是後存的蓋掉先存的。新分頁是空白的 (不複製, 2026-11-08 使用者指定)。
+  // 顧問不能改正式那張, 也就不能加分頁 (RLS 同一條 is_gym_editor), 但看得到。
+  const [drafts, setDrafts] = useState(initialDrafts);
+  const [view, setView] = useState<string | null>(
+    initialDraftId && initialDrafts.some((d) => d.id === initialDraftId) ? initialDraftId : null,
+  );
+  const active = useMemo(
+    () => (view ? drafts.find((d) => d.id === view) : undefined),
+    [view, drafts],
+  );
+  useUrlState({ draft: active ? shortId(active.id) : null });
+  const plan = useMemo(() => (active ? active.plan : officialPlan), [active, officialPlan]);
+  const mine = !!active && active.user_id === myUserId;
+  /** 分頁只有建立的人改得動 (而且他還是正式成員); 正式那張照舊看身分 */
+  const editable = active ? canEdit && active.user_id === myUserId : canEdit;
+  const myDraftCount = drafts.filter((d) => d.user_id === myUserId).length;
+
+  /**
+   * 分頁的存檔: 一份只有建立的人在改, 所以整份覆蓋就好 (正式那張的「一人一列」是為了多人同時改)。
+   * 連點 / 打字合併成一次 (450ms), 而且**同一份排隊送** —— 只合併不排隊的話,
+   * 跨視窗的兩趟可能後到先至, 舊的那份會把新的蓋掉 (與背包糖果 2026-09-10 同一個坑)。
+   */
+  const draftQueue = useRef(new Map<string, Promise<void>>());
+  const scheduleDraftSave = useCoalescedWrite<{ name?: string; plan?: Plan }>((id, payload) => {
+    const prev = draftQueue.current.get(id) ?? Promise.resolve();
+    const next = prev.then(async () => {
+      const { error } = await supabase.from("battle_plan_drafts").update(payload).eq("id", id);
+      if (error) toast.error("分頁儲存失敗", { description: error.message });
+    });
+    draftQueue.current.set(id, next);
+    return next;
+  });
+  // 最新的分頁放一份在 ref: 同一個 render 裡連改兩次 (例如連點兩個人) 時, 第二次要接在第一次後面,
+  // 從 render 當下的 active.plan 算的話第一次的改動會被吃掉。只在事件處理裡寫, 不在 render 裡寫。
+  const draftsRef = useRef(initialDrafts);
+  const putDraft = (id: string, patch: Partial<Pick<PlanDraftRow, "name" | "plan">>) => {
+    draftsRef.current = draftsRef.current.map((d) => (d.id === id ? { ...d, ...patch } : d));
+    setDrafts(draftsRef.current);
+  };
+  const updateDraft = (fn: (doc: Plan) => Plan) => {
+    // 別人的分頁不給改 (畫面上本來就沒有可按的東西, 這裡再擋一次; RLS 也會擋)
+    const cur = active && editable && draftsRef.current.find((d) => d.id === active.id);
+    if (!cur) return;
+    const nextPlan = fn(cur.plan);
+    putDraft(cur.id, { plan: nextPlan });
+    scheduleDraftSave(cur.id, { plan: nextPlan });
+  };
+  const renameDraft = (name: string) => {
+    if (!active || !editable) return;
+    putDraft(active.id, { name });
+    scheduleDraftSave(active.id, { name: name.trim() });
+  };
+  /**
+   * 「＋ 分頁」= 一張**空白的** (2026-11-08 使用者:「加新分頁的時候 不用複製前一張阿」):
+   * 欄位沿用正在看的那張 (物攻 / 特攻 / 降抗 這些名字, 不然每開一張都要重加), 格子裡的人、備註、敘述全部是空的。
+   */
+  const blankPlan = (): Plan => ({
+    rows: plan.rows.map((r) => ({ id: r.id, label: r.label, wide: r.wide, cells: {} })),
+    note: "",
+  });
+  const [creating, setCreating] = useState(false);
+  const createDraft = async () => {
+    if (creating || !canEdit || myDraftCount >= MAX_PLAN_DRAFTS) return;
+    setCreating(true);
+    // 預設名稱「分頁 N」, 全館一起數 (別人的分頁也算), 撞名就往後跳
+    const names = new Set(drafts.map((d) => d.name.trim()));
+    let k = drafts.length + 1;
+    while (names.has(`分頁 ${k}`)) k++;
+    const { data, error } = await supabase
+      .from("battle_plan_drafts")
+      .insert({ gym_id: gymId, battle_id: battleId, name: `分頁 ${k}`, plan: blankPlan() })
+      .select(PLAN_DRAFT_COLS)
+      .single();
+    setCreating(false);
+    if (error || !data) {
+      toast.error("新增分頁失敗", { description: error?.message ?? "" });
+      return;
+    }
+    const row = normalizeDraftRow(data);
+    draftsRef.current = [...draftsRef.current, row];
+    setDrafts(draftsRef.current);
+    setView(row.id);
+  };
+  /** 刪分頁要按兩下 (與刪欄位同一個手勢)。建立的人, 或管理員 (人離開之後他的分頁要有人收得掉) */
+  const canDeleteDraft = !!active && ((mine && canEdit) || isAdmin);
+  const [confirmDeleteDraft, setConfirmDeleteDraft] = useState(false);
+  const deleteDraft = async () => {
+    if (!active || !canDeleteDraft) return;
+    if (!confirmDeleteDraft) {
+      setConfirmDeleteDraft(true);
+      return;
+    }
+    setConfirmDeleteDraft(false);
+    const id = active.id;
+    // 還在排隊的存檔先等它送完, 不然刪掉之後那一趟 update 會撲空 (0 列, 不報錯但白跑)
+    await draftQueue.current.get(id);
+    const { data: gone, error } = await supabase
+      .from("battle_plan_drafts")
+      .delete()
+      .eq("id", id)
+      .select("id");
+    if (error) {
+      toast.error("刪除分頁失敗", { description: error.message });
+      return;
+    }
+    // RLS 擋下的刪除不會報錯, 只是 0 列 (例如管理員剛被降級) —— 不要讓畫面以為刪掉了
+    if (!gone?.length) {
+      toast.error("刪除分頁失敗", { description: "沒有權限刪除這個分頁" });
+      return;
+    }
+    draftsRef.current = draftsRef.current.filter((d) => d.id !== id);
+    setDrafts(draftsRef.current);
+    setView(null);
+  };
 
   /** 重抓 (別人改了 / 自己寫失敗要回滾) —— 回到分頁時抓一次, 5 秒節流, 與看板同一套新鮮度 */
   const refetch = async () => {
-    const [f, sl, pl] = await Promise.all([
+    const [f, sl, pl, dr] = await Promise.all([
       supabase.from("battle_plan_fields").select(PLAN_FIELD_COLS).eq("battle_id", battleId),
       supabase
         .from("battle_plan_slots")
@@ -400,9 +558,26 @@ export function BattlePlan({
         .order("created_at")
         .order("id"),
       supabase.from("battle_plans").select("note").eq("battle_id", battleId).maybeSingle(),
+      // 別人新加 / 改名 / 刪掉的分頁 (與 page.tsx 同一支查詢)
+      supabase
+        .from("battle_plan_drafts")
+        .select(PLAN_DRAFT_COLS)
+        .eq("battle_id", battleId)
+        .order("created_at")
+        .order("id"),
     ]);
     if (f.data) setFields(f.data);
     if (sl.data) setSlots(sl.data);
+    if (dr.data) {
+      // 自己的分頁以畫面上這份為準: 只有自己在改, 存檔可能還在路上, 拿資料庫的會把剛打的字蓋回去。
+      // 別人的照資料庫 (他改了名、改了內容); 資料庫裡沒有的 (被刪了) 就拿掉。
+      const local = new Map(draftsRef.current.map((d) => [d.id, d]));
+      draftsRef.current = dr.data.map((raw) => {
+        const cur = local.get(raw.id);
+        return cur && cur.user_id === myUserId ? cur : normalizeDraftRow(raw);
+      });
+      setDrafts(draftsRef.current);
+    }
     // 正在打敘述的人不要被重抓蓋掉
     if (!pl.error && document.activeElement !== noteRef.current) setNote(pl.data?.note ?? "");
   };
@@ -435,7 +610,19 @@ export function BattlePlan({
   const sameCell = (s: PlanSlotRow, fieldId: string, cellKey: string) =>
     s.field_id === fieldId && s.stage_id === stageOf(cellKey);
 
+  // 每一支寫入都先看「現在是不是在分頁」: 是的話只改那一個分頁 (battle_plan_drafts, 而且只有建立的人改得動), 正式那三張表不碰。
   const toggleMember = async (fieldId: string, cellKey: string, memberId: string) => {
+    if (active) {
+      updateDraft((doc) =>
+        withCell(doc, fieldId, cellKey, (c) => ({
+          ...c,
+          members: c.members.includes(memberId)
+            ? c.members.filter((x) => x !== memberId)
+            : [...c.members, memberId],
+        })),
+      );
+      return;
+    }
     const stageId = stageOf(cellKey);
     const has = slots.some((s) => sameCell(s, fieldId, cellKey) && s.member_id === memberId);
     if (has) {
@@ -471,15 +658,22 @@ export function BattlePlan({
   };
 
   /** 那一格的備註: 打字只改畫面, 離開輸入框才存 (空白 = 刪掉那一列) */
-  const setCellText = (fieldId: string, cellKey: string, text: string) =>
+  const setCellText = (fieldId: string, cellKey: string, text: string) => {
+    // 分頁只有建立的人在改, 打字當下就排進存檔 (合併成一次), 不必等離開輸入框
+    if (active) return updateDraft((doc) => withCell(doc, fieldId, cellKey, (c) => ({ ...c, text })));
     setSlots((prev) => {
       const rest = prev.filter((s) => !(sameCell(s, fieldId, cellKey) && s.member_id === null));
       return text
         ? [...rest, { field_id: fieldId, stage_id: stageOf(cellKey), member_id: null, note: text }]
         : rest;
     });
+  };
   const saveCellText = async (fieldId: string, cellKey: string, raw: string) => {
     const text = raw.trim();
+    if (active) {
+      if (text !== raw) updateDraft((doc) => withCell(doc, fieldId, cellKey, (c) => ({ ...c, text })));
+      return;
+    }
     const stageId = stageOf(cellKey);
     if (!text) {
       let q = supabase
@@ -506,9 +700,17 @@ export function BattlePlan({
     if (error) failed("儲存備註", error.message);
   };
 
-  const renameField = (id: string, label: string) =>
+  const mapRows = (fn: (r: PlanRow) => PlanRow) =>
+    updateDraft((doc) => ({ ...doc, rows: doc.rows.map(fn) }));
+  const renameField = (id: string, label: string) => {
+    if (active) return mapRows((r) => (r.id === id ? { ...r, label } : r));
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, label } : f)));
+  };
   const saveFieldLabel = async (id: string, label: string) => {
+    if (active) {
+      if (label.trim() !== label) mapRows((r) => (r.id === id ? { ...r, label: label.trim() } : r));
+      return;
+    }
     const { error } = await supabase
       .from("battle_plan_fields")
       .update({ label: label.trim() })
@@ -518,18 +720,28 @@ export function BattlePlan({
   /** 欄位裡有人時要按兩下才刪 (與名冊的叉叉同一個手勢) */
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const deleteField = async (id: string) => {
-    const used = slots.some((s) => s.field_id === id);
+    // plan = 正在看的那一份 (正式或分頁), 兩邊同一個判斷
+    const used = Object.keys(plan.rows.find((r) => r.id === id)?.cells ?? {}).length > 0;
     if (used && confirmDelete !== id) {
       setConfirmDelete(id);
       return;
     }
     setConfirmDelete(null);
+    if (active) {
+      updateDraft((doc) => ({ ...doc, rows: doc.rows.filter((r) => r.id !== id) }));
+      return;
+    }
     setFields((prev) => prev.filter((f) => f.id !== id));
     setSlots((prev) => prev.filter((s) => s.field_id !== id));
     const { error } = await supabase.from("battle_plan_fields").delete().eq("id", id);
     if (error) failed("刪除欄位", error.message);
   };
   const addField = async (wide: boolean) => {
+    if (active) {
+      const row: PlanRow = { id: crypto.randomUUID(), label: "", wide, cells: {} };
+      updateDraft((doc) => ({ ...doc, rows: [...doc.rows, row] }));
+      return;
+    }
     const sort = Math.max(0, ...fields.map((f) => f.sort_order)) + 1;
     const { data, error } = await supabase
       .from("battle_plan_fields")
@@ -542,7 +754,12 @@ export function BattlePlan({
     }
     setFields((prev) => [...prev, data]);
   };
+  const changeNote = (text: string) => {
+    if (active) return updateDraft((doc) => ({ ...doc, note: text }));
+    setNote(text);
+  };
   const saveNote = async (raw: string) => {
+    if (active) return; // 打字當下就排進存檔了
     const { error } = await supabase
       .from("battle_plans")
       .upsert({ battle_id: battleId, gym_id: gymId, note: raw }, { onConflict: "battle_id" });
@@ -552,6 +769,14 @@ export function BattlePlan({
   const roster = useMemo(() => members.filter((m) => m.role !== "advisor"), [members]);
   const byId = useMemo(() => new Map(roster.map((m) => [m.id, m])), [roster]);
   const catById = useMemo(() => new Map(catalog.map((p) => [p.pairId, p])), [catalog]);
+  /** 分頁是誰加的 (名冊上查不到 = 已經離開 / 改成顧問) */
+  const creatorOf = (d: PlanDraftRow) => byId.get(memberIdByUser[d.user_id] ?? "");
+  const tabName = (d: PlanDraftRow) => d.name.trim() || "未命名分頁";
+  /** 「泡茶綿羊 · 2026/11/07 22:22」—— 畫面與匯出圖同一句 */
+  const tabByline = (d: PlanDraftRow) => {
+    const m = creatorOf(d);
+    return `${m ? memberLabel(m) : "（已離開）"} · ${formatTaipeiDateTime(d.created_at) ?? ""}`;
+  };
 
   /** 同一個人在「每關一格」的列裡出現幾次 —— 超過一次標黃 (主打只站一格是館內規矩) */
   const stageCount = useMemo(() => {
@@ -568,6 +793,12 @@ export function BattlePlan({
     rowId: string;
     cellKey: string;
   } | null>(null);
+  const switchView = (id: string | null) => {
+    setView(id);
+    setEditing(null);
+    setConfirmDelete(null);
+    setConfirmDeleteDraft(false);
+  };
   const editRow = editing ? plan.rows.find((r) => r.id === editing.rowId) : undefined;
   const editStage = editing ? stages.find((s) => s.id === editing.cellKey) : undefined;
   const editCell = editRow?.cells[editing!.cellKey] ?? EMPTY_CELL;
@@ -578,38 +809,86 @@ export function BattlePlan({
    * 範圍兩種: 道館拍組 (預設) / 全部該屬性拍組 (要整本圖鑑, 切過去才載)。
    * 成員排序 = 列出來那幾隻的練度加總 (寶N=N、覺N=5+N)。
    */
+  /**
+   * 這一關的**必要拍組** (0089/0090) 跟道館拍組**合成一個分頁「必要/道館拍組」**
+   * (2026-11-08 使用者:「側邊的必要拍組 跟道館拍組好像可以放在一起顯示」「必要/道館拍組 這樣呈現」
+   * 「就是合成一個Tab 不用分兩個看」「計算排序的時候也按照這個排」)。
+   * 每個人上下兩排: 「必要」= 這一關的必要拍組全部列出來 (照看板順序, 沒有的反灰, 不到要求的標黃),
+   * 每個人同一格是同一組, 往下掃得過去; 「道館」= 這一關屬性的道館拍組裡他有的 (跟必要重複的不再列)。
+   * 排序也是先必要再道館。不做左右: 必要拍組最多 10 組, 左右擺一定換行換得亂七八糟。
+   * 「所有X屬性拍組」那個分頁照舊一排 (不放必要那一排 —— 分頁名寫的就只有屬性拍組);
+   * 沒設必要拍組的關, 第一個分頁就叫「道館拍組」、也只有一排, 跟以前一樣。
+   */
   const [pairScope, setPairScope] = useState<"gym" | "all">("gym");
+  /** 這一關的必要拍組 (照看板上的順序) 與各自要求的寶數 (0090) */
+  const keyReq = useMemo(
+    () => (editStage ? requiredPairs.filter((r) => r.stage_id === editStage.id) : []),
+    [requiredPairs, editStage],
+  );
   const heldIds = useMemo(() => {
     const ids = new Set<string>();
     for (const g of Object.values(memberGrades)) for (const id of Object.keys(g)) ids.add(id);
     return ids;
   }, [memberGrades]);
-  const fullCatalog = useCatalogWithFullFallback(
-    catalog,
-    pairScope === "all" ? { ids: heldIds, fullCatalogUrl } : undefined,
-  );
+  // 必要拍組可以是名單外的 (看板勾「全圖鑑」挑的) —— 子集裡查不到就抓整本 (與看板同一條規矩)
+  const neededIds = useMemo(() => {
+    const ids = new Set(requiredPairs.map((r) => r.pair_id));
+    if (pairScope === "all") for (const id of heldIds) ids.add(id);
+    return ids;
+  }, [requiredPairs, pairScope, heldIds]);
+  const fullCatalog = useCatalogWithFullFallback(catalog, { ids: neededIds, fullCatalogUrl });
+  const fullById = useMemo(() => new Map(fullCatalog.map((p) => [p.pairId, p])), [fullCatalog]);
   const candidates = useMemo(() => {
     if (!editing) return [];
     const type = editStage?.weak_type;
-    const pool = !type
-      ? []
-      : pairScope === "gym"
-        ? gymPairsList
-            .filter((g) => g.type === type)
-            .map((g) => catById.get(g.pairId))
-            .filter((p): p is ClientPairRecord => !!p)
-        : fullCatalog.filter((p) => p.type === type);
+    const keyPool = (pairScope === "gym" ? keyReq : [])
+      .map((r) => {
+        const p = fullById.get(r.pair_id);
+        return p ? { p, need: r.min_grade } : null;
+      })
+      .filter((x): x is { p: ClientPairRecord; need: number } => !!x);
+    const keyIds = new Set(keyPool.map((x) => x.p.pairId));
+    const pool = (
+      !type
+        ? []
+        : pairScope === "gym"
+          ? gymPairsList
+              .filter((g) => g.type === type)
+              .map((g) => catById.get(g.pairId))
+              .filter((p): p is ClientPairRecord => !!p)
+          : fullCatalog.filter((p) => p.type === type)
+    ).filter((p) => !keyIds.has(p.pairId));
     return roster
       .map((m) => {
         const g = memberGrades[m.id] ?? {};
-        const held = pool
-          .map((p) => ({ p, grade: g[p.pairId] ?? 0 }))
+        const key = keyPool.map(({ p, need }) => ({ p, grade: g[p.pairId] ?? 0, need }));
+        // 屬性那一排一屬性幾十組: 只列有的、高的在前
+        const rest = pool
+          .map((p) => ({ p, grade: g[p.pairId] ?? 0, need: undefined as number | undefined }))
           .filter((x) => x.grade > 0)
           .sort((a, b) => b.grade - a.grade);
-        return { m, score: held.reduce((sum, x) => sum + x.grade, 0), held };
+        const keyOwned = key.filter((x) => x.grade > 0);
+        const hasAll = key.length > 0 && keyOwned.length === key.length;
+        return {
+          m,
+          // 綠燈 (必要拍組都有、都達標) → 黃燈 (都有) → 有幾組 → 必要寶數加總 → 另一排寶數加總
+          tier: !hasAll ? 0 : key.every((x) => x.grade >= x.need) ? 2 : 1,
+          count: keyOwned.length,
+          keyScore: keyOwned.reduce((sum, x) => sum + x.grade, 0),
+          restScore: rest.reduce((sum, x) => sum + x.grade, 0),
+          key,
+          rest,
+        };
       })
-      .sort((a, b) => b.score - a.score || memberCallName(a.m).localeCompare(memberCallName(b.m)));
-  }, [editing, editStage, pairScope, gymPairsList, fullCatalog, catById, roster, memberGrades]);
+      .sort(
+        (a, b) =>
+          b.tier - a.tier ||
+          b.count - a.count ||
+          b.keyScore - a.keyScore ||
+          b.restScore - a.restScore ||
+          memberCallName(a.m).localeCompare(memberCallName(b.m)),
+      );
+  }, [editing, editStage, pairScope, keyReq, fullById, gymPairsList, fullCatalog, catById, roster, memberGrades]);
 
   const leaders = useMemo(() => matchTemplate(stages.map((s) => s.weak_type)), [stages]);
 
@@ -628,8 +907,17 @@ export function BattlePlan({
       const l = leaders?.byType.get(s.weak_type);
       return { ...s, leader: l ? `${l.leader}＆${l.pokemon}` : undefined };
     });
-    const cv = drawPlanImage("排刀表", battleName, withLeader, plan, memberOf, images);
-    downloadCanvas(cv, `${battleName}-排刀表.png`);
+    // 分頁的圖: 標題寫分頁名、副標寫是誰什麼時候加的 —— 貼到賴群時不會被當成正式那張
+    const draftName = active ? tabName(active) : "";
+    const cv = drawPlanImage(
+      active ? `排刀表：${draftName}` : "排刀表",
+      active ? `${battleName} · ${tabByline(active)}` : battleName,
+      withLeader,
+      plan,
+      memberOf,
+      images,
+    );
+    downloadCanvas(cv, active ? `${battleName}-排刀表-${draftName}.png` : `${battleName}-排刀表.png`);
   };
 
   // 版面跟著站上其他地方走 (2026-10-02 使用者:「表格的 UI 可以不要長那麼死板嗎? 跟我們系統的 UI 對齊」):
@@ -671,7 +959,7 @@ export function BattlePlan({
               </span>
             );
           })}
-          {canEdit ? (
+          {editable ? (
             <span className="inline-flex h-8 items-center rounded-full border border-dashed px-3 text-xs text-muted-foreground">
               {c.members.length ? "編輯" : "＋ 指派"}
             </span>
@@ -686,7 +974,7 @@ export function BattlePlan({
         ) : null}
       </>
     );
-    return canEdit ? (
+    return editable ? (
       <button
         type="button"
         onClick={() => setEditing({ rowId: row.id, cellKey: key })}
@@ -701,7 +989,7 @@ export function BattlePlan({
 
   /** 欄位名稱列: 可改名、可刪、可新增。每關欄位與全場欄位各一列, 放在各自的區塊旁邊 */
   const fieldBar = (rows: PlanRow[], wide: boolean) =>
-    canEdit ? (
+    editable ? (
       <div className="flex flex-wrap items-center gap-1.5">
         {rows.map((row) => (
           <span
@@ -767,6 +1055,15 @@ export function BattlePlan({
             )}
           />
           排刀表
+          {/* 收起來時也看得出來現在選的不是正式那張 */}
+          {active ? (
+            <Badge
+              variant="outline"
+              className="ml-1 min-w-0 max-w-40 truncate border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-400/15 dark:text-amber-200"
+            >
+              {tabName(active)}
+            </Badge>
+          ) : null}
         </button>
         {open ? (
           <Button
@@ -782,6 +1079,94 @@ export function BattlePlan({
       </div>
       {open ? (
         <div className="space-y-3 border-t p-3">
+          {/* 分頁: 正式 + 全館加的 (每個分頁寫著是誰加的)。顧問看得到但不能加 */}
+          {canEdit || drafts.length ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Chip active={!active} onClick={() => switchView(null)}>
+                正式
+              </Chip>
+              {drafts.map((d) => {
+                const m = creatorOf(d);
+                return (
+                  <Chip
+                    key={d.id}
+                    active={active?.id === d.id}
+                    onClick={() => switchView(d.id)}
+                    activeClass="bg-amber-50 border-amber-400 dark:bg-amber-400/15"
+                    title={tabByline(d)}
+                  >
+                    <span className="max-w-40 truncate">{tabName(d)}</span>
+                    <span className="font-normal text-muted-foreground">
+                      · {m ? memberCallName(m) : "已離開"}
+                    </span>
+                  </Chip>
+                );
+              })}
+              {canEdit ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-muted-foreground"
+                  disabled={creating || myDraftCount >= MAX_PLAN_DRAFTS}
+                  title={
+                    myDraftCount >= MAX_PLAN_DRAFTS
+                      ? `一個人最多 ${MAX_PLAN_DRAFTS} 個分頁`
+                      : "新增一個空白分頁"
+                  }
+                  onClick={() => void createDraft()}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  分頁
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+          {active ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-300 bg-amber-50/70 px-3 py-2 dark:border-amber-400/40 dark:bg-amber-400/10">
+              {editable ? (
+                <input
+                  value={active.name}
+                  maxLength={20}
+                  placeholder="分頁名稱"
+                  aria-label="分頁名稱"
+                  style={{ width: `${Math.max(5, [...active.name].length) + 1}em` }}
+                  onChange={(e) => renameDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  }}
+                  className="h-8 min-w-0 rounded-full border bg-background px-3 text-sm font-medium outline-none"
+                />
+              ) : (
+                <span className="px-1 text-sm font-medium">{tabName(active)}</span>
+              )}
+              {/* 是誰、什麼時候加的 */}
+              <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-xs text-amber-900 dark:text-amber-100">
+                {(() => {
+                  const m = creatorOf(active);
+                  return m ? (
+                    <MemberChip member={m} />
+                  ) : (
+                    <span className="text-muted-foreground">（已離開）</span>
+                  );
+                })()}
+                <span className="tabular-nums">
+                  {formatTaipeiDateTime(active.created_at)} 加的
+                </span>
+              </span>
+              {canDeleteDraft ? (
+                <Button
+                  size="sm"
+                  variant={confirmDeleteDraft ? "destructive" : "ghost"}
+                  className="h-8"
+                  onClick={() => void deleteDraft()}
+                  onBlur={() => setConfirmDeleteDraft(false)}
+                >
+                  {confirmDeleteDraft ? "確定刪除" : "刪除分頁"}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+
           {/* 每關欄位 (名稱自己填, 可加可刪) —— 在關卡卡片上方 */}
           {fieldBar(stageRows, false)}
 
@@ -827,14 +1212,14 @@ export function BattlePlan({
 
           <div>
             <div className="mb-1 text-xs font-medium text-muted-foreground">敘述</div>
-            {canEdit ? (
+            {editable ? (
               <textarea
                 value={plan.note}
                 maxLength={2000}
                 rows={4}
                 placeholder="例：降抗順序、注意事項"
                 ref={noteRef}
-                onChange={(e) => setNote(e.target.value)}
+                onChange={(e) => changeNote(e.target.value)}
                 onBlur={(e) => void saveNote(e.target.value)}
                 className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
               />
@@ -879,7 +1264,7 @@ export function BattlePlan({
               <span className="inline-flex rounded-md border p-0.5 text-xs">
                 {(
                   [
-                    ["gym", "道館拍組"],
+                    ["gym", keyReq.length > 0 ? "必要/道館拍組" : "道館拍組"],
                     ["all", `所有${TYPE_LABELS[editStage.weak_type]}屬性拍組`],
                   ] as const
                 ).map(([k, label]) => (
@@ -908,9 +1293,14 @@ export function BattlePlan({
                   Number(editCell.members.includes(b.m.id)) -
                   Number(editCell.members.includes(a.m.id)),
               )
-              .map(({ m, held }) => {
+              .map(({ m, key, rest }) => {
                 const on = editCell.members.includes(m.id);
                 const n = stageCount.get(m.id) ?? 0;
+                // 有必要拍組 = 上下兩排, 排頭各一個小標; 沒有 = 一排, 不掛標 (跟以前一樣)
+                const lines = [
+                  ...(key.length > 0 ? [{ label: "必要", items: key }] : []),
+                  ...(rest.length > 0 || key.length === 0 ? [{ label: "道館", items: rest }] : []),
+                ];
                 return (
                   <li key={m.id}>
                     <button
@@ -938,35 +1328,53 @@ export function BattlePlan({
                           )}
                         />
                       </span>
-                      {held.length ? (
-                        <span className="mt-1.5 flex flex-wrap gap-1.5 pl-10">
-                          {held.map(({ p, grade }) => (
-                            <span
-                              key={p.pairId}
-                              title={`${pairName(p)} ${GRADE_LABELS[grade]}`}
-                              className="flex w-14 flex-col items-center"
-                            >
-                              <SyncPairCard
-                                pair={p}
-                                size="sm"
-                                showName={false}
-                                minimal
-                                potential={Math.min(5, grade)}
-                                superAwakening={grade > 5 ? grade - 5 : 0}
-                                awakenable={p.hasAwakening}
-                                className="[&>svg]:h-14 [&>svg]:w-14"
-                              />
-                              <span className="text-[10px] leading-tight text-muted-foreground max-sm:text-xs">
-                                {GRADE_LABELS[grade]}
-                              </span>
+                      {lines.map(({ label, items }) =>
+                        items.length ? (
+                          <span key={label} className="mt-1.5 flex items-center">
+                            {/* 小標放在頭像底下那一欄 (pl-10 的寬度), 不另佔一行 */}
+                            <span className="w-10 shrink-0 text-[10px] text-muted-foreground max-sm:text-xs">
+                              {key.length > 0 ? label : null}
                             </span>
-                          ))}
-                        </span>
-                      ) : editStage ? (
-                        <span className="mt-1 block pl-10 text-xs text-muted-foreground">
-                          {pairScope === "gym" ? "無此屬性的道館拍組" : "無此屬性的拍組"}
-                        </span>
-                      ) : null}
+                            <span className="flex flex-wrap gap-1.5">
+                              {items.map(({ p, grade, need }) => (
+                                <span
+                                  key={p.pairId}
+                                  title={`${pairName(p)} ${grade > 0 ? GRADE_LABELS[grade] : "未持有"}${
+                                    need && grade > 0 && grade < need ? `／需${GRADE_LABELS[need]}` : ""
+                                  }`}
+                                  className="flex w-14 flex-col items-center"
+                                >
+                                  {/* 寶0 只會出現在必要那一排 (全部列出來): 整卡反灰, 與卡牆的未持有同一個長相 */}
+                                  <SyncPairCard
+                                    pair={p}
+                                    size="sm"
+                                    showName={false}
+                                    minimal
+                                    potential={Math.min(5, grade)}
+                                    superAwakening={grade > 5 ? grade - 5 : 0}
+                                    awakenable={p.hasAwakening}
+                                    owned={grade > 0}
+                                    className="[&>svg]:h-14 [&>svg]:w-14"
+                                  />
+                                  <span
+                                    className={cn(
+                                      "text-[10px] leading-tight text-muted-foreground max-sm:text-xs",
+                                      // 有, 但不到必要拍組要求的寶數 = 黃 (看板上的黃燈同一個意思)
+                                      need && grade > 0 && grade < need && "font-semibold text-amber-600 dark:text-amber-400",
+                                    )}
+                                  >
+                                    {grade > 0 ? GRADE_LABELS[grade] : "未持有"}
+                                  </span>
+                                </span>
+                              ))}
+                            </span>
+                          </span>
+                        ) : editStage ? (
+                          <span key={label} className="mt-1 block pl-10 text-xs text-muted-foreground">
+                            {pairScope === "gym" ? "無此屬性的道館拍組" : "無此屬性的拍組"}
+                          </span>
+                        ) : null,
+                      )}
                     </button>
                   </li>
                 );
