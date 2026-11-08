@@ -52,7 +52,7 @@ describe("?pairs= / ?sort=", () => {
     expect(parseComparePairs("b,a,b")).toEqual(["b", "a"]);
     expect(parseComparePairs("ok_1,<script>,x y")).toEqual(["ok_1"]);
     expect(parseComparePairs(undefined)).toEqual([]);
-    const many = Array.from({ length: 20 }, (_, i) => `p${i}`).join(",");
+    const many = Array.from({ length: MAX_COMPARE_PAIRS + 5 }, (_, i) => `p${i}`).join(",");
     expect(parseComparePairs(many)).toHaveLength(MAX_COMPARE_PAIRS);
   });
 

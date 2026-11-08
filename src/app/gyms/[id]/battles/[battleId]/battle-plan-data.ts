@@ -38,6 +38,28 @@ export type PlanDraftRow = {
   created_at: string;
 };
 export const PLAN_DRAFT_COLS = "id, user_id, name, plan, created_at";
+/**
+ * 排刀表的預設欄位: 與 0083 的 on_battle_created_plan 同一份 (新賽事的正式那張長這樣, tests 釘住兩邊一致)。
+ * ＋ 分頁也是這個長相 (2026-11-08 使用者:「不要 我要新開的就是預設的長相」) ——
+ * 正在看的那張多加的欄位、改過的欄位名都不帶過去。
+ */
+export const PLAN_DEFAULT_FIELDS = [
+  { label: "物攻", wide: false },
+  { label: "特攻", wide: false },
+  { label: "降抗", wide: true },
+] as const;
+/** 預設長相的一張空白排刀表 (欄位 id 每張自己一份) */
+export function blankPlanDoc(): PlanDoc {
+  return {
+    rows: PLAN_DEFAULT_FIELDS.map((f) => ({
+      id: crypto.randomUUID(),
+      label: f.label,
+      wide: f.wide,
+      cells: {},
+    })),
+    note: "",
+  };
+}
 /** 一個人在一場最多開幾個分頁 (畫面上的上限; 夠用就好, 全館加起來不讓切換列長成一大排) */
 export const MAX_PLAN_DRAFTS = 5;
 

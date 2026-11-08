@@ -62,8 +62,11 @@ export function serializeCompareTypes(types: readonly SyncPairType[]): string | 
   return sorted.length ? sorted.join(",") : null;
 }
 
-/** 指定拍組最多幾組 —— 再多矩陣就比不出東西了 (也擋住網址被塞一長串) */
-export const MAX_COMPARE_PAIRS = 8;
+/**
+ * 指定拍組最多幾組 (2026-11-08 使用者: 原本 8 組「太少了」)。
+ * 這個數字只是擋住網址被塞一長串, 不是版面的限制: 表格本來就能橫捲 (人名那一欄 sticky)。
+ */
+export const MAX_COMPARE_PAIRS = 30;
 
 /** ?pairs= → pairId 清單 (照網址順序, 重複的丟掉; 圖鑑裡有沒有交給呼叫端對) */
 export function parseComparePairs(raw: string | string[] | undefined): string[] {

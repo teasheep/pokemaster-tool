@@ -57,6 +57,7 @@ import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 import {
   MAX_PLAN_DRAFTS,
+  blankPlanDoc,
   PLAN_DRAFT_COLS,
   PLAN_FIELD_COLS,
   PLAN_SLOT_COLS,
@@ -484,15 +485,8 @@ export function BattlePlan({
     putDraft(active.id, { name });
     scheduleDraftSave(active.id, { name: name.trim() });
   };
-  /**
-   * 「＋ 分頁」= 一張**空白的** (2026-11-08 使用者:「加新分頁的時候 不用複製前一張阿」):
-   * 欄位沿用正在看的那張 (物攻 / 特攻 / 降抗 這些名字, 不然每開一張都要重加), 格子裡的人、備註、敘述全部是空的。
-   */
-  const blankPlan = (): Plan => ({
-    rows: plan.rows.map((r) => ({ id: r.id, label: r.label, wide: r.wide, cells: {} })),
-    note: "",
-  });
   const [creating, setCreating] = useState(false);
+  /** 「＋ 分頁」= 預設長相的空白一張, 不看正在看的那張 (見 blankPlanDoc) */
   const createDraft = async () => {
     if (creating || !canEdit || myDraftCount >= MAX_PLAN_DRAFTS) return;
     setCreating(true);
@@ -502,7 +496,7 @@ export function BattlePlan({
     while (names.has(`分頁 ${k}`)) k++;
     const { data, error } = await supabase
       .from("battle_plan_drafts")
-      .insert({ gym_id: gymId, battle_id: battleId, name: `分頁 ${k}`, plan: blankPlan() })
+      .insert({ gym_id: gymId, battle_id: battleId, name: `分頁 ${k}`, plan: blankPlanDoc() })
       .select(PLAN_DRAFT_COLS)
       .single();
     setCreating(false);

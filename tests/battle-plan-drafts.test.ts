@@ -9,7 +9,9 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  PLAN_DEFAULT_FIELDS,
   PLAN_DRAFT_COLS,
+  blankPlanDoc,
   normalizePlanDoc,
 } from "@/app/gyms/[id]/battles/[battleId]/battle-plan-data";
 
@@ -66,10 +68,30 @@ describe("分頁的權限: 全館看得到, 只有建立的人改得動", () => 
     expect(UI).toMatch(/const canDeleteDraft = !!active && \(\(mine && canEdit\) \|\| isAdmin\)/);
   });
 
-  it("＋ 分頁 = 空白的: 欄位名稱沿用, 格子與敘述不複製 (「加新分頁的時候 不用複製前一張阿」)", () => {
-    expect(UI).toMatch(/rows: plan\.rows\.map\(\(r\) => \(\{ id: r\.id, label: r\.label, wide: r\.wide, cells: \{\} \}\)\),\s*note: ""/);
-    expect(UI).toMatch(/name: `分頁 \$\{k\}`, plan: blankPlan\(\) \}/);
+  it("＋ 分頁 = 預設的長相: 不看正在看的那張 (「不要 我要新開的就是預設的長相」)", () => {
+    expect(UI).toMatch(/plan: blankPlanDoc\(\) \}/);
+    // 多加的欄位、改過的欄位名、格子、敘述都不可以帶過去
     expect(UI).not.toMatch(/structuredClone\(plan\)/);
+    expect(UI).not.toMatch(/plan\.rows\.map\(\(r\) => \(\{ id: r\.id, label: r\.label/);
+    const doc = blankPlanDoc();
+    expect(doc.rows.map((r) => [r.label, r.wide])).toEqual([
+      ["物攻", false],
+      ["特攻", false],
+      ["降抗", true],
+    ]);
+    expect(doc.note).toBe("");
+    expect(doc.rows.every((r) => Object.keys(r.cells).length === 0)).toBe(true);
+    // 存進資料庫再讀回來 (normalizePlanDoc) 要一模一樣, 而且每一列都有自己的 id
+    expect(normalizePlanDoc(JSON.parse(JSON.stringify(doc)))).toEqual(doc);
+    expect(new Set(doc.rows.map((r) => r.id)).size).toBe(doc.rows.length);
+  });
+
+  it("預設欄位 = 0083 新賽事帶的那三個 (兩邊走鐘的話, 分頁跟正式那張的預設就不一樣了)", () => {
+    const file = fs.readdirSync("supabase/migrations").find((f) => f.startsWith("0083_"))!;
+    const sql = stripSqlComments(read(`supabase/migrations/${file}`));
+    PLAN_DEFAULT_FIELDS.forEach((f, i) => {
+      expect(sql).toContain(`'${f.label}', ${f.wide}, ${i + 1})`);
+    });
   });
 
   it("要標得出是誰加的: 查詢欄位帶 user_id, page.tsx 傳 user_id → 成員的對照", () => {
